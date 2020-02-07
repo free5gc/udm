@@ -12,6 +12,15 @@ import (
 var udmContext UDMContext
 var udmUeContext UdmUeContext
 
+// The key generation code is on https://play.golang.org/p/DAM22fBBKTu
+const (
+	UdmProfileAHNPrivateKey = "07fa724b31e2a7b577e28fff5ee9dc886ba4a4558aa9968f29d1795fe2b34cbf"
+	UdmProfileAHNPublicKey  = "0b1aee59238a73d2b778976db9e10d7f4e54828d193d74c464c874218a2e7e75"
+	UdmProfileBHNPrivateKey = "825a5c0bb7af5ccdaabcba7067f15cac544cc88f896f2d13435f2fe0939272d9"
+	UdmProfileBHNPublicKeyX = "d80ee92c0fda7f1af522da8b639cd50a02843e9c77731bf134f1cd59438c4b1a"
+	UdmProfileBHNPublicKeyY = "ad5ef7e143d16f7740e2fd4cf29e2f0cca731619833a6a88d9b362ea03386b67"
+)
+
 const (
 	LocationUriAmf3GppAccessRegistration int = iota
 	LocationUriAmfNon3GppAccessRegistration
