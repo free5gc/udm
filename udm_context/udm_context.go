@@ -16,6 +16,8 @@ const (
 	LocationUriAmf3GppAccessRegistration int = iota
 	LocationUriAmfNon3GppAccessRegistration
 	LocationUriSmfRegistration
+	LocationUriSdmSubscription
+	LocationUriSharedDataSubscription
 )
 
 func Init() {
@@ -34,6 +36,7 @@ type UDMContext struct {
 	NfService         map[models.ServiceName]models.NfService
 	NFDiscoveryClient *Nnrf_NFDiscovery.APIClient
 	UdmUePool         map[string]*UdmUeContext // supi as key
+	UdmNFPool         map[string]*UdmNFContext // SubscriptionID as key
 	NrfUri            string
 	GpsiSupiList      models.IdentityData
 	SharedSubsDataMap map[string]models.SharedData // sharedDataIds as key
@@ -46,9 +49,21 @@ type UdmUeContext struct {
 	Amf3GppAccessRegistration         *models.Amf3GppAccessRegistration
 	AmfNon3GppAccessRegistration      *models.AmfNon3GppAccessRegistration
 	AccessAndMobilitySubscriptionData *models.AccessAndMobilitySubscriptionData
+	SmfSelSubsData                    *models.SmfSelectionSubscriptionData
+	UeCtxtInSmfData                   *models.UeContextInSmfData
+	TraceDataResponse                 models.TraceDataResponse
+	TraceData                         *models.TraceData
 	SessionManagementSubsData         map[string]models.SessionManagementSubscriptionData
+	SubsDataSets                      *models.SubscriptionDataSets
+	SubscribeToNotifChange            *models.SdmSubscription
+	SubscribeToNotifSharedDataChange  *models.SdmSubscription
 	PduSessionID                      string
 	UdrUri                            string
+}
+type UdmNFContext struct {
+	SubscriptionID                   string
+	SubscribeToNotifChange           *models.SdmSubscription // SubscriptionID as key
+	SubscribeToNotifSharedDataChange *models.SdmSubscription // SubscriptionID as key
 }
 
 func ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string, dnnFromReq string) (mp map[string]models.SessionManagementSubscriptionData, ind string,
@@ -133,10 +148,117 @@ func GetCorrespondingSupi(list models.IdentityData) (id string) {
 	return identifier
 }
 
+// functions related to Retrieval of multiple datasets(GetSupi)
+func CreateSubsDataSetsForUe(Supi string, body models.SubscriptionDataSets) {
+	udmUe := UDM_Self().UdmUePool[Supi]
+	if udmUe == nil {
+		udmUe = CreateUdmUe(Supi)
+	}
+	udmUe.SubsDataSets = &body
+}
+
+func UdmUeSubsDataSetsExisting(Supi string) bool {
+	udmUe := UDM_Self().UdmUePool[Supi]
+	if udmUe != nil {
+		return udmUe.SubsDataSets == nil
+	}
+	return true
+}
+
+// Functions related to the trace data configuration
+func CreateTraceDataforUe(Supi string, body models.TraceData) {
+	udmUe := UDM_Self().UdmUePool[Supi]
+	if udmUe == nil {
+		udmUe = CreateUdmUe(Supi)
+	}
+	udmUe.TraceData = &body
+}
+
+func UdmUeTraceDataExisting(Supi string) bool {
+	udmUe := UDM_Self().UdmUePool[Supi]
+	if udmUe != nil {
+		return udmUe.TraceData == nil
+	}
+	return true
+}
+
+// functions related to sdmSubscription (subscribe to notification of data change)
+func CreateSubscriptiontoNotifChange(SubscriptionID string, body *models.SdmSubscription) {
+	udmUe := UDM_Self().UdmUePool[SubscriptionID]
+	if udmUe == nil {
+		udmUe = CreateUdmUe(SubscriptionID)
+	}
+	udmUe.SubscribeToNotifChange = body
+}
+
+func UdmNfCntxtNotExisting(SubscriptionID string) bool {
+	udmNf := UDM_Self().UdmNFPool[SubscriptionID]
+	if udmNf != nil {
+		return udmNf.SubscribeToNotifChange == nil
+	}
+	return true
+}
+
+func CreateSubstoNotifSharedData(SubscriptionID string, body *models.SdmSubscription) {
+	udmUe := UDM_Self().UdmUePool[SubscriptionID]
+	if udmUe == nil {
+		udmUe = CreateUdmUe(SubscriptionID)
+	}
+	udmUe.SubscribeToNotifSharedDataChange = body
+}
+
+func UdmNfCntxtSharedDataExisting(SubscriptionID string) bool {
+	udmNf := UDM_Self().UdmNFPool[SubscriptionID]
+	if udmNf != nil {
+		return udmNf.SubscribeToNotifSharedDataChange == nil
+	}
+	return true
+}
+
+// functions related UecontextInSmfData
+func CreateUeContextInSmfDataforUe(Supi string, body models.UeContextInSmfData) {
+	udmUe := UDM_Self().UdmUePool[Supi]
+	if udmUe == nil {
+		udmUe = CreateUdmUe(Supi)
+	}
+	udmUe.UeCtxtInSmfData = &body
+}
+
+func UdmUeCtxtInSmfDataExisting(Supi string) bool {
+	udmUe := UDM_Self().UdmUePool[Supi]
+	if udmUe != nil {
+		return udmUe.UeCtxtInSmfData == nil
+	}
+	return true
+}
+
+// functions for SmfSelectionSubscriptionData
+func CreateSmfSelectionSubsDatadforUe(Supi string, body models.SmfSelectionSubscriptionData) {
+	udmUe := UDM_Self().UdmUePool[Supi]
+	if udmUe == nil {
+		udmUe = CreateUdmUe(Supi)
+	}
+	udmUe.SmfSelSubsData = &body
+}
+
+func UdmueSmfSelSubsDataNotExisting(Supi string) bool {
+	udmUe := UDM_Self().UdmUePool[Supi]
+	if udmUe != nil {
+		return udmUe.SmfSelSubsData == nil
+	}
+	return true
+}
+
 func CreateUdmUe(Supi string) (udmUe *UdmUeContext) {
 	udmUe = new(UdmUeContext)
 	udmUe.Supi = Supi
 	UDM_Self().UdmUePool[Supi] = udmUe
+	return
+}
+func CreateUdmNf(SubscriptionID string) (udmNf *UdmNFContext) {
+	udmNf = new(UdmNFContext)
+	udmNf.SubscriptionID = SubscriptionID
+	UDM_Self().UdmNFPool[SubscriptionID] = udmNf
 	return
 }
 
@@ -247,6 +369,16 @@ func (ue *UdmUeContext) GetLocationURI(types int) string {
 		return UDM_Self().GetIPv4Uri() + "/nudm-uecm/v1/" + ue.Supi + "/registrations/amf-non-3gpp-access"
 	case LocationUriSmfRegistration:
 		return UDM_Self().GetIPv4Uri() + "/nudm-uecm/v1/" + ue.Supi + "/registrations/smf-registrations/" + ue.PduSessionID
+	}
+	return ""
+}
+
+func (ue *UdmUeContext) GetLocationURI2(types int, supi string) string {
+	switch types {
+	case LocationUriSharedDataSubscription:
+		// return UDM_Self().GetIPv4Uri() + "/nudm-sdm/v1/shared-data-subscriptions/" + nf.SubscriptionID
+	case LocationUriSdmSubscription:
+		return UDM_Self().GetIPv4Uri() + "/nudm-sdm/v1/" + supi + "/sdm-subscriptions/"
 	}
 	return ""
 }

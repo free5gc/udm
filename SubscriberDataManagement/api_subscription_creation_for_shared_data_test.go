@@ -12,6 +12,8 @@ package SubscriberDataManagement_test
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 	Nudm_SDM_Client "gofree5gc/lib/Nudm_SubscriberDataManagement"
 	"gofree5gc/lib/http2_util"
 	"gofree5gc/lib/openapi/models"
@@ -22,9 +24,6 @@ import (
 	"gofree5gc/src/udm/udm_handler"
 	"net/http"
 	"testing"
-
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 )
 
 // SubscribeToSharedData - subscribe to notifications for shared data
@@ -51,21 +50,21 @@ func TestSubscribeToSharedData(t *testing.T) {
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.POST("/nudr-dr/v1/subscription-data/:ueId/context-data/sdm-subscriptions", func(c *gin.Context) {
+		router.POST("/nudr-dr/v1/subscription-data/context-data/sdm-subscriptions", func(c *gin.Context) { // :ueId/
+
 			ueId := c.Param("ueId")
-			fmt.Println("FFFFFF")
 			fmt.Println("==========SubscribeToSharedData - subscribe to notifications for shared data==========")
 			fmt.Println("ueId: ", ueId)
 
-			var SdmSubscription models.SdmSubscription
-			if err := c.ShouldBindJSON(&SdmSubscription); err != nil {
+			var sdmSubscription models.SdmSubscription
+			if err := c.ShouldBindJSON(&sdmSubscription); err != nil {
 				fmt.Println("fake udr server error")
 				c.JSON(http.StatusInternalServerError, gin.H{})
 				return
 			}
-			SdmSubscription.NfInstanceId = "NfintanceId_test"
-			fmt.Println("SdmSubscription - ", SdmSubscription.NfInstanceId)
-			c.JSON(http.StatusCreated, gin.H{})
+			sdmSubscription.NfInstanceId = "NfintanceId_test"
+			fmt.Println("SdmSubscription - ", sdmSubscription.NfInstanceId)
+			c.JSON(http.StatusCreated, sdmSubscription)
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("gofree5gc/udrsslkey.log")
@@ -86,7 +85,6 @@ func TestSubscribeToSharedData(t *testing.T) {
 
 	var sdmSubscription models.SdmSubscription
 	sdmSubscription.NfInstanceId = "Test_NfinstanceId"
-
 	_, resp, err := clientAPI.SubscriptionCreationForSharedDataApi.SubscribeToSharedData(context.TODO(), sdmSubscription)
 	if err != nil {
 		fmt.Println(err.Error())

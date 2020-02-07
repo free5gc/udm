@@ -12,6 +12,8 @@ package SubscriberDataManagement_test
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 	Nudm_SDM_Client "gofree5gc/lib/Nudm_SubscriberDataManagement"
 	"gofree5gc/lib/http2_util"
 	"gofree5gc/lib/path_util"
@@ -21,9 +23,6 @@ import (
 	"gofree5gc/src/udm/udm_handler"
 	"net/http"
 	"testing"
-
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 )
 
 // UnsubscribeForSharedData - unsubscribe from notifications for shared data

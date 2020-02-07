@@ -30,7 +30,6 @@ import (
 
 // GetSmfSelectData - retrieve a UE's SMF Selection Subscription Data
 func TestGetSmfSelectData(t *testing.T) {
-	// udm_util.testInitUdmConfig()
 	udm_context.TestInit()
 	go udm_handler.Handle()
 	go func() { // udm server
@@ -50,7 +49,7 @@ func TestGetSmfSelectData(t *testing.T) {
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.GET("/nudr-dr/v1/subscription-data/:ueId/:servingPlmnId/provisioned-data/smf-selection-subscription-data", func(c *gin.Context) {
+		router.GET("/nudr-dr/v1/subscription-data/:ueId/provisioned-data/smf-selection-subscription-data", func(c *gin.Context) { // :servingPlmnId/
 			supi := c.Param("supi")
 			fmt.Println("==========SMF selection subscription data==========")
 			fmt.Println("supi: ", supi)
