@@ -49,6 +49,16 @@ type UdmUeContext struct {
 	SessionManagementSubsData         map[string]models.SessionManagementSubscriptionData
 	PduSessionID                      string
 	UdrUri                            string
+	CreatedEeSubscription             models.CreatedEeSubscription
+}
+
+// Functions related to EE services
+func CreateEeSusbContext(ueId string, body models.CreatedEeSubscription) {
+	udmUe := UDM_Self().UdmUePool[ueId]
+	if udmUe == nil {
+		udmUe = CreateUdmUe(ueId)
+	}
+	udmUe.CreatedEeSubscription = body
 }
 
 func ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string, dnnFromReq string) (mp map[string]models.SessionManagementSubscriptionData, ind string,
