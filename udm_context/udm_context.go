@@ -108,31 +108,31 @@ func MappingSharedData(sharedDatafromUDR []models.SharedData) (mp map[string]mod
 	return sharedSubsDataMap
 }
 
-func ObtainRequiredSharedData(Sharedids []string, response []models.SharedData) (s []models.SharedData) {
+func ObtainRequiredSharedData(Sharedids []string, response []models.SharedData) (sharedDatas []models.SharedData) {
 	sharedSubsDataMap := MappingSharedData(response)
-	keys := make([]string, len(sharedSubsDataMap))
-	c := make([]string, len(Sharedids))
-	t := 0
+	Allkeys := make([]string, len(sharedSubsDataMap))
+	MatchedKeys := make([]string, len(Sharedids))
+	counter := 0
 	for k := range sharedSubsDataMap {
-		keys = append(keys, k)
+		Allkeys = append(Allkeys, k)
 	}
 
 	for j := 0; j < len(Sharedids); j++ {
-		for i := 0; i < len(keys); i++ {
-			if strings.Contains(keys[i], Sharedids[j]) {
-				c[t] = keys[i]
+		for i := 0; i < len(Allkeys); i++ {
+			if strings.Contains(Allkeys[i], Sharedids[j]) {
+				MatchedKeys[counter] = Allkeys[i]
 			}
 		}
-		t += 1
+		counter += 1
 	}
 
-	shared_Data := make([]models.SharedData, len(c))
-	if len(c) != 1 {
-		for i := 0; i < len(c); i++ {
-			shared_Data[i] = sharedSubsDataMap[c[i]]
+	shared_Data := make([]models.SharedData, len(MatchedKeys))
+	if len(MatchedKeys) != 1 {
+		for i := 0; i < len(MatchedKeys); i++ {
+			shared_Data[i] = sharedSubsDataMap[MatchedKeys[i]]
 		}
 	} else {
-		shared_Data[0] = sharedSubsDataMap[c[0]]
+		shared_Data[0] = sharedSubsDataMap[MatchedKeys[0]]
 	}
 	return shared_Data
 }
