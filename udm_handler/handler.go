@@ -73,20 +73,23 @@ func Handle() {
 				case udm_message.EventGetSmfSelectData:
 					supi := msg.HTTPRequest.Params["supi"]
 					plmnID := msg.HTTPRequest.Query.Get("plmn-id")
-					udm_producer.HandleGetSmfSelectData(msg.ResponseChan, supi, plmnID)
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetSmfSelectData(msg.ResponseChan, supi, plmnID, supportedFeatures)
 
 				case udm_message.EventGetSupi:
 					supi := msg.HTTPRequest.Params["supi"]
 					plmnID := msg.HTTPRequest.Query.Get("plmn-id")
-					// dataSetNames := msg.HTTPRequest.Query["dataset-names"]
-					udm_producer.HandleGetSupi(msg.ResponseChan, supi, plmnID)
+					dataSetNames := msg.HTTPRequest.Query["dataset-names"]
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetSupi(msg.ResponseChan, supi, plmnID, dataSetNames, supportedFeatures)
 				case udm_message.EventGetTraceData:
 					supi := msg.HTTPRequest.Params["supi"]
 					plmnID := msg.HTTPRequest.Query.Get("plmn-id")
 					udm_producer.HandleGetTraceData(msg.ResponseChan, supi, plmnID)
 				case udm_message.EventGetUeContextInSmfData:
 					supi := msg.HTTPRequest.Params["supi"]
-					udm_producer.HandleGetUeContextInSmfData(msg.ResponseChan, supi)
+					supportedFeatures := msg.HTTPRequest.Query.Get("supported-features")
+					udm_producer.HandleGetUeContextInSmfData(msg.ResponseChan, supi, supportedFeatures)
 				case udm_message.EventSubscribe:
 					supi := msg.HTTPRequest.Params["supi"]
 					subscriptionID := msg.HTTPRequest.Params["subscriptionId"]

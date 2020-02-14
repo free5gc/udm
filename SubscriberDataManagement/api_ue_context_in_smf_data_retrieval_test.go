@@ -12,6 +12,7 @@ package SubscriberDataManagement_test
 import (
 	"context"
 	"fmt"
+	"github.com/antihax/optional"
 	Nudm_SDM_Client "gofree5gc/lib/Nudm_SubscriberDataManagement"
 	"gofree5gc/lib/http2_util"
 	"gofree5gc/lib/openapi/models"
@@ -56,7 +57,7 @@ func TestGetUeContextInSmfData(t *testing.T) {
 			fmt.Println("supi: ", supi)
 
 			var testueContextInSmfData models.UeContextInSmfData
-			testueContextInSmfData.EmergencyInfo.PgwFqdn = "TEst_00"
+			// testueContextInSmfData.EmergencyInfo.PgwFqdn = "TEst_00"
 			c.JSON(http.StatusOK, testueContextInSmfData)
 		})
 
@@ -77,11 +78,12 @@ func TestGetUeContextInSmfData(t *testing.T) {
 	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
 
 	supi := "SDM1234"
-	_, resp, err := clientAPI.UEContextInSMFDataRetrievalApi.GetUeContextInSmfData(context.Background(), supi, nil)
+	var getUeContextInSmfDataParamOpts Nudm_SDM_Client.GetUeContextInSmfDataParamOpts
+	getUeContextInSmfDataParamOpts.SupportedFeatures = optional.NewString("supportedFeatures")
+	_, resp, err := clientAPI.UEContextInSMFDataRetrievalApi.GetUeContextInSmfData(context.Background(), supi, &getUeContextInSmfDataParamOpts)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("resp: ", resp)
 	}
-	// */
 }

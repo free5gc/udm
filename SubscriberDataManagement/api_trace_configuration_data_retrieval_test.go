@@ -12,6 +12,7 @@ package SubscriberDataManagement_test
 import (
 	"context"
 	"fmt"
+	"github.com/antihax/optional"
 	Nudm_SDM_Client "gofree5gc/lib/Nudm_SubscriberDataManagement"
 	"gofree5gc/lib/http2_util"
 	"gofree5gc/lib/openapi/models"
@@ -52,15 +53,20 @@ func TestGetTraceData(t *testing.T) {
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.GET("/nudr-dr/v1/subscription-data/:ueId/:servingPlmnId/provisioned-data/trace-data", func(c *gin.Context) {
+		router.GET("/nudr-dr/v1/subscription-data/:ueId/provisioned-data/trace-data", func(c *gin.Context) { // :servingPlmnID
 			supi := c.Param("supi")
+			PlmnID := c.Param("plmn-id")
 			fmt.Println("==========GetTraceData - retrieve a UE's Trace Configuration Data==========")
 			fmt.Println("supi: ", supi)
+			fmt.Println("PlmnID: ", PlmnID)
 
 			var traceData models.TraceData
+			var traceDataResponse models.TraceDataResponse
 			traceData.TraceRef = "Test_00"
-			fmt.Println("traceData - ", traceData.TraceRef)
-			c.JSON(http.StatusNoContent, gin.H{})
+			traceDataResponse.SharedTraceDataId = "SharedTraceDataId"
+			traceDataResponse.TraceData = &traceData
+			fmt.Println("traceDataResponse - ", traceDataResponse.SharedTraceDataId)
+			c.JSON(http.StatusOK, traceData)
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("gofree5gc/udrsslkey.log")
@@ -80,7 +86,9 @@ func TestGetTraceData(t *testing.T) {
 	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
 
 	supi := "SDM1234"
-	_, resp, err := clientAPI.TraceConfigurationDataRetrievalApi.GetTraceData(context.TODO(), supi, nil)
+	var getTraceDataParamOpts Nudm_SDM_Client.GetTraceDataParamOpts
+	getTraceDataParamOpts.SupportedFeatures = optional.NewString("supportedFeatures")
+	_, resp, err := clientAPI.TraceConfigurationDataRetrievalApi.GetTraceData(context.TODO(), supi, &getTraceDataParamOpts)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {

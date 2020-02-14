@@ -12,6 +12,8 @@ package SubscriberDataManagement_test
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 	Nudm_SDM_Client "gofree5gc/lib/Nudm_SubscriberDataManagement"
 	"gofree5gc/lib/http2_util"
 	"gofree5gc/lib/openapi/models"
@@ -22,15 +24,13 @@ import (
 	"gofree5gc/src/udm/udm_handler"
 	"net/http"
 	"testing"
-
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 )
 
 // Subscribe - subscribe to notifications
 func TestSubscribe(t *testing.T) {
 
 	go func() { // udm server
+
 		router := gin.Default()
 		Nudm_SDM_Server.AddService(router)
 
@@ -44,14 +44,13 @@ func TestSubscribe(t *testing.T) {
 			assert.True(t, err == nil)
 		}
 	}()
-
 	udm_context.TestInit()
 	go udm_handler.Handle()
 
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.POST("/nudr-dr/v1/subscription-data/context-data/sdm-subscriptions/:subsId", func(c *gin.Context) {
+		router.POST("/nudr-dr/v1/subscription-data/:ueId/context-data/sdm-subscriptions", func(c *gin.Context) {
 			supi := c.Param("supi")
 			fmt.Println("==========Subscribe - subscribe to notifications==========")
 			fmt.Println("supi: ", supi)
@@ -62,8 +61,10 @@ func TestSubscribe(t *testing.T) {
 				c.JSON(http.StatusInternalServerError, gin.H{})
 				return
 			}
-			fmt.Println("sdmSubscription - ", sdmSubscription.NfInstanceId)
-			c.JSON(http.StatusCreated, gin.H{})
+			var sdmSubscriptionResponse models.SdmSubscription
+			sdmSubscriptionResponse.NfInstanceId = sdmSubscription.NfInstanceId
+			fmt.Println("sdmSubscription : ", sdmSubscriptionResponse.NfInstanceId)
+			c.JSON(http.StatusCreated, sdmSubscription)
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("gofree5gc/udrsslkey.log")
@@ -85,8 +86,8 @@ func TestSubscribe(t *testing.T) {
 	supi := "SDM1234"
 	var sdmSubscription models.SdmSubscription
 	sdmSubscription.NfInstanceId = "Test_NfinstanceId"
-
-	_, resp, err := clientAPI.SubscriptionCreationApi.Subscribe(context.TODO(), supi, sdmSubscription)
+	sdmSubscription.Dnn = "3"
+	_, resp, err := clientAPI.SubscriptionCreationApi.Subscribe(context.Background(), supi, sdmSubscription)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {

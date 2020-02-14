@@ -83,5 +83,4 @@ func TestUnsubscribe(t *testing.T) {
 	} else {
 		fmt.Println("resp: ", resp)
 	}
-
 }
