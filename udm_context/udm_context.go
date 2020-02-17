@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gofree5gc/lib/Nnrf_NFDiscovery"
 	"gofree5gc/lib/openapi/models"
+	"gofree5gc/src/udm/factory"
 	"strconv"
 	"strings"
 )
@@ -40,6 +41,7 @@ type UDMContext struct {
 	NrfUri            string
 	GpsiSupiList      models.IdentityData
 	SharedSubsDataMap map[string]models.SharedData // sharedDataIds as key
+	Keys              *factory.Keys
 }
 
 type UdmUeContext struct {
@@ -74,6 +76,22 @@ type UdmNFContext struct {
 	SubscriptionID                   string
 	SubscribeToNotifChange           *models.SdmSubscription // SubscriptionID as key
 	SubscribeToNotifSharedDataChange *models.SdmSubscription // SubscriptionID as key
+}
+
+func GetUdmProfileAHNPublicKey() string {
+	return udmContext.Keys.UdmProfileAHNPublicKey
+}
+
+func GetUdmProfileAHNPrivateKey() string {
+	return udmContext.Keys.UdmProfileAHNPrivateKey
+}
+
+func GetUdmProfileBHNPublicKey() string {
+	return udmContext.Keys.UdmProfileBHNPublicKey
+}
+
+func GetUdmProfileBHNPrivateKey() string {
+	return udmContext.Keys.UdmProfileBHNPrivateKey
 }
 
 func ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string, dnnFromReq string) (mp map[string]models.SessionManagementSubscriptionData, ind string,
