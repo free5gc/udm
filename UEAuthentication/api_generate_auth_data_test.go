@@ -6,8 +6,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"gofree5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
 	"gofree5gc/lib/Nudm_UEAuthentication"
 	"gofree5gc/lib/http2_util"
@@ -17,11 +15,14 @@ import (
 	"gofree5gc/src/udm/udm_context"
 	"gofree5gc/src/udm/udm_handler"
 	"gofree5gc/src/udm/udm_util"
-	"golang.org/x/crypto/curve25519"
 	"math/big"
 	"net/http"
 	"strconv"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/curve25519"
 )
 
 func generateProfileAEphemeralKey() ([]byte, []byte) {
@@ -71,6 +72,9 @@ func generateTestData(sharedKey, pubEph, plaintext []byte, profileScheme int) []
 	fmt.Printf("scheme output: %x\n", output)
 	return output
 }
+
+const profileAScheme = 1
+const profileBScheme = 2
 
 func TestUeAuthenticationsPost(t *testing.T) {
 	go func() { // udm server
@@ -137,15 +141,17 @@ func TestUeAuthenticationsPost(t *testing.T) {
 	fmt.Printf("==========\n\n")
 	// Please modify HERE(profileScheme) to test different schemes!
 	// profile: 0=>NULL scheme, 1=>Profile A, 2=>Profile B
-	profileScheme := 2
+	profileScheme := 0
 	var testData []byte
 	var supiOrSuci string
 	// fill in the suci you want as plaintext here
 	// test data from TS33.501 Annex C.4
-	// plaintext, _ := hex.DecodeString("00012080f6")
-	plaintext, _ := hex.DecodeString("aabb8787")
-	suciTestPrefix := "0-123-45-0002-" + strconv.Itoa(profileScheme) + "-17-"
-	if profileScheme == 1 {
+	plaintext, _ := hex.DecodeString("00012080f6")
+	// plaintext, _ := hex.DecodeString("aabb8787")
+
+	// suci-0(SUPI type)-mcc-mnc-routingIndentifier-protectionScheme-homeNetworkPublicKeyIdentifier-schemeOutput
+	suciTestPrefix := "suci-0-274-012-0001-" + strconv.Itoa(profileScheme) + "-01-"
+	if profileScheme == profileAScheme {
 		privEphProfileA, pubEphProfileA := generateProfileAEphemeralKey()
 		pubHNProfileA, _ := hex.DecodeString(udm_context.UdmProfileAHNPublicKey)
 
@@ -159,8 +165,8 @@ func TestUeAuthenticationsPost(t *testing.T) {
 
 		testData = generateTestData(sharedKey, pubEphProfileA, plaintext, profileScheme)
 		supiOrSuci = suciTestPrefix + hex.EncodeToString(testData)
-	} else if profileScheme == 2 {
-		pubHNProfileBstr := "04" + udm_context.UdmProfileBHNPublicKeyX + udm_context.UdmProfileBHNPublicKeyY
+	} else if profileScheme == profileBScheme {
+		pubHNProfileBstr := udm_context.UdmProfileBHNPublicKey
 		privEphProfileB, pubEphProfileBx, pubEphProfileBy := generateProfileBEphemeralKey()
 		pubEphProfileBstr := "04" + hex.EncodeToString(pubEphProfileBx.Bytes()) + hex.EncodeToString(pubEphProfileBy.Bytes())
 

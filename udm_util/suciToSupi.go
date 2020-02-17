@@ -12,10 +12,11 @@ import (
 	"fmt"
 	"gofree5gc/src/udm/logger"
 	"gofree5gc/src/udm/udm_context"
-	"golang.org/x/crypto/curve25519"
 	"math"
 	"math/big"
 	"strings"
+
+	"golang.org/x/crypto/curve25519"
 )
 
 // profile A
@@ -242,27 +243,42 @@ func profileB(input string) (string, error) {
 	return hex.EncodeToString(decryptPlainText), nil
 }
 
+// suci-0(SUPI type)-mcc-mnc-routingIndentifier-protectionScheme-homeNetworkPublicKeyIdentifier-schemeOutput
+const supiTypePlace = 1
+const mccPlace = 2
+const mncPlace = 3
+const schemePlace = 5
+const imsiPrefix = "imsi-"
+const profileAScheme = "1"
+const profileBScheme = "2"
+
 func SuciToSupi(suci string) (string, error) {
 	suciPart := strings.Split(suci, "-")
-	// logger.UeauLog.Infof("suciPart %s\n", suciPart)
-	logger.UeauLog.Infof("scheme %s\n", suciPart[4])
-	scheme := suciPart[4]
-	mccMnc := suciPart[1] + suciPart[2]
-	if scheme == "1" { // Profile A
+	logger.UeauLog.Infof("suciPart %s\n", suciPart)
+	supiType := suciPart[supiTypePlace]
+	if supiType == "imsi" || supiType == "nai" {
+		logger.UeauLog.Infof("Got supi\n")
+		return suci, nil
+	}
+
+	logger.UeauLog.Infof("scheme %s\n", suciPart[schemePlace])
+	scheme := suciPart[schemePlace]
+	mccMnc := suciPart[mccPlace] + suciPart[mncPlace]
+	if scheme == profileAScheme {
 		profileAResult, err := profileA(suciPart[len(suciPart)-1])
 		if err != nil {
 			return "", err
 		} else {
-			return mccMnc + profileAResult, nil
+			return imsiPrefix + mccMnc + profileAResult, nil
 		}
-	} else if scheme == "2" { // Profile B
+	} else if scheme == profileBScheme {
 		profileBResult, err := profileB(suciPart[len(suciPart)-1])
 		if err != nil {
 			return "", err
 		} else {
-			return mccMnc + profileBResult, nil
+			return imsiPrefix + mccMnc + profileBResult, nil
 		}
 	} else { // NULL scheme
-		return mccMnc + suciPart[len(suciPart)-1], nil
+		return imsiPrefix + mccMnc + suciPart[len(suciPart)-1], nil
 	}
 }
