@@ -59,6 +59,16 @@ type UdmUeContext struct {
 	SubscribeToNotifSharedDataChange  *models.SdmSubscription
 	PduSessionID                      string
 	UdrUri                            string
+	CreatedEeSubscription             models.CreatedEeSubscription
+}
+
+// Functions related to EE services
+func CreateEeSusbContext(ueId string, body models.CreatedEeSubscription) {
+	udmUe := UDM_Self().UdmUePool[ueId]
+	if udmUe == nil {
+		udmUe = CreateUdmUe(ueId)
+	}
+	udmUe.CreatedEeSubscription = body
 }
 type UdmNFContext struct {
 	SubscriptionID                   string

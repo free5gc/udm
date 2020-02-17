@@ -10,13 +10,26 @@
 package EventExposure_test
 
 import (
+	"context"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	Nudm_EE_Client "gofree5gc/lib/Nudm_EventExposure"
+	"gofree5gc/lib/http2_util"
+	"gofree5gc/lib/openapi/models"
+	"gofree5gc/lib/path_util"
+	Nudm_EE_Server "gofree5gc/src/udm/EventExposure"
+	"gofree5gc/src/udm/logger"
+	"gofree5gc/src/udm/udm_context"
+	"gofree5gc/src/udm/udm_handler"
+	"net/http"
 	"testing"
 )
 
 // UpdateEeSubscription - Patch
 func TestUpdateEeSubscription(t *testing.T) {
 
-	/*udm_context.TestInit()
+	udm_context.TestInit()
 	go udm_handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
@@ -35,18 +48,18 @@ func TestUpdateEeSubscription(t *testing.T) {
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.PUT("/nudr-dr/v1/subscription-data/:ueId/context-data/ee-subscriptions/:subsId", func(c *gin.Context) {
+		router.PUT("/nudr-dr/v1/subscription-data/:ueId/context-data/ee-subscriptions", func(c *gin.Context) {
 			ueIdentity := c.Param("ueIdentity")
-			fmt.Println("==========CreateEeSubscription - Subscribe==========")
+			fmt.Println("==========Update EeSubscription - Modify ==========")
 			fmt.Println("ueIdentity: ", ueIdentity)
-			var patchItems []models.PatchItem
+			var patchItems models.PatchItem
 			if err := c.ShouldBindJSON(&patchItems); err != nil {
 				fmt.Println("fake udm server error: ", err.Error())
 				c.JSON(http.StatusInternalServerError, gin.H{})
 				return
 			}
 			fmt.Println("patchItems: ", patchItems)
-			c.JSON(http.StatusCreated, gin.H{})
+			c.JSON(http.StatusNoContent, gin.H{})
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("gofree5gc/udrsslkey.log")
@@ -69,11 +82,9 @@ func TestUpdateEeSubscription(t *testing.T) {
 	subscriptionId := "Test001"
 	ueIdentity := "SDM1234"
 	resp, err := clientAPI.UpdateEESubscriptionApi.UpdateEeSubscription(context.Background(), ueIdentity, subscriptionId, patchItem)
-
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("resp: ", resp)
 	}
-	// */
 }
