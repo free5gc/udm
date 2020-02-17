@@ -12,19 +12,21 @@ package SubscriberDataManagement_test
 import (
 	"context"
 	"fmt"
+	"github.com/antihax/optional"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 	Nudm_SDM_Client "gofree5gc/lib/Nudm_SubscriberDataManagement"
 	"gofree5gc/lib/http2_util"
+	"gofree5gc/lib/openapi/common"
 	"gofree5gc/lib/openapi/models"
 	"gofree5gc/lib/path_util"
 	Nudm_SDM_Server "gofree5gc/src/udm/SubscriberDataManagement"
 	"gofree5gc/src/udm/logger"
 	"gofree5gc/src/udm/udm_context"
 	"gofree5gc/src/udm/udm_handler"
+	"log"
 	"net/http"
 	"testing"
-
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 )
 
 // GetIdTranslationResult - retrieve a UE's SUPI
@@ -75,10 +77,20 @@ func TestGetIdTranslationResult(t *testing.T) {
 	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
 
 	gpsi := "SDM1234"
-	idTranslationResult, resp, err := clientAPI.GPSIToSUPITranslationApi.GetIdTranslationResult(context.Background(), gpsi, nil)
-
+	var getIdTranslationResultParamOpts Nudm_SDM_Client.GetIdTranslationResultParamOpts
+	getIdTranslationResultParamOpts.SupportedFeatures = optional.NewString("supportedFeatures")
+	idTranslationResult, resp, err := clientAPI.GPSIToSUPITranslationApi.GetIdTranslationResult(context.Background(), gpsi, &getIdTranslationResultParamOpts)
 	if err != nil {
-		fmt.Println(err.Error())
+		var problemDetails models.ProblemDetails
+		if resp == nil {
+			log.Panic(err)
+		} else if err.Error() != resp.Status {
+			log.Panic(err)
+		} else {
+			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			fmt.Println("problemDetails: ", problemDetails)
+		}
+		return
 	} else {
 		fmt.Println("resp: ", resp)
 		fmt.Println("idTranslationResult: ", idTranslationResult)
