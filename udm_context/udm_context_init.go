@@ -44,5 +44,8 @@ func InitUDMContext(context *UDMContext) {
 		context.NrfUri = fmt.Sprintf("%s://%s:%d", context.UriScheme, context.HttpIPv4Address, 29510)
 	}
 	servingNameList := configuration.ServiceNameList
+
+	context.Keys = configuration.Keys
+
 	context.InitNFService(servingNameList, config.Info.Version)
 }

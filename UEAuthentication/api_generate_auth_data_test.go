@@ -141,7 +141,7 @@ func TestUeAuthenticationsPost(t *testing.T) {
 	fmt.Printf("==========\n\n")
 	// Please modify HERE(profileScheme) to test different schemes!
 	// profile: 0=>NULL scheme, 1=>Profile A, 2=>Profile B
-	profileScheme := 0
+	profileScheme := 1
 	var testData []byte
 	var supiOrSuci string
 	// fill in the suci you want as plaintext here
@@ -153,7 +153,7 @@ func TestUeAuthenticationsPost(t *testing.T) {
 	suciTestPrefix := "suci-0-274-012-0001-" + strconv.Itoa(profileScheme) + "-01-"
 	if profileScheme == profileAScheme {
 		privEphProfileA, pubEphProfileA := generateProfileAEphemeralKey()
-		pubHNProfileA, _ := hex.DecodeString(udm_context.UdmProfileAHNPublicKey)
+		pubHNProfileA, _ := hex.DecodeString(udm_context.GetUdmProfileAHNPublicKey())
 
 		// test data from TS33.501 Annex C.4
 		// privEphProfileA, _ = hex.DecodeString("c80949f13ebe61af4ebdbd293ea4f942696b9e815d7e8f0096bbf6ed7de62256")
@@ -166,7 +166,7 @@ func TestUeAuthenticationsPost(t *testing.T) {
 		testData = generateTestData(sharedKey, pubEphProfileA, plaintext, profileScheme)
 		supiOrSuci = suciTestPrefix + hex.EncodeToString(testData)
 	} else if profileScheme == profileBScheme {
-		pubHNProfileBstr := udm_context.UdmProfileBHNPublicKey
+		pubHNProfileBstr := udm_context.GetUdmProfileBHNPublicKey()
 		privEphProfileB, pubEphProfileBx, pubEphProfileBy := generateProfileBEphemeralKey()
 		pubEphProfileBstr := "04" + hex.EncodeToString(pubEphProfileBx.Bytes()) + hex.EncodeToString(pubEphProfileBy.Bytes())
 

@@ -143,8 +143,8 @@ func profileA(input string) (string, error) {
 	// fmt.Printf("dePub: %x\ndeCiph: %x\ndeMac: %x\n", decryptPublicKey, decryptCipherText, decryptMac)
 
 	// test data from TS33.501 Annex C.4
-	// aHNPriv, _ := hex.DecodeString("c53c22208b61860b06c62e5406a7b330c2b577aa5558981510d128247d38bd1d")
-	aHNPriv, _ := hex.DecodeString(udm_context.UdmProfileAHNPrivateKey)
+	// aHNPriv, _ := hex.DecodeString("c53c2208b61860b06c62e5406a7b330c2b577aa5558981510d128247d38bd1d")
+	aHNPriv, _ := hex.DecodeString(udm_context.GetUdmProfileAHNPrivateKey())
 	decryptSharedKey, _ := curve25519.X25519(aHNPriv, []byte(decryptPublicKey))
 	// fmt.Printf("deShared: %x\n", decryptSharedKey)
 
@@ -200,7 +200,8 @@ func profileB(input string) (string, error) {
 
 	// test data from TS33.501 Annex C.4
 	// bHNPriv, _ := hex.DecodeString("F1AB1074477EBCC7F554EA1C5FC368B1616730155E0041AC447D6301975FECDA")
-	bHNPriv, _ := hex.DecodeString(udm_context.UdmProfileBHNPrivateKey)
+	bHNPriv, _ := hex.DecodeString(udm_context.GetUdmProfileBHNPrivateKey())
+
 	var xUncompressed, yUncompressed *big.Int
 	if uncompressed {
 		xUncompressed = new(big.Int).SetBytes(decryptPublicKey[1:(ProfileBPubKeyLen/2 + 1)])

@@ -12,4 +12,6 @@ type Configuration struct {
 	Nrfclient *Nrfclient `yaml:"nrfclient,omitempty"`
 
 	NrfUri string `yaml:"nrfUri,omitempty"`
+
+	Keys *Keys `yaml:"keys,omitempty"`
 }

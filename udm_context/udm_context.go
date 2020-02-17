@@ -5,20 +5,13 @@ import (
 	"fmt"
 	"gofree5gc/lib/Nnrf_NFDiscovery"
 	"gofree5gc/lib/openapi/models"
+	"gofree5gc/src/udm/factory"
 	"strconv"
 	"strings"
 )
 
 var udmContext UDMContext
 var udmUeContext UdmUeContext
-
-// From 33501-f60 Annex C.4.3
-const (
-	UdmProfileAHNPrivateKey = "c53c22208b61860b06c62e5406a7b330c2b577aa5558981510d128247d38bd1d"
-	UdmProfileAHNPublicKey  = "5a8d38864820197c3394b92613b20b91633cbd897119273bf8e4a6f4eec0a650"
-	UdmProfileBHNPrivateKey = "F1AB1074477EBCC7F554EA1C5FC368B1616730155E0041AC447D6301975FECDA"
-	UdmProfileBHNPublicKey  = "0472DA71976234CE833A6907425867B82E074D44EF907DFB4B3E21C1C2256EBCD15A7DED52FCBB097A4ED250E036C7B9C8C7004C4EEDC4F068CD7BF8D3F900E3B4"
-)
 
 const (
 	LocationUriAmf3GppAccessRegistration int = iota
@@ -45,6 +38,7 @@ type UDMContext struct {
 	NrfUri            string
 	GpsiSupiList      models.IdentityData
 	SharedSubsDataMap map[string]models.SharedData // sharedDataIds as key
+	Keys              *factory.Keys
 }
 
 type UdmUeContext struct {
@@ -57,6 +51,22 @@ type UdmUeContext struct {
 	SessionManagementSubsData         map[string]models.SessionManagementSubscriptionData
 	PduSessionID                      string
 	UdrUri                            string
+}
+
+func GetUdmProfileAHNPublicKey() string {
+	return udmContext.Keys.UdmProfileAHNPublicKey
+}
+
+func GetUdmProfileAHNPrivateKey() string {
+	return udmContext.Keys.UdmProfileAHNPrivateKey
+}
+
+func GetUdmProfileBHNPublicKey() string {
+	return udmContext.Keys.UdmProfileBHNPublicKey
+}
+
+func GetUdmProfileBHNPrivateKey() string {
+	return udmContext.Keys.UdmProfileBHNPrivateKey
 }
 
 func ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string, dnnFromReq string) (mp map[string]models.SessionManagementSubscriptionData, ind string,
