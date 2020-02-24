@@ -22,6 +22,7 @@ var SdmLog *logrus.Entry
 var PpLop *logrus.Entry
 var EeLog *logrus.Entry
 var UtilLog *logrus.Entry
+var CallbackLog *logrus.Entry
 
 func init() {
 	log = logrus.New()
@@ -58,6 +59,7 @@ func init() {
 	PpLop = log.WithFields(logrus.Fields{"UDM": "PP"})
 	EeLog = log.WithFields(logrus.Fields{"UDM": "EE"})
 	UtilLog = log.WithFields(logrus.Fields{"UDM": "Util"})
+	CallbackLog = log.WithFields(logrus.Fields{"UDM": "Callback"})
 }
 
 func SetLogLevel(level logrus.Level) {
