@@ -249,6 +249,8 @@ const supiTypePlace = 1
 const mccPlace = 2
 const mncPlace = 3
 const schemePlace = 5
+
+const typeIMSI = "0"
 const imsiPrefix = "imsi-"
 const profileAScheme = "1"
 const profileBScheme = "2"
@@ -256,30 +258,48 @@ const profileBScheme = "2"
 func SuciToSupi(suci string) (string, error) {
 	suciPart := strings.Split(suci, "-")
 	logger.UeauLog.Infof("suciPart %s\n", suciPart)
-	supiType := suciPart[supiTypePlace]
-	if supiType == "imsi" || supiType == "nai" {
+
+	suciPrefix := suciPart[0]
+	if suciPrefix == "imsi" || suciPrefix == "nai" {
 		logger.UeauLog.Infof("Got supi\n")
 		return suci, nil
+
+	} else if suciPrefix == "suci" {
+		if len(suciPart) < 6 {
+			logger.UeauLog.Errorf("Suci with wrong format\n")
+			return suci, fmt.Errorf("Suci with wrong format\n")
+		}
+
+	} else {
+		logger.UeauLog.Errorf("Unknown suciPrefix\n")
+		return suci, fmt.Errorf("Unknown suciPrefix\n")
 	}
 
 	logger.UeauLog.Infof("scheme %s\n", suciPart[schemePlace])
 	scheme := suciPart[schemePlace]
 	mccMnc := suciPart[mccPlace] + suciPart[mncPlace]
+
+	supiPrefix := imsiPrefix
+	if suciPrefix == "suci" && suciPart[supiTypePlace] == typeIMSI {
+		supiPrefix = imsiPrefix
+		logger.UeauLog.Infof("SUPI type is IMSI\n")
+	}
+
 	if scheme == profileAScheme {
 		profileAResult, err := profileA(suciPart[len(suciPart)-1])
 		if err != nil {
 			return "", err
 		} else {
-			return imsiPrefix + mccMnc + profileAResult, nil
+			return supiPrefix + mccMnc + profileAResult, nil
 		}
 	} else if scheme == profileBScheme {
 		profileBResult, err := profileB(suciPart[len(suciPart)-1])
 		if err != nil {
 			return "", err
 		} else {
-			return imsiPrefix + mccMnc + profileBResult, nil
+			return supiPrefix + mccMnc + profileBResult, nil
 		}
 	} else { // NULL scheme
-		return imsiPrefix + mccMnc + suciPart[len(suciPart)-1], nil
+		return supiPrefix + mccMnc + suciPart[len(suciPart)-1], nil
 	}
 }
