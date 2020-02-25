@@ -12,6 +12,7 @@ import (
 	"gofree5gc/src/udm/udm_consumer"
 	"gofree5gc/src/udm/udm_context"
 	"gofree5gc/src/udm/udm_handler/udm_message"
+	"gofree5gc/src/udm/udm_producer/udm_producer_callback"
 	"net/http"
 	"strconv"
 	"strings"
@@ -127,9 +128,14 @@ func HandleRegistrationAmf3gppAccess(respChan chan udm_message.HandlerResponseMe
 		return
 	}
 
-	// check when the operation is forbidden
 	if contextExisted {
 		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, nil)
+		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
+		deregistData := models.DeregistrationData{
+			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
+			AccessType:  models.AccessType__3_GPP_ACCESS,
+		}
+		go udm_producer_callback.SendOnDeregistrationNotification(ueID, udmUe.Amf3GppAccessRegistration.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
 	} else {
 		h := make(http.Header)
 		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
@@ -159,6 +165,12 @@ func HandleRegisterAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMes
 
 	if contextExisted {
 		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, nil)
+		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
+		deregistData := models.DeregistrationData{
+			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
+			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
+		}
+		go udm_producer_callback.SendOnDeregistrationNotification(ueID, udmUe.Amf3GppAccessRegistration.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
 	} else {
 		h := make(http.Header)
 		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
