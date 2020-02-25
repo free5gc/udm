@@ -17,7 +17,6 @@ import (
 	Nudm_SDM_Client "gofree5gc/lib/Nudm_SubscriberDataManagement"
 	"gofree5gc/lib/http2_util"
 	"gofree5gc/lib/path_util"
-	Nudm_SDM_Server "gofree5gc/src/udm/SubscriberDataManagement"
 	"gofree5gc/src/udm/logger"
 	"gofree5gc/src/udm/udm_context"
 	"gofree5gc/src/udm/udm_handler"
@@ -30,7 +29,13 @@ func TestUnsubscribeForSharedData(t *testing.T) {
 
 	go func() { // udm server
 		router := gin.Default()
-		Nudm_SDM_Server.AddService(router)
+
+		router.DELETE("/nudm-sdm/v1/shared-data-subscriptions/:subsId", func(c *gin.Context) {
+			subscriptionId := c.Param("subscriptionId")
+			fmt.Println("==========UnsubscribeForSharedData - unsubscribe from notifications for shared data==========")
+			fmt.Println("subscriptionId: ", subscriptionId)
+			c.JSON(http.StatusNoContent, gin.H{})
+		})
 
 		udmLogPath := path_util.Gofree5gcPath("gofree5gc/udmsslkey.log")
 		udmPemPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udm.pem")
@@ -45,27 +50,6 @@ func TestUnsubscribeForSharedData(t *testing.T) {
 
 	udm_context.TestInit()
 	go udm_handler.Handle()
-
-	go func() { // fake udr server
-		router := gin.Default()
-
-		router.DELETE("/nudr-dr/v1/subscription-data/:ueId/context-data/sdm-subscriptions/:subsId", func(c *gin.Context) {
-			subscriptionId := c.Param("subscriptionId")
-			fmt.Println("==========UnsubscribeForSharedData - unsubscribe from notifications for shared data==========")
-			fmt.Println("subscriptionId: ", subscriptionId)
-			c.JSON(http.StatusNoContent, gin.H{})
-		})
-
-		udrLogPath := path_util.Gofree5gcPath("gofree5gc/udrsslkey.log")
-		udrPemPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udr.pem")
-		udrKeyPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udr.key")
-
-		server, err := http2_util.NewServer(":29504", udrLogPath, router)
-		if err == nil && server != nil {
-			logger.InitLog.Infoln(server.ListenAndServeTLS(udrPemPath, udrKeyPath))
-			assert.True(t, err == nil)
-		}
-	}()
 
 	udm_context.Init()
 	cfg := Nudm_SDM_Client.NewConfiguration()
