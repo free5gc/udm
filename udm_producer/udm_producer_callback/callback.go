@@ -3,6 +3,7 @@ package udm_producer_callback
 import (
 	"context"
 	"gofree5gc/lib/Nudm_SubscriberDataManagement"
+	"gofree5gc/lib/Nudm_UEContextManagement"
 	"gofree5gc/lib/openapi/models"
 	"gofree5gc/src/udm/logger"
 	"gofree5gc/src/udm/udm_context"
@@ -24,6 +25,20 @@ func SendOnDataChangeNotification(ueId string, notifyItems []models.NotifyItem) 
 			} else if err.Error() != httpResponse.Status {
 				logger.HttpLog.Errorln(err.Error())
 			}
+		}
+	}
+}
+
+func SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string, deregistData models.DeregistrationData) {
+	configuration := Nudm_UEContextManagement.NewConfiguration()
+	clientAPI := Nudm_UEContextManagement.NewAPIClient(configuration)
+
+	httpResponse, err := clientAPI.DeregistrationNotificationCallbackApi.DeregistrationNotify(context.TODO(), onDeregistrationNotificationUrl, deregistData)
+	if err != nil {
+		if httpResponse == nil {
+			logger.HttpLog.Error(err.Error())
+		} else if err.Error() != httpResponse.Status {
+			logger.HttpLog.Errorln(err.Error())
 		}
 	}
 }
