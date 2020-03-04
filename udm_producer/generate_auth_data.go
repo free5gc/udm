@@ -14,7 +14,7 @@ import (
 	"gofree5gc/lib/openapi/models"
 	"gofree5gc/src/udm/logger"
 	"gofree5gc/src/udm/udm_handler/udm_message"
-	"gofree5gc/src/udm/udm_util"
+	"gofree5gc/lib/util_3gpp/suci"
 	"math/rand"
 	"net/http"
 	"time"
@@ -25,7 +25,7 @@ func HandleGenerateAuthData(respChan chan udm_message.HandlerResponseMessage, su
 	var problemDetails models.ProblemDetails
 	rand.Seed(time.Now().UnixNano())
 
-	supi, suciToSupiErr := udm_util.SuciToSupi(supiOrSuci)
+	supi, suciToSupiErr := suci.ToSupi(supiOrSuci)
 	if suciToSupiErr != nil {
 		logger.UeauLog.Errorln("suciToSupi error: ", suciToSupiErr.Error())
 		problemDetails.Cause = "AUTHENTICATION_REJECTED"
