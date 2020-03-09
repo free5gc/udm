@@ -18,7 +18,6 @@ import (
 	"gofree5gc/lib/http2_util"
 	"gofree5gc/lib/openapi/models"
 	"gofree5gc/lib/path_util"
-	Nudm_SDM_Server "gofree5gc/src/udm/SubscriberDataManagement"
 	"gofree5gc/src/udm/logger"
 	"gofree5gc/src/udm/udm_context"
 	"gofree5gc/src/udm/udm_handler"
@@ -31,7 +30,20 @@ func TestSubscribeToSharedData(t *testing.T) {
 
 	go func() { // udm server
 		router := gin.Default()
-		Nudm_SDM_Server.AddService(router)
+
+		router.POST("/nudm-sdm/v1/shared-data-subscriptions", func(c *gin.Context) {
+
+			fmt.Println("\n==========SubscribeToSharedData - subscribe to notifications for shared data==========")
+			var sharedDataSubscription models.SdmSubscription
+			if err := c.ShouldBindJSON(&sharedDataSubscription); err != nil {
+				fmt.Println("fake udm server error")
+				c.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
+			sharedDataSubscription.NfInstanceId = "NfintanceId_test"
+			fmt.Println("sharedDataSubscription - ", sharedDataSubscription.NfInstanceId)
+			c.JSON(http.StatusCreated, sharedDataSubscription)
+		})
 
 		udmLogPath := path_util.Gofree5gcPath("gofree5gc/udmsslkey.log")
 		udmPemPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udm.pem")
@@ -47,48 +59,18 @@ func TestSubscribeToSharedData(t *testing.T) {
 	udm_context.TestInit()
 	go udm_handler.Handle()
 
-	go func() { // fake udr server
-		router := gin.Default()
-
-		router.POST("/nudr-dr/v1/subscription-data/context-data/sdm-subscriptions", func(c *gin.Context) { // :ueId/
-
-			ueId := c.Param("ueId")
-			fmt.Println("==========SubscribeToSharedData - subscribe to notifications for shared data==========")
-			fmt.Println("ueId: ", ueId)
-
-			var sdmSubscription models.SdmSubscription
-			if err := c.ShouldBindJSON(&sdmSubscription); err != nil {
-				fmt.Println("fake udr server error")
-				c.JSON(http.StatusInternalServerError, gin.H{})
-				return
-			}
-			sdmSubscription.NfInstanceId = "NfintanceId_test"
-			fmt.Println("SdmSubscription - ", sdmSubscription.NfInstanceId)
-			c.JSON(http.StatusCreated, sdmSubscription)
-		})
-
-		udrLogPath := path_util.Gofree5gcPath("gofree5gc/udrsslkey.log")
-		udrPemPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udr.pem")
-		udrKeyPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udr.key")
-
-		server, err := http2_util.NewServer(":29504", udrLogPath, router)
-		if err == nil && server != nil {
-			logger.InitLog.Infoln(server.ListenAndServeTLS(udrPemPath, udrKeyPath))
-			assert.True(t, err == nil)
-		}
-	}()
-
 	udm_context.Init()
 	cfg := Nudm_SDM_Client.NewConfiguration()
 	cfg.SetBasePath("https://localhost:29503")
 	clientAPI := Nudm_SDM_Client.NewAPIClient(cfg)
-
-	var sdmSubscription models.SdmSubscription
-	sdmSubscription.NfInstanceId = "Test_NfinstanceId"
-	_, resp, err := clientAPI.SubscriptionCreationForSharedDataApi.SubscribeToSharedData(context.TODO(), sdmSubscription)
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println("resp: ", resp)
+	{
+		var sharedDataSubscription models.SdmSubscription
+		sharedDataSubscription.NfInstanceId = "Test_NfinstanceId"
+		_, resp, err := clientAPI.SubscriptionCreationForSharedDataApi.SubscribeToSharedData(context.TODO(), sharedDataSubscription)
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Println("resp: ", resp)
+		}
 	}
 }

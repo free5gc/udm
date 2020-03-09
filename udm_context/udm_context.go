@@ -62,6 +62,7 @@ type UdmUeContext struct {
 	PduSessionID                      string
 	UdrUri                            string
 	CreatedEeSubscription             models.CreatedEeSubscription
+	UdmSubsToNotify                   map[string]*models.SubscriptionDataSubscriptions
 }
 
 // Functions related to EE services
@@ -72,6 +73,7 @@ func CreateEeSusbContext(ueId string, body models.CreatedEeSubscription) {
 	}
 	udmUe.CreatedEeSubscription = body
 }
+
 type UdmNFContext struct {
 	SubscriptionID                   string
 	SubscribeToNotifChange           *models.SdmSubscription // SubscriptionID as key

@@ -154,6 +154,9 @@ func Handle() {
 				case udm_message.EventUpdate:
 					gpsi := msg.HTTPRequest.Params["gpsi"]
 					udm_producer.HandleUpdate(msg.ResponseChan, gpsi, msg.HTTPRequest.Body.(models.PpData))
+				case udm_message.EventDataChangeNotificationToNF:
+					supi := msg.HTTPRequest.Params["supi"]
+					udm_producer.HandleDataChangeNotificationToNF(msg.ResponseChan, supi, msg.HTTPRequest.Body.(models.DataChangeNotify))
 				default:
 					HandlerLog.Warnf("Event[%d] has not implemented", msg.Event)
 				}

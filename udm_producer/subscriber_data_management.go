@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/antihax/optional"
+	"gofree5gc/lib/Nudm_SubscriberDataManagement"
 	Nudr "gofree5gc/lib/Nudr_DataRepository"
 	"gofree5gc/lib/openapi/common"
 	"gofree5gc/lib/openapi/models"
+	"gofree5gc/src/udm/udm_consumer"
 	"gofree5gc/src/udm/udm_context"
 	"gofree5gc/src/udm/udm_handler/udm_message"
 	"net/http"
@@ -412,11 +414,11 @@ func HandleGetSmfSelectData(httpChannel chan udm_message.HandlerResponseMessage,
 
 func HandleSubscribeToSharedData(httpChannel chan udm_message.HandlerResponseMessage, sdmSubscription models.SdmSubscription) {
 	var body *models.SdmSubscription
-	subscriptionID := sdmSubscription.SubscriptionId
-	clientAPI := createUDMClientToUDR(subscriptionID, true)
-	udm_context.CreateSubstoNotifSharedData(subscriptionID, body)
+	cfg := Nudm_SubscriberDataManagement.NewConfiguration()
+	udmClientAPI := Nudm_SubscriberDataManagement.NewAPIClient(cfg)
+	udm_context.CreateSubstoNotifSharedData(sdmSubscription.SubscriptionId, body)
 
-	sdmSubscriptionResp, res, err := clientAPI.SDMSubscriptionsCollectionApi.CreateSdmSubscriptions(context.Background(), subscriptionID, sdmSubscription)
+	sdmSubscriptionResp, res, err := udmClientAPI.SubscriptionCreationForSharedDataApi.SubscribeToSharedData(context.Background(), sdmSubscription)
 	if err != nil {
 		var problemDetails models.ProblemDetails
 		if res == nil {
@@ -433,7 +435,7 @@ func HandleSubscribeToSharedData(httpChannel chan udm_message.HandlerResponseMes
 
 	if res.StatusCode == http.StatusCreated {
 		h := make(http.Header)
-		udmUe := udm_context.CreateUdmUe(subscriptionID)
+		udmUe := udm_context.CreateUdmUe(sdmSubscriptionResp.SubscriptionId)
 		udmUe.SubscribeToNotifSharedDataChange = &sdmSubscriptionResp
 		h.Set("Location", udmUe.GetLocationURI2(udm_context.LocationUriSharedDataSubscription, "supi"))
 		udm_message.SendHttpResponseMessage(httpChannel, h, http.StatusCreated, *udmUe.SubscribeToNotifSharedDataChange)
@@ -474,6 +476,10 @@ func HandleSubscribe(httpChannel chan udm_message.HandlerResponseMessage, supi s
 		h := make(http.Header)
 		udmUe := udm_context.CreateUdmUe(subscriptionID)
 		udmUe.SubscribeToNotifChange = &sdmSubscriptionResp
+
+		subsDataSubscription := models.SubscriptionDataSubscriptions{}
+		subsDataSubscription.OriginalCallbackReference = sdmSubscriptionResp.CallbackReference
+		go udm_consumer.SubscriptionToNotify(supi, subsDataSubscription)
 		h.Set("Location", udmUe.GetLocationURI2(udm_context.LocationUriSdmSubscription, supi))
 		udm_message.SendHttpResponseMessage(httpChannel, h, http.StatusCreated, *udmUe.SubscribeToNotifChange)
 
@@ -492,8 +498,10 @@ func HandleSubscribe(httpChannel chan udm_message.HandlerResponseMessage, supi s
 
 func HandleUnsubscribeForSharedData(httpChannel chan udm_message.HandlerResponseMessage, subscriptionID string) {
 
-	clientAPI := createUDMClientToUDR("", true)
-	res, err := clientAPI.SDMSubscriptionDocumentApi.RemovesdmSubscriptions(context.Background(), "====", subscriptionID)
+	cfg := Nudm_SubscriberDataManagement.NewConfiguration()
+	udmClientAPI := Nudm_SubscriberDataManagement.NewAPIClient(cfg)
+
+	res, err := udmClientAPI.SubscriptionDeletionForSharedDataApi.UnsubscribeForSharedData(context.Background(), subscriptionID)
 	if err != nil {
 		var problemDetails models.ProblemDetails
 		if res == nil {
