@@ -8,7 +8,6 @@ import (
 	Nudr "gofree5gc/lib/Nudr_DataRepository"
 	"gofree5gc/lib/openapi/common"
 	"gofree5gc/lib/openapi/models"
-	"gofree5gc/src/udm/udm_consumer"
 	"gofree5gc/src/udm/udm_context"
 	"gofree5gc/src/udm/udm_handler/udm_message"
 	"net/http"
@@ -476,10 +475,6 @@ func HandleSubscribe(httpChannel chan udm_message.HandlerResponseMessage, supi s
 		h := make(http.Header)
 		udmUe := udm_context.CreateUdmUe(subscriptionID)
 		udmUe.SubscribeToNotifChange = &sdmSubscriptionResp
-
-		subsDataSubscription := models.SubscriptionDataSubscriptions{}
-		subsDataSubscription.OriginalCallbackReference = sdmSubscriptionResp.CallbackReference
-		go udm_consumer.SubscriptionToNotify(supi, subsDataSubscription)
 		h.Set("Location", udmUe.GetLocationURI2(udm_context.LocationUriSdmSubscription, supi))
 		udm_message.SendHttpResponseMessage(httpChannel, h, http.StatusCreated, *udmUe.SubscribeToNotifChange)
 
