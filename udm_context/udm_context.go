@@ -4,6 +4,7 @@ import (
 	// "fmt"
 	"fmt"
 	"gofree5gc/lib/Nnrf_NFDiscovery"
+	"gofree5gc/lib/openapi"
 	"gofree5gc/lib/openapi/models"
 	"gofree5gc/src/udm/factory"
 	"strconv"
@@ -100,23 +101,25 @@ func ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snss
 	Dnns []models.DnnConfiguration, allDnns []map[string]models.DnnConfiguration) {
 
 	smDataMap := make(map[string]models.SessionManagementSubscriptionData)
-	snssailist := make([]string, len(smDataMap))
-	AllDnnConfigsbyDnn := make([]models.DnnConfiguration, len(snssailist))    // to obtain all DNN configurations identified by "dnn" for all network slices where such DNN is available
+	sNssaiList := make([]string, len(smDatafromUDR))
+	AllDnnConfigsbyDnn := make([]models.DnnConfiguration, 1, len(sNssaiList)) // to obtain all DNN configurations identified by "dnn" for all network slices where such DNN is available
 	AllDnns := make([]map[string]models.DnnConfiguration, len(smDatafromUDR)) // to obtain all DNN configurations for all network slice(s)
 	var snssaikey string                                                      // Required snssai to obtain all DNN configurations
 
-	for i := 0; i < len(smDatafromUDR); i++ {
-		str := fmt.Sprintf("%v", smDatafromUDR[i].SingleNssai)
-		smDataMap[str] = smDatafromUDR[i] // Map each Session management Subscrription Data with its SingleNssai
-		snssailist = append(snssailist, str)
-		AllDnns[i] = smDatafromUDR[i].DnnConfigurations
-		if strings.Contains(str, snssaiFromReq) {
-			snssaikey = str
+	for idx, smSubscriptionData := range smDatafromUDR {
+		singleNssaiStr := openapi.MarshToJsonString(smSubscriptionData.SingleNssai)[0]
+		smDataMap[singleNssaiStr] = smSubscriptionData
+		sNssaiList = append(sNssaiList, singleNssaiStr)
+		AllDnns[idx] = smSubscriptionData.DnnConfigurations
+		if strings.Contains(singleNssaiStr, snssaiFromReq) {
+			snssaikey = singleNssaiStr
 		}
-		if _, ok := smDatafromUDR[i].DnnConfigurations[dnnFromReq]; ok {
-			AllDnnConfigsbyDnn[i] = smDatafromUDR[i].DnnConfigurations[dnnFromReq]
+
+		if _, ok := smSubscriptionData.DnnConfigurations[dnnFromReq]; ok {
+			AllDnnConfigsbyDnn = append(AllDnnConfigsbyDnn, smSubscriptionData.DnnConfigurations[dnnFromReq])
 		}
 	}
+
 	return smDataMap, snssaikey, AllDnnConfigsbyDnn, AllDnns
 }
 
