@@ -3,15 +3,17 @@ package udm_producer
 import (
 	"context"
 	"fmt"
-	"github.com/antihax/optional"
 	"gofree5gc/lib/Nudm_SubscriberDataManagement"
 	Nudr "gofree5gc/lib/Nudr_DataRepository"
 	"gofree5gc/lib/openapi/common"
 	"gofree5gc/lib/openapi/models"
+	"gofree5gc/src/udm/logger"
 	"gofree5gc/src/udm/udm_context"
 	"gofree5gc/src/udm/udm_handler/udm_message"
 	"net/http"
 	"strconv"
+
+	"github.com/antihax/optional"
 )
 
 func HandleGetAmData(httpChannel chan udm_message.HandlerResponseMessage, supi string, plmnID string, supportedFeatures string) {
@@ -293,10 +295,11 @@ func HandleGetSharedData(httpChannel chan udm_message.HandlerResponseMessage, sh
 }
 
 func HandleGetSmData(httpChannel chan udm_message.HandlerResponseMessage, supi string, plmnID string, Dnn string, Snssai string, supportedFeatures string) {
+	logger.Handlelog.Infof("HandleGetSmData SUPI[%s] PLMNID[%s] DNN[%s] SNssai[%s]", supi, plmnID, Dnn, Snssai)
 
 	clientAPI := createUDMClientToUDR(supi, false)
 	var querySmDataParamOpts Nudr.QuerySmDataParamOpts
-	querySmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
+	querySmDataParamOpts.SingleNssai = optional.NewInterface(Snssai)
 
 	sessionManagementSubscriptionDataResp, res, err := clientAPI.SessionManagementSubscriptionDataApi.QuerySmData(context.Background(),
 		supi, plmnID, &querySmDataParamOpts)
