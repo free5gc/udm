@@ -323,6 +323,11 @@ func HandleGetSmData(httpChannel chan udm_message.HandlerResponseMessage, supi s
 		var AllDnns []map[string]models.DnnConfiguration
 		udmUe.SessionManagementSubsData, snssaikey, AllDnnConfigsbyDnn, AllDnns = udm_context.ManageSmData(sessionManagementSubscriptionDataResp, Snssai, Dnn)
 
+		var rspSMSubDataList = make([]models.SessionManagementSubscriptionData, 0, 4)
+		for _, eachSMSubData := range udmUe.SessionManagementSubsData {
+			rspSMSubDataList = append(rspSMSubDataList, eachSMSubData)
+		}
+
 		switch {
 		case Snssai == "" && Dnn == "":
 			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, AllDnns)
@@ -331,7 +336,7 @@ func HandleGetSmData(httpChannel chan udm_message.HandlerResponseMessage, supi s
 		case Snssai == "" && Dnn != "":
 			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, AllDnnConfigsbyDnn)
 		case Snssai != "" && Dnn != "":
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, udmUe.SessionManagementSubsData[snssaikey].DnnConfigurations[Dnn])
+			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, rspSMSubDataList)
 		default:
 			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, udmUe.SessionManagementSubsData)
 		}
