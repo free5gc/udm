@@ -321,20 +321,18 @@ func GetAccessMobilitySubsDataForUe(Supi string) *models.AccessAndMobilitySubscr
 	return nil
 }
 
-func UdmAmf3gppRegContextNotExists(Supi string) bool {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.Amf3GppAccessRegistration == nil
+func UdmAmf3gppRegContextExists(Supi string) bool {
+	if udmUe := UDM_Self().UdmUePool[Supi]; udmUe != nil {
+		return udmUe.Amf3GppAccessRegistration != nil
 	}
-	return true
+	return false
 }
 
-func UdmAmfNon3gppRegContextNotExists(Supi string) bool {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.AmfNon3GppAccessRegistration == nil
+func UdmAmfNon3gppRegContextExists(Supi string) bool {
+	if udmUe := UDM_Self().UdmUePool[Supi]; udmUe != nil {
+		return udmUe.AmfNon3GppAccessRegistration != nil
 	}
-	return true
+	return false
 }
 
 func UdmSmfRegContextNotExists(Supi string) bool {
