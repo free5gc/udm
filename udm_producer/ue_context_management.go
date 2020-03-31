@@ -108,13 +108,15 @@ func HandleGetAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMessage,
 	udm_message.SendHttpResponseMessage(respChan, nil, http.StatusOK, amfNon3GppAccessRegistration)
 }
 
+// TS 29.503 5.3.2.2.2
 func HandleRegistrationAmf3gppAccess(respChan chan udm_message.HandlerResponseMessage, ueID string, body models.Amf3GppAccessRegistration) {
 	// TODO: EPS interworking with N26 is not supported yet in this stage
-	contextExisted := false
-	udm_context.CreateAmf3gppRegContext(ueID, body)
-	if !udm_context.UdmAmf3gppRegContextNotExists(ueID) {
-		contextExisted = true
+	var oldAmf3GppAccessRegContext *models.Amf3GppAccessRegistration
+	if udm_context.UdmAmf3gppRegContextExists(ueID) {
+		oldAmf3GppAccessRegContext = udm_context.UDM_Self().UdmUePool[ueID].Amf3GppAccessRegistration
 	}
+
+	udm_context.CreateAmf3gppRegContext(ueID, body)
 
 	clientAPI := createUDMClientToUDR(ueID, false)
 	var createAmfContext3gppParamOpts Nudr_DataRepository.CreateAmfContext3gppParamOpts
@@ -128,14 +130,15 @@ func HandleRegistrationAmf3gppAccess(respChan chan udm_message.HandlerResponseMe
 		return
 	}
 
-	if contextExisted {
+	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
+	// corresponding to the same (e.g. 3GPP) access, if one exists
+	if oldAmf3GppAccessRegContext != nil {
 		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, nil)
-		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
 		deregistData := models.DeregistrationData{
 			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
 			AccessType:  models.AccessType__3_GPP_ACCESS,
 		}
-		go udm_producer_callback.SendOnDeregistrationNotification(ueID, udmUe.Amf3GppAccessRegistration.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
+		go udm_producer_callback.SendOnDeregistrationNotification(ueID, oldAmf3GppAccessRegContext.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
 	} else {
 		h := make(http.Header)
 		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
@@ -144,12 +147,14 @@ func HandleRegistrationAmf3gppAccess(respChan chan udm_message.HandlerResponseMe
 	}
 }
 
+// TS 29.503 5.3.2.2.3
 func HandleRegisterAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMessage, ueID string, body models.AmfNon3GppAccessRegistration) {
-	contextExisted := false
-	udm_context.CreateAmfNon3gppRegContext(ueID, body)
-	if !udm_context.UdmAmfNon3gppRegContextNotExists(ueID) {
-		contextExisted = true
+	var oldAmfNon3GppAccessRegContext *models.AmfNon3GppAccessRegistration
+	if udm_context.UdmAmfNon3gppRegContextExists(ueID) {
+		oldAmfNon3GppAccessRegContext = udm_context.UDM_Self().UdmUePool[ueID].AmfNon3GppAccessRegistration
 	}
+
+	udm_context.CreateAmfNon3gppRegContext(ueID, body)
 
 	clientAPI := createUDMClientToUDR(ueID, false)
 	var createAmfContextNon3gppParamOpts Nudr_DataRepository.CreateAmfContextNon3gppParamOpts
@@ -163,14 +168,15 @@ func HandleRegisterAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMes
 		return
 	}
 
-	if contextExisted {
+	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
+	// corresponding to the same (e.g. 3GPP) access, if one exists
+	if oldAmfNon3GppAccessRegContext != nil {
 		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusNoContent, nil)
-		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
 		deregistData := models.DeregistrationData{
 			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
 			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
 		}
-		go udm_producer_callback.SendOnDeregistrationNotification(ueID, udmUe.Amf3GppAccessRegistration.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
+		go udm_producer_callback.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
 	} else {
 		h := make(http.Header)
 		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
