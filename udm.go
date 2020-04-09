@@ -9,6 +9,7 @@ import (
 	// m "gofree5gc/lib/openapi/models"
 	"gofree5gc/src/udm/logger"
 	"gofree5gc/src/udm/udm_service"
+	"gofree5gc/src/udm/version"
 	"os"
 )
 
