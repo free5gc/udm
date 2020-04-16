@@ -12,9 +12,9 @@ import (
 	"gofree5gc/lib/milenage"
 	"gofree5gc/lib/openapi/common"
 	"gofree5gc/lib/openapi/models"
+	"gofree5gc/lib/util_3gpp/suci"
 	"gofree5gc/src/udm/logger"
 	"gofree5gc/src/udm/udm_handler/udm_message"
-	"gofree5gc/lib/util_3gpp/suci"
 	"math/rand"
 	"net/http"
 	"time"
@@ -74,9 +74,14 @@ func HandleGenerateAuthData(respChan chan udm_message.HandlerResponseMessage, su
 	}
 
 	if authSubs.Opc != nil {
-		OPC_str = authSubs.Opc.OpcValue
-		OPC, _ = hex.DecodeString(OPC_str)
-		has_OPC = true
+		if OPC_str != "" {
+			OPC_str = authSubs.Opc.OpcValue
+			OPC, _ = hex.DecodeString(OPC_str)
+			has_OPC = true
+		} else {
+			logger.UeauLog.Infoln("Nil Opc")
+		}
+
 	} else {
 		logger.UeauLog.Infoln("Nil Opc")
 	}
