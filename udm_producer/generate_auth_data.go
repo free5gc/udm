@@ -30,6 +30,7 @@ func HandleGenerateAuthData(respChan chan udm_message.HandlerResponseMessage, su
 		logger.UeauLog.Errorln("suciToSupi error: ", suciToSupiErr.Error())
 		problemDetails.Cause = "AUTHENTICATION_REJECTED"
 		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+		return
 	}
 	logger.UeauLog.Infof("supi conversion => %s\n", supi)
 
@@ -39,6 +40,7 @@ func HandleGenerateAuthData(respChan chan udm_message.HandlerResponseMessage, su
 		logger.UeauLog.Errorln("Return from UDR QueryAuthSubsData error")
 		problemDetails.Cause = "AUTHENTICATION_REJECTED"
 		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+		return
 	}
 
 	/*
@@ -53,31 +55,60 @@ func HandleGenerateAuthData(respChan chan udm_message.HandlerResponseMessage, su
 
 	if authSubs.PermanentKey != nil {
 		K_str = authSubs.PermanentKey.PermanentKeyValue
-		K, _ = hex.DecodeString(K_str)
-		has_K = true
+		if len(K_str) == 32 {
+			K, _ = hex.DecodeString(K_str)
+			has_K = true
+		} else {
+			logger.UeauLog.Errorln("K_str length is ", len(K_str))
+			problemDetails.Cause = "AUTHENTICATION_REJECTED"
+			udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+			return
+		}
 	} else {
 		logger.UeauLog.Errorln("Nil PermanentKey")
 		problemDetails.Cause = "AUTHENTICATION_REJECTED"
 		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+		return
 	}
 
 	if authSubs.Milenage != nil {
 		if authSubs.Milenage.Op != nil {
 			OP_str = authSubs.Milenage.Op.OpValue
-			OP, _ = hex.DecodeString(OP_str)
-			has_OP = true
+			if len(OP_str) == 32 {
+				OP, _ = hex.DecodeString(OP_str)
+				has_OP = true
+			} else {
+				logger.UeauLog.Errorln("OP_str length is ", len(OP_str))
+				problemDetails.Cause = "AUTHENTICATION_REJECTED"
+				udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+				return
+			}
 		} else {
 			logger.UeauLog.Infoln("Nil Op")
+			problemDetails.Cause = "AUTHENTICATION_REJECTED"
+			udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+			return
 		}
 	} else {
 		logger.UeauLog.Infoln("Nil Milenage")
+		problemDetails.Cause = "AUTHENTICATION_REJECTED"
+		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+		return
 	}
 
 	if authSubs.Opc != nil {
+		OPC_str = authSubs.Opc.OpcValue
 		if OPC_str != "" {
-			OPC_str = authSubs.Opc.OpcValue
-			OPC, _ = hex.DecodeString(OPC_str)
-			has_OPC = true
+			if len(OPC_str) == 32 {
+				OPC, _ = hex.DecodeString(OPC_str)
+				has_OPC = true
+			} else {
+				logger.UeauLog.Errorln("OPC_str length is ", len(OPC_str))
+				problemDetails.Cause = "AUTHENTICATION_REJECTED"
+				udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+				return
+			}
+
 		} else {
 			logger.UeauLog.Infoln("Nil Opc")
 		}
