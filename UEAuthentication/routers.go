@@ -11,7 +11,7 @@ package UEAuthentication
 
 import (
 	"github.com/sirupsen/logrus"
-	"gofree5gc/src/udm/logger"
+	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 

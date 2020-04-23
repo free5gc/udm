@@ -3,7 +3,7 @@ package Nudm_Callback
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"gofree5gc/src/udm/logger"
+	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 )

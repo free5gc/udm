@@ -3,9 +3,9 @@ package udm_consumer
 import (
 	"context"
 	"fmt"
-	"gofree5gc/lib/Nnrf_NFManagement"
-	"gofree5gc/lib/openapi/models"
-	"gofree5gc/src/udm/udm_context"
+	"free5gc/lib/Nnrf_NFManagement"
+	"free5gc/lib/openapi/models"
+	"free5gc/src/udm/udm_context"
 	"net/http"
 	"strings"
 	"time"

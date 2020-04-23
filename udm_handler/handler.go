@@ -2,10 +2,10 @@ package udm_handler
 
 import (
 	// "fmt"
-	"gofree5gc/lib/openapi/models"
-	"gofree5gc/src/udm/logger"
-	"gofree5gc/src/udm/udm_handler/udm_message"
-	"gofree5gc/src/udm/udm_producer"
+	"free5gc/lib/openapi/models"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_handler/udm_message"
+	"free5gc/src/udm/udm_producer"
 	"time"
 
 	"github.com/sirupsen/logrus"

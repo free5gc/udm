@@ -20,9 +20,9 @@ func TestUpdate(t *testing.T) {
 		router := gin.Default()
 		Nudm_PP_Server.AddService(router)
 
-		udmLogPath := path_util.Gofree5gcPath("gofree5gc/udmsslkey.log")
-		udmPemPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udm.pem")
-		udmKeyPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udm.key")
+		udmLogPath := path_util.Gofree5gcPath("free5gc/udmsslkey.log")
+		udmPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.pem")
+		udmKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.key")
 		server, err := http2_util.NewServer(":29503", udmLogPath, router)
 		if err == nil && server != nil {
 			logger.InitLog.Infoln(server.ListenAndServeTLS(udmPemPath, udmKeyPath))
@@ -47,9 +47,9 @@ func TestUpdate(t *testing.T) {
 			c.JSON(http.StatusCreated, gin.H{})
 		})
 
-		udrLogPath := path_util.Gofree5gcPath("gofree5gc/udrsslkey.log")
-		udrPemPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udr.pem")
-		udrKeyPath := path_util.Gofree5gcPath("gofree5gc/support/TLS/udr.key")
+		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
+		udrPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.pem")
+		udrKeyPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.key")
 
 		server, err := http2_util.NewServer(":29504", udrLogPath, router)
 		if err == nil && server != nil {

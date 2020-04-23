@@ -3,10 +3,10 @@ package udm_context
 import (
 	// "fmt"
 	"fmt"
-	"gofree5gc/lib/Nnrf_NFDiscovery"
-	"gofree5gc/lib/openapi"
-	"gofree5gc/lib/openapi/models"
-	"gofree5gc/src/udm/factory"
+	"free5gc/lib/Nnrf_NFDiscovery"
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/models"
+	"free5gc/src/udm/factory"
 	"strconv"
 	"strings"
 )

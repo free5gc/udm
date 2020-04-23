@@ -2,10 +2,10 @@ package udm_producer
 
 import (
 	"context"
-	"gofree5gc/lib/openapi/common"
-	"gofree5gc/lib/openapi/models"
-	m "gofree5gc/lib/openapi/models"
-	"gofree5gc/src/udm/udm_handler/udm_message"
+	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi/models"
+	m "free5gc/lib/openapi/models"
+	"free5gc/src/udm/udm_handler/udm_message"
 	"net/http"
 )
 

@@ -2,9 +2,9 @@ package udm_consumer_test
 
 import (
 	"fmt"
-	"gofree5gc/lib/MongoDBLibrary"
-	"gofree5gc/src/udm/udm_consumer"
-	"gofree5gc/src/udm/udm_context"
+	"free5gc/lib/MongoDBLibrary"
+	"free5gc/src/udm/udm_consumer"
+	"free5gc/src/udm/udm_context"
 	"testing"
 	"time"
 

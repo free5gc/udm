@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"gofree5gc/src/app"
-	// "gofree5gc/lib/milenage"
-	// m "gofree5gc/lib/openapi/models"
-	"gofree5gc/src/udm/logger"
-	"gofree5gc/src/udm/udm_service"
-	"gofree5gc/src/udm/version"
+	"free5gc/src/app"
+	// "free5gc/lib/milenage"
+	// m "free5gc/lib/openapi/models"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_service"
+	"free5gc/src/udm/version"
 	"os"
 )
 
