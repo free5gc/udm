@@ -147,6 +147,8 @@ func (udm *UDM) Start() {
 	server, err := http2_util.NewServer(addr, udmLogPath, router)
 	if err == nil && server != nil {
 		initLog.Infoln(server.ListenAndServeTLS(udmPemPath, udmKeyPath))
+	} else {
+		initLog.Fatalf("Initialize http2 server failed: %+v", err)
 	}
 }
 
