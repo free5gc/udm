@@ -12,11 +12,11 @@ package UEContextManagement
 import (
 	// "fmt"
 	"github.com/gin-gonic/gin"
-	"gofree5gc/lib/http_wrapper"
-	"gofree5gc/lib/openapi/models"
-	"gofree5gc/src/udm/logger"
-	"gofree5gc/src/udm/udm_handler"
-	"gofree5gc/src/udm/udm_handler/udm_message"
+	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi/models"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/udm_handler"
+	"free5gc/src/udm/udm_handler/udm_message"
 	"net/http"
 )
 

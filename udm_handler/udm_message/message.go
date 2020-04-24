@@ -1,8 +1,8 @@
 package udm_message
 
 import (
-	"gofree5gc/lib/http_wrapper"
-	"gofree5gc/lib/openapi/models"
+	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi/models"
 	"net/http"
 )
 

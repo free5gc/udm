@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/antihax/optional"
-	"gofree5gc/lib/Nudr_DataRepository"
-	"gofree5gc/lib/openapi/common"
-	"gofree5gc/lib/openapi/models"
-	"gofree5gc/src/udm/udm_context"
-	"gofree5gc/src/udm/udm_handler/udm_message"
+	"free5gc/lib/Nudr_DataRepository"
+	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi/models"
+	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/udm_handler/udm_message"
 	"net/http"
 )
 

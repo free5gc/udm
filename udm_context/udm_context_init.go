@@ -2,16 +2,16 @@ package udm_context
 
 import (
 	"fmt"
-	"gofree5gc/lib/openapi/models"
-	"gofree5gc/lib/path_util"
-	"gofree5gc/src/udm/factory"
-	"gofree5gc/src/udm/logger"
+	"free5gc/lib/openapi/models"
+	"free5gc/lib/path_util"
+	"free5gc/src/udm/factory"
+	"free5gc/src/udm/logger"
 
 	"github.com/google/uuid"
 )
 
 func TestInit() {
-	DefaultUDMConfigPath := path_util.Gofree5gcPath("gofree5gc/config/udmcfg.conf")
+	DefaultUDMConfigPath := path_util.Gofree5gcPath("free5gc/config/udmcfg.conf")
 	factory.InitConfigFactory(DefaultUDMConfigPath)
 	Init()
 }
