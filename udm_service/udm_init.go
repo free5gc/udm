@@ -64,7 +64,7 @@ func (*UDM) Initialize(c *cli.Context) {
 	}
 
 	if config.udmcfg != "" {
-		factory.InitConfigFactory(path_util.Gofree5gcPath(config.udmcfg))
+		factory.InitConfigFactory(config.udmcfg)
 	} else {
 		DefaultUdmConfigPath := path_util.Gofree5gcPath("free5gc/config/udmcfg.conf")
 		factory.InitConfigFactory(DefaultUdmConfigPath)
