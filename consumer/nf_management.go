@@ -1,4 +1,4 @@
-package udm_consumer
+package consumer
 
 import (
 	"context"

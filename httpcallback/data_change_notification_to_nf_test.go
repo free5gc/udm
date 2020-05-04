@@ -7,8 +7,8 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	nrf_service "free5gc/src/nrf/service"
+	"free5gc/src/udm/consumer"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_consumer"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udr/udr_service"
 	"github.com/davecgh/go-spew/spew"
@@ -81,7 +81,7 @@ func TestOnDataChangeNotifification(t *testing.T) {
 	date = date.Add(duration)
 	dateFormat, _ := time.Parse(time.RFC3339, date.Format(time.RFC3339))
 
-	clientAPI := udm_consumer.UDMClientToUDR(ueId, false)
+	clientAPI := consumer.UDMClientToUDR(ueId, false)
 
 	var subscriptionDataSubscriptions = models.SubscriptionDataSubscriptions{
 		CallbackReference: "https://127.0.0.1:9999/DataChangeNotify",

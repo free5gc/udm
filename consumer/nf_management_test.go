@@ -1,9 +1,9 @@
-package udm_consumer_test
+package consumer_test
 
 import (
 	"fmt"
 	"free5gc/lib/MongoDBLibrary"
-	"free5gc/src/udm/udm_consumer"
+	"free5gc/src/udm/consumer"
 	"free5gc/src/udm/udm_context"
 	"testing"
 	"time"
@@ -21,12 +21,12 @@ func TestRegisterNFInstance(t *testing.T) {
 
 	udm_context.TestInit()
 	self := udm_context.UDM_Self()
-	NfProfile, err := udm_consumer.BuildNFInstance(self)
+	NfProfile, err := consumer.BuildNFInstance(self)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	uri, _, err1 := udm_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, NfProfile)
+	uri, _, err1 := consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, NfProfile)
 	if err1 != nil {
 		t.Error(err1.Error())
 	} else {

@@ -1,4 +1,4 @@
-package udm_consumer_test
+package consumer_test
 
 import (
 	"flag"
@@ -7,7 +7,7 @@ import (
 	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/openapi/models"
 	nrf_service "free5gc/src/nrf/service"
-	"free5gc/src/udm/udm_consumer"
+	"free5gc/src/udm/consumer"
 	"free5gc/src/udm/udm_context"
 	"reflect"
 	"testing"
@@ -37,12 +37,12 @@ func TestSendSearchNFInstances(t *testing.T) {
 
 	udm_context.TestInit()
 	self := udm_context.UDM_Self()
-	nfprofile, err := udm_consumer.BuildNFInstance(self)
+	nfprofile, err := consumer.BuildNFInstance(self)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	uri, _, err1 := udm_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, nfprofile)
+	uri, _, err1 := consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, nfprofile)
 	if err1 != nil {
 		t.Error(err1.Error())
 	} else {
@@ -53,7 +53,7 @@ func TestSendSearchNFInstances(t *testing.T) {
 		ServiceNames: optional.NewInterface([]models.ServiceName{models.ServiceName_NUDM_SDM}),
 	}
 
-	result, err2 := udm_consumer.SendNFIntances(self.NrfUri, models.NfType_UDM, models.NfType_UDM, param)
+	result, err2 := consumer.SendNFIntances(self.NrfUri, models.NfType_UDM, models.NfType_UDM, param)
 	if err2 != nil {
 		t.Error(err2.Error())
 	} else if len(result.NfInstances) > 0 && !reflect.DeepEqual(nfprofile, result.NfInstances[0]) {
@@ -74,12 +74,12 @@ func TestSendSearchNFInstancesUDR(t *testing.T) {
 
 	udm_context.TestInit()
 	self := udm_context.UDM_Self()
-	nfprofile, err := udm_consumer.BuildNFInstance(self)
+	nfprofile, err := consumer.BuildNFInstance(self)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	uri, _, err1 := udm_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, nfprofile)
+	uri, _, err1 := consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, nfprofile)
 	if err1 != nil {
 		t.Error(err1.Error())
 	} else {
@@ -87,6 +87,6 @@ func TestSendSearchNFInstancesUDR(t *testing.T) {
 	}
 
 	udmUeContext := udm_context.UdmUe_self()
-	result := udm_consumer.SendNFIntancesUDR(udmUeContext.Supi, udm_consumer.NFDiscoveryToUDRParamSupi)
+	result := consumer.SendNFIntancesUDR(udmUeContext.Supi, consumer.NFDiscoveryToUDRParamSupi)
 	fmt.Println("result: ", result)
 }

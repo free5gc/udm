@@ -7,9 +7,9 @@ import (
 	Nudr "free5gc/lib/Nudr_DataRepository"
 	"free5gc/lib/openapi/common"
 	"free5gc/lib/openapi/models"
+	"free5gc/src/udm/consumer"
 	"free5gc/src/udm/factory"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_consumer"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler/udm_message"
 	"free5gc/src/udm/udm_producer/udm_producer_callback"
@@ -46,34 +46,34 @@ func getUdrUri(id string) string {
 		udmUe := udm_context.UDM_Self().UdmUePool[id]
 		if udmUe != nil {
 			if udmUe.UdrUri == "" {
-				udmUe.UdrUri = udm_consumer.SendNFIntancesUDR(id, udm_consumer.NFDiscoveryToUDRParamSupi)
+				udmUe.UdrUri = consumer.SendNFIntancesUDR(id, consumer.NFDiscoveryToUDRParamSupi)
 			}
 			return udmUe.UdrUri
 		} else {
 			udmUe = udm_context.CreateUdmUe(id)
-			udmUe.UdrUri = udm_consumer.SendNFIntancesUDR(id, udm_consumer.NFDiscoveryToUDRParamSupi)
+			udmUe.UdrUri = consumer.SendNFIntancesUDR(id, consumer.NFDiscoveryToUDRParamSupi)
 			return udmUe.UdrUri
 		}
 	} else if strings.Contains(id, "pei") {
 		for _, udmUe := range udm_context.UDM_Self().UdmUePool {
 			if udmUe.Amf3GppAccessRegistration != nil && udmUe.Amf3GppAccessRegistration.Pei == id {
 				if udmUe.UdrUri != "" {
-					udmUe.UdrUri = udm_consumer.SendNFIntancesUDR(udmUe.Supi, udm_consumer.NFDiscoveryToUDRParamSupi)
+					udmUe.UdrUri = consumer.SendNFIntancesUDR(udmUe.Supi, consumer.NFDiscoveryToUDRParamSupi)
 				}
 				return udmUe.UdrUri
 			} else if udmUe.AmfNon3GppAccessRegistration != nil && udmUe.AmfNon3GppAccessRegistration.Pei == id {
 				if udmUe.UdrUri != "" {
-					udmUe.UdrUri = udm_consumer.SendNFIntancesUDR(udmUe.Supi, udm_consumer.NFDiscoveryToUDRParamSupi)
+					udmUe.UdrUri = consumer.SendNFIntancesUDR(udmUe.Supi, consumer.NFDiscoveryToUDRParamSupi)
 				}
 				return udmUe.UdrUri
 			}
 		}
 	} else if strings.Contains(id, "extgroupid") {
 		// extra group id
-		return udm_consumer.SendNFIntancesUDR(id, udm_consumer.NFDiscoveryToUDRParamExtGroupId)
+		return consumer.SendNFIntancesUDR(id, consumer.NFDiscoveryToUDRParamExtGroupId)
 	} else if strings.Contains(id, "msisdn") || strings.Contains(id, "extid") {
 		// gpsi
-		return udm_consumer.SendNFIntancesUDR(id, udm_consumer.NFDiscoveryToUDRParamGpsi)
+		return consumer.SendNFIntancesUDR(id, consumer.NFDiscoveryToUDRParamGpsi)
 	}
 	return ""
 }

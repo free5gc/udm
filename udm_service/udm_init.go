@@ -8,13 +8,13 @@ import (
 	"free5gc/src/app"
 	"free5gc/src/udm/UEAuthentication"
 	"free5gc/src/udm/UEContextManagement"
+	"free5gc/src/udm/consumer"
 	"free5gc/src/udm/eventexposure"
 	"free5gc/src/udm/factory"
 	"free5gc/src/udm/httpcallback"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/parameterprovision"
 	"free5gc/src/udm/subscriberdatamanagement"
-	"free5gc/src/udm/udm_consumer"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
 
@@ -131,13 +131,13 @@ func (udm *UDM) Start() {
 	udm_context.Init()
 	udm_context.UDM_Self().InitNFService(serviceName, config.Info.Version)
 
-	proflie, err := udm_consumer.BuildNFInstance(self)
+	proflie, err := consumer.BuildNFInstance(self)
 	if err != nil {
 		logger.InitLog.Errorln(err.Error())
 	} else {
 		var newNrfUri string
 		var err1 error
-		newNrfUri, self.NfId, err1 = udm_consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, proflie)
+		newNrfUri, self.NfId, err1 = consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, proflie)
 		if err1 != nil {
 			logger.InitLog.Errorln(err1.Error())
 		} else {
