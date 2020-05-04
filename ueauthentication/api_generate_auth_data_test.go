@@ -14,7 +14,7 @@ import (
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_util"
+	"free5gc/src/udm/util"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -43,29 +43,29 @@ func generateProfileBEphemeralKey() ([]byte, *big.Int, *big.Int) {
 func generateTestData(sharedKey, pubEph, plaintext []byte, profileScheme int) []byte {
 	var encKeyLen, macKeyLen, hashLen, icbLen, macLen int
 	if profileScheme == 1 {
-		encKeyLen = udm_util.ProfileAEncKeyLen
-		macKeyLen = udm_util.ProfileAMacKeyLen
-		hashLen = udm_util.ProfileAHashLen
-		icbLen = udm_util.ProfileAIcbLen
-		macLen = udm_util.ProfileAMacLen
+		encKeyLen = util.ProfileAEncKeyLen
+		macKeyLen = util.ProfileAMacKeyLen
+		hashLen = util.ProfileAHashLen
+		icbLen = util.ProfileAIcbLen
+		macLen = util.ProfileAMacLen
 	} else if profileScheme == 2 {
-		encKeyLen = udm_util.ProfileBEncKeyLen
-		macKeyLen = udm_util.ProfileBMacKeyLen
-		hashLen = udm_util.ProfileBHashLen
-		icbLen = udm_util.ProfileBIcbLen
-		macLen = udm_util.ProfileBMacLen
+		encKeyLen = util.ProfileBEncKeyLen
+		macKeyLen = util.ProfileBMacKeyLen
+		hashLen = util.ProfileBHashLen
+		icbLen = util.ProfileBIcbLen
+		macLen = util.ProfileBMacLen
 	} else {
 		return plaintext
 	}
 
-	kdfKey := udm_util.AnsiX963KDF(sharedKey, pubEph, encKeyLen, macKeyLen, hashLen)
+	kdfKey := util.AnsiX963KDF(sharedKey, pubEph, encKeyLen, macKeyLen, hashLen)
 	encKey := kdfKey[:encKeyLen]
 	icb := kdfKey[encKeyLen : encKeyLen+icbLen]
 	macKey := kdfKey[len(kdfKey)-macKeyLen:]
 	// fmt.Printf("kdfKey: %x\nencKey: %x\nmacKey: %x\nicb: %x\n", kdfKey, encKey, macKey, icb)
 
-	ciphertext := udm_util.Aes128ctr(plaintext, encKey, icb)
-	macTag := udm_util.HmacSha256(ciphertext, macKey, macLen)
+	ciphertext := util.Aes128ctr(plaintext, encKey, icb)
+	macTag := util.HmacSha256(ciphertext, macKey, macLen)
 	// fmt.Printf("plain: %x\ncipher: %x\nmacTag: %x\n", plaintext, ciphertext, macTag)
 
 	output := append(append(pubEph, ciphertext...), macTag...)
@@ -91,7 +91,7 @@ func TestUeAuthenticationsPost(t *testing.T) {
 			assert.True(t, err == nil)
 		}
 	}()
-	// udm_util.testInitUdmConfig()
+	// util.testInitUdmConfig()
 	udm_context.TestInit()
 	go udm_handler.Handle()
 
@@ -182,7 +182,7 @@ func TestUeAuthenticationsPost(t *testing.T) {
 
 		pubHNProfileB, _ := hex.DecodeString(pubHNProfileBstr)
 		pubEphProfileBuncom, _ := hex.DecodeString(pubEphProfileBstr)
-		pubEphProfileB := udm_util.CompressKey(pubEphProfileBuncom, pubEphProfileBy)
+		pubEphProfileB := util.CompressKey(pubEphProfileBuncom, pubEphProfileBy)
 		// fmt.Printf("pubEphB: %x\npubHNB: %x\n", pubEphProfileB, pubHNProfileB)
 
 		pubHNProfileBx := pubHNProfileB[1:33]

@@ -1,4 +1,4 @@
-package udm_util
+package util
 
 import (
 	"fmt"

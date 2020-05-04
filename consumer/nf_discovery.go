@@ -9,7 +9,7 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_context"
-	"free5gc/src/udm/udm_util"
+	"free5gc/src/udm/util"
 	"net/http"
 )
 
@@ -63,7 +63,7 @@ func SendNFIntancesUDR(id string, types int) string {
 		return ""
 	}
 	for _, profile := range result.NfInstances {
-		return udm_util.SearchNFServiceUri(profile, models.ServiceName_NUDR_DR, models.NfServiceStatus_REGISTERED)
+		return util.SearchNFServiceUri(profile, models.ServiceName_NUDR_DR, models.NfServiceStatus_REGISTERED)
 	}
 	return ""
 }

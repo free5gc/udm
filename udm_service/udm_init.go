@@ -127,7 +127,7 @@ func (udm *UDM) Start() {
 	addr := fmt.Sprintf("%s:%d", sbi.IPv4Addr, sbi.Port)
 
 	self := udm_context.UDM_Self()
-	// udm_util.InitUDMContext(self)
+	// util.InitUDMContext(self)
 	udm_context.Init()
 	udm_context.UDM_Self().InitNFService(serviceName, config.Info.Version)
 

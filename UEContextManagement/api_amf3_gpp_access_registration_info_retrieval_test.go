@@ -35,7 +35,7 @@ func TestGetAmf3gppAccess(t *testing.T) {
 			assert.True(t, err == nil)
 		}
 	}()
-	// udm_util.testInitUdmConfig()
+	// util.testInitUdmConfig()
 	udm_context.TestInit()
 	go udm_handler.Handle()
 
