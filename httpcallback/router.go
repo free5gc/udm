@@ -1,9 +1,9 @@
-package Nudm_Callback
+package httpcallback
 
 import (
+	"free5gc/src/udm/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 )

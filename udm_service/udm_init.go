@@ -11,6 +11,7 @@ import (
 	"free5gc/src/udm/UEContextManagement"
 	"free5gc/src/udm/eventexposure"
 	"free5gc/src/udm/factory"
+	"free5gc/src/udm/httpcallback"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/parameterprovision"
 	"free5gc/src/udm/udm_consumer"
@@ -109,6 +110,7 @@ func (udm *UDM) Start() {
 	router := gin.Default()
 
 	eventexposure.AddService(router)
+	httpcallback.AddService(router)
 	parameterprovision.AddService(router)
 	SubscriberDataManagement.AddService(router)
 	UEAuthentication.AddService(router)

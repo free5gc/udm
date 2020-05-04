@@ -1,12 +1,12 @@
-package Nudm_Callback
+package httpcallback
 
 import (
-	"github.com/gin-gonic/gin"
 	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_handler"
 	"free5gc/src/udm/udm_handler/udm_message"
+	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
