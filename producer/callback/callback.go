@@ -1,4 +1,4 @@
-package udm_producer_callback
+package callback
 
 import (
 	"context"

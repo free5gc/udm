@@ -10,7 +10,7 @@ import (
 	"free5gc/src/udm/consumer"
 	"free5gc/src/udm/factory"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/producer/udm_producer_callback"
+	"free5gc/src/udm/producer/callback"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler/udm_message"
 	"net/http"
@@ -138,7 +138,7 @@ func HandleRegistrationAmf3gppAccess(respChan chan udm_message.HandlerResponseMe
 			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
 			AccessType:  models.AccessType__3_GPP_ACCESS,
 		}
-		go udm_producer_callback.SendOnDeregistrationNotification(ueID, oldAmf3GppAccessRegContext.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
+		go callback.SendOnDeregistrationNotification(ueID, oldAmf3GppAccessRegContext.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
 	} else {
 		h := make(http.Header)
 		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
@@ -176,7 +176,7 @@ func HandleRegisterAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMes
 			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
 			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
 		}
-		go udm_producer_callback.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
+		go callback.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri, deregistData) // Deregistration Notify Triggered
 	} else {
 		h := make(http.Header)
 		udmUe := udm_context.UDM_Self().UdmUePool[ueID]
