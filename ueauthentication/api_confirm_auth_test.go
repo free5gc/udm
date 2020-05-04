@@ -1,4 +1,4 @@
-package UEAuthentication_test
+package ueauthentication_test
 
 import (
 	"context"
@@ -7,10 +7,10 @@ import (
 	"free5gc/lib/http2_util"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
-	Nudm_UEAU_Server "free5gc/src/udm/UEAuthentication"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
+	Nudm_UEAU_Server "free5gc/src/udm/ueauthentication"
 	"net/http"
 	"testing"
 	"time"

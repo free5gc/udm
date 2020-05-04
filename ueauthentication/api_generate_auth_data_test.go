@@ -1,4 +1,4 @@
-package UEAuthentication
+package ueauthentication_test
 
 import (
 	"context"

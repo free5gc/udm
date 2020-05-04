@@ -6,7 +6,6 @@ import (
 	"free5gc/lib/http2_util"
 	"free5gc/lib/path_util"
 	"free5gc/src/app"
-	"free5gc/src/udm/UEAuthentication"
 	"free5gc/src/udm/UEContextManagement"
 	"free5gc/src/udm/consumer"
 	"free5gc/src/udm/eventexposure"
@@ -17,6 +16,7 @@ import (
 	"free5gc/src/udm/subscriberdatamanagement"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
+	"free5gc/src/udm/ueauthentication"
 
 	"os/exec"
 	"sync"
@@ -113,7 +113,7 @@ func (udm *UDM) Start() {
 	httpcallback.AddService(router)
 	parameterprovision.AddService(router)
 	subscriberdatamanagement.AddService(router)
-	UEAuthentication.AddService(router)
+	ueauthentication.AddService(router)
 	UEContextManagement.AddService(router)
 
 	udmLogPath := path_util.Gofree5gcPath("free5gc/udmsslkey.log")
