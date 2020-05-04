@@ -2,18 +2,16 @@ package main
 
 import (
 	"fmt"
+	"free5gc/src/app"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/service"
+	"free5gc/src/udm/version"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"free5gc/src/app"
-	// "free5gc/lib/milenage"
-	// m "free5gc/lib/openapi/models"
-	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_service"
-	"free5gc/src/udm/version"
 	"os"
 )
 
-var UDM = &udm_service.UDM{}
+var UDM = &service.UDM{}
 
 var appLog *logrus.Entry
 

@@ -1,4 +1,4 @@
-package udm_service
+package service
 
 import (
 	"bufio"
