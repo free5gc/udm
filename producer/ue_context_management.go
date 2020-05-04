@@ -1,4 +1,4 @@
-package udm_producer
+package producer
 
 import (
 	"context"
@@ -10,9 +10,9 @@ import (
 	"free5gc/src/udm/consumer"
 	"free5gc/src/udm/factory"
 	"free5gc/src/udm/logger"
+	"free5gc/src/udm/producer/udm_producer_callback"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler/udm_message"
-	"free5gc/src/udm/udm_producer/udm_producer_callback"
 	"net/http"
 	"strconv"
 	"strings"

@@ -1,4 +1,4 @@
-package udm_producer
+package producer
 
 import (
 	"context"
