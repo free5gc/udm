@@ -3,14 +3,10 @@ package Nudm_Callback_test
 import (
 	"context"
 	"flag"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli"
 	"free5gc/lib/http2_util"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
-	"free5gc/src/nrf/nrf_service"
+	nrf_service "free5gc/src/nrf/service"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_consumer"
 	"free5gc/src/udm/udm_context"
@@ -19,6 +15,11 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli"
 )
 
 func nrfInit() {

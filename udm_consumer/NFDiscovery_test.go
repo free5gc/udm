@@ -6,7 +6,7 @@ import (
 	"free5gc/lib/MongoDBLibrary"
 	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/openapi/models"
-	"free5gc/src/nrf/nrf_service"
+	nrf_service "free5gc/src/nrf/service"
 	"free5gc/src/udm/udm_consumer"
 	"free5gc/src/udm/udm_context"
 	"reflect"
