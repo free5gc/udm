@@ -1,4 +1,4 @@
-package UEContextManagement_test
+package uecontextmanagement_test
 
 import (
 	"context"
@@ -7,19 +7,20 @@ import (
 	"free5gc/lib/http2_util"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
-	Nudm_UECM_Server "free5gc/src/udm/UEContextManagement"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
+	Nudm_UECM_Server "free5gc/src/udm/uecontextmanagement"
 	"net/http"
 	"testing"
 
+	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
 // GetAmf3gppAccess - retrieve the AMF registration for 3GPP access information
-func TestRegistrationAmf3gppAccess(t *testing.T) {
+func TestGetAmf3gppAccess(t *testing.T) {
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_UECM_Server.AddService(router)
@@ -34,26 +35,23 @@ func TestRegistrationAmf3gppAccess(t *testing.T) {
 			assert.True(t, err == nil)
 		}
 	}()
-
+	// util.testInitUdmConfig()
 	udm_context.TestInit()
 	go udm_handler.Handle()
 
 	go func() { // fake udr server
 		router := gin.Default()
 
-		router.PUT("/nudr-dr/v1/subscription-data/:ueId/context-data/amf-3gpp-access", func(c *gin.Context) {
+		router.GET("/nudr-dr/v1/subscription-data/:ueId/context-data/amf-3gpp-access", func(c *gin.Context) {
 			ueId := c.Param("ueId")
-			fmt.Println("==========AMF registration for 3GPP access==========")
+			supportedFeatures := c.Query("supported-features")
+			fmt.Println("==========AMF 3Gpp-access Registration Info Retrieval==========")
 			fmt.Println("ueId: ", ueId)
+			fmt.Println("supportedFeatures: ", supportedFeatures)
 
-			var amf3GppAccessRegistration models.Amf3GppAccessRegistration
-			if err := c.ShouldBindJSON(&amf3GppAccessRegistration); err != nil {
-				fmt.Println("fake udr server error")
-				c.JSON(http.StatusInternalServerError, gin.H{})
-				return
-			}
-			fmt.Println("amf3GppAccessRegistration - ", amf3GppAccessRegistration.AmfInstanceId)
-			c.JSON(http.StatusNoContent, gin.H{})
+			var testAmf3GppAccessRegistration models.Amf3GppAccessRegistration
+			testAmf3GppAccessRegistration.AmfInstanceId = "test001"
+			c.JSON(http.StatusOK, testAmf3GppAccessRegistration)
 		})
 
 		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
@@ -73,12 +71,13 @@ func TestRegistrationAmf3gppAccess(t *testing.T) {
 	clientAPI := Nudm_UECM_Client.NewAPIClient(cfg)
 
 	ueId := "UECM1234"
-	var amf3GppAccessRegistration models.Amf3GppAccessRegistration
-	amf3GppAccessRegistration.AmfInstanceId = "PUT_TEST_001"
-	_, resp, err := clientAPI.AMFRegistrationFor3GPPAccessApi.Registration(context.Background(), ueId, amf3GppAccessRegistration)
+	var getParamOpts Nudm_UECM_Client.GetParamOpts
+	getParamOpts.SupportedFeatures = optional.NewString("test_3gpp_SupportedFeatures")
+	amf3GppAccessRegistration, resp, err := clientAPI.AMF3GppAccessRegistrationInfoRetrievalApi.Get(context.Background(), ueId, &getParamOpts)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("resp: ", resp)
+		fmt.Println("amf3GppAccessRegistration: ", amf3GppAccessRegistration)
 	}
 }
