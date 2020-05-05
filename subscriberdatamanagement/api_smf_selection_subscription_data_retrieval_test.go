@@ -16,9 +16,9 @@ import (
 	"free5gc/lib/http2_util"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
+	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
 	Nudm_SDM_Server "free5gc/src/udm/subscriberdatamanagement"
-	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
 
 	"net/http"

@@ -7,13 +7,13 @@ import (
 	"free5gc/lib/path_util"
 	"free5gc/src/app"
 	"free5gc/src/udm/consumer"
+	"free5gc/src/udm/context"
 	"free5gc/src/udm/eventexposure"
 	"free5gc/src/udm/factory"
 	"free5gc/src/udm/httpcallback"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/parameterprovision"
 	"free5gc/src/udm/subscriberdatamanagement"
-	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/udm_handler"
 	"free5gc/src/udm/ueauthentication"
 	"free5gc/src/udm/uecontextmanagement"
@@ -126,10 +126,10 @@ func (udm *UDM) Start() {
 	}
 	addr := fmt.Sprintf("%s:%d", sbi.IPv4Addr, sbi.Port)
 
-	self := udm_context.UDM_Self()
+	self := context.UDM_Self()
 	// util.InitUDMContext(self)
-	udm_context.Init()
-	udm_context.UDM_Self().InitNFService(serviceName, config.Info.Version)
+	context.Init()
+	context.UDM_Self().InitNFService(serviceName, config.Info.Version)
 
 	proflie, err := consumer.BuildNFInstance(self)
 	if err != nil {

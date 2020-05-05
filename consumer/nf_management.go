@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"free5gc/lib/Nnrf_NFManagement"
 	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/udm_context"
+	udm_context "free5gc/src/udm/context"
 	"net/http"
 	"strings"
 	"time"

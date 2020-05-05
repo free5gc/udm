@@ -8,7 +8,7 @@ import (
 	"free5gc/lib/openapi/models"
 	nrf_service "free5gc/src/nrf/service"
 	"free5gc/src/udm/consumer"
-	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/context"
 	"reflect"
 	"testing"
 	"time"
@@ -35,8 +35,8 @@ func TestSendSearchNFInstances(t *testing.T) {
 	MongoDBLibrary.RestfulAPIDeleteMany("NfProfile", bson.M{})
 	time.Sleep(200 * time.Millisecond)
 
-	udm_context.TestInit()
-	self := udm_context.UDM_Self()
+	context.TestInit()
+	self := context.UDM_Self()
 	nfprofile, err := consumer.BuildNFInstance(self)
 	if err != nil {
 		t.Error(err.Error())
@@ -72,8 +72,8 @@ func TestSendSearchNFInstancesUDR(t *testing.T) {
 	MongoDBLibrary.RestfulAPIDeleteMany("Nfprofile", bson.M{})
 	time.Sleep(200 * time.Millisecond)
 
-	udm_context.TestInit()
-	self := udm_context.UDM_Self()
+	context.TestInit()
+	self := context.UDM_Self()
 	nfprofile, err := consumer.BuildNFInstance(self)
 	if err != nil {
 		t.Error(err.Error())
@@ -86,7 +86,7 @@ func TestSendSearchNFInstancesUDR(t *testing.T) {
 		fmt.Println("uri: ", uri)
 	}
 
-	udmUeContext := udm_context.UdmUe_self()
+	udmUeContext := context.UdmUe_self()
 	result := consumer.SendNFIntancesUDR(udmUeContext.Supi, consumer.NFDiscoveryToUDRParamSupi)
 	fmt.Println("result: ", result)
 }

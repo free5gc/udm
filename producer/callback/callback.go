@@ -5,8 +5,8 @@ import (
 	"free5gc/lib/Nudm_SubscriberDataManagement"
 	"free5gc/lib/Nudm_UEContextManagement"
 	"free5gc/lib/openapi/models"
+	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_context"
 )
 
 func SendOnDataChangeNotification(ueId string, notifyItems []models.NotifyItem) {

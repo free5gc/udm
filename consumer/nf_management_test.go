@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"free5gc/lib/MongoDBLibrary"
 	"free5gc/src/udm/consumer"
-	"free5gc/src/udm/udm_context"
+	"free5gc/src/udm/context"
 	"testing"
 	"time"
 
@@ -19,8 +19,8 @@ func TestRegisterNFInstance(t *testing.T) {
 	MongoDBLibrary.RestfulAPIDeleteMany("NfProfile", bson.M{})
 	time.Sleep(200 * time.Millisecond)
 
-	udm_context.TestInit()
-	self := udm_context.UDM_Self()
+	context.TestInit()
+	self := context.UDM_Self()
 	NfProfile, err := consumer.BuildNFInstance(self)
 	if err != nil {
 		t.Error(err.Error())

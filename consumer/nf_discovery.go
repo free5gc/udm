@@ -7,8 +7,8 @@ import (
 	// "github.com/antihax/optional"
 	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/openapi/models"
+	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_context"
 	"free5gc/src/udm/util"
 	"net/http"
 )
