@@ -79,15 +79,9 @@ func HandleGenerateAuthData(respChan chan udm_message.HandlerResponseMessage, su
 				has_OP = true
 			} else {
 				logger.UeauLog.Errorln("OP_str length is ", len(OP_str))
-				problemDetails.Cause = "AUTHENTICATION_REJECTED"
-				udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
-				return
 			}
 		} else {
 			logger.UeauLog.Infoln("Nil Op")
-			problemDetails.Cause = "AUTHENTICATION_REJECTED"
-			udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
-			return
 		}
 	} else {
 		logger.UeauLog.Infoln("Nil Milenage")
@@ -104,17 +98,18 @@ func HandleGenerateAuthData(respChan chan udm_message.HandlerResponseMessage, su
 				has_OPC = true
 			} else {
 				logger.UeauLog.Errorln("OPC_str length is ", len(OPC_str))
-				problemDetails.Cause = "AUTHENTICATION_REJECTED"
-				udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
-				return
 			}
-
 		} else {
 			logger.UeauLog.Infoln("Nil Opc")
 		}
-
 	} else {
 		logger.UeauLog.Infoln("Nil Opc")
+	}
+
+	if !has_OPC && !has_OP {
+		problemDetails.Cause = "AUTHENTICATION_REJECTED"
+		udm_message.SendHttpResponseMessage(respChan, nil, http.StatusForbidden, response)
+		return
 	}
 
 	if !has_OPC {
