@@ -25,7 +25,7 @@ import (
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udr/DataRepository"
+	"free5gc/src/udr/datarepository"
 	"net/http"
 	"reflect"
 	"testing"
@@ -59,7 +59,7 @@ func TestGetSmData(t *testing.T) {
 
 	go func() {
 		router := gin.Default()
-		DataRepository.AddService(router)
+		datarepository.AddService(router)
 
 		udrLogPath := path_util.Gofree5gcPath("free5gc/udrsslkey.log")
 		udrPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udr.pem")
