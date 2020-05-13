@@ -147,10 +147,24 @@ func (udm *UDM) Start() {
 
 	go udm_handler.Handle()
 	server, err := http2_util.NewServer(addr, udmLogPath, router)
-	if err == nil && server != nil {
-		initLog.Infoln(server.ListenAndServeTLS(udmPemPath, udmKeyPath))
-	} else {
-		initLog.Fatalf("Initialize http2 server failed: %+v", err)
+	if server == nil {
+		initLog.Errorln("Initialize HTTP server failed: %+v", err)
+		return
+	}
+
+	if err != nil {
+		initLog.Warnln("Initialize HTTP server: +%v", err)
+	}
+
+	serverScheme := factory.UdmConfig.Configuration.Sbi.Scheme
+	if serverScheme == "http" {
+		err = server.ListenAndServe()
+	} else if serverScheme == "https" {
+		err = server.ListenAndServeTLS(udmPemPath, udmKeyPath)
+	}
+
+	if err != nil {
+		initLog.Fatalln("HTTP server setup failed: %+v", err)
 	}
 }
 
