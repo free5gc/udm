@@ -17,8 +17,8 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
+	"free5gc/src/udm/handler"
 	Nudm_SDM_Server "free5gc/src/udm/subscriberdatamanagement"
-	"free5gc/src/udm/udm_handler"
 	"net/http"
 	"testing"
 
@@ -29,7 +29,7 @@ import (
 // GetAmData - retrieve a UE's Access and Mobility Subscription Data
 func TestGetAmData(t *testing.T) {
 
-	go udm_handler.Handle()
+	go handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_SDM_Server.AddService(router)

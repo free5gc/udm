@@ -15,7 +15,7 @@ import (
 
 // Update - provision parameters
 func TestUpdate(t *testing.T) {
-	/*go udm_handler.Handle()
+	/*go handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_PP_Server.AddService(router)

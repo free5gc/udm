@@ -11,8 +11,8 @@ package subscriberdatamanagement
 
 import (
 	"free5gc/lib/http_wrapper"
-	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_handler/udm_message"
+	"free5gc/src/udm/handler"
+	"free5gc/src/udm/handler/udm_message"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +25,7 @@ func Unsubscribe(c *gin.Context) {
 	req.Params["subscriptionId"] = c.Params.ByName("subscriptionId")
 
 	handleMsg := udm_message.NewHandlerMessage(udm_message.EventUnsubscribe, req)
-	udm_handler.SendMessage(handleMsg)
+	handler.SendMessage(handleMsg)
 
 	rsp := <-handleMsg.ResponseChan
 	HTTPResponse := rsp.HTTPResponse

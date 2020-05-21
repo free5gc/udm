@@ -13,8 +13,8 @@ import (
 	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_handler/udm_message"
+	"free5gc/src/udm/handler"
+	"free5gc/src/udm/handler/udm_message"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -38,7 +38,7 @@ func Register(c *gin.Context) {
 	req.Params["ueId"] = c.Param("ueId")
 
 	handlerMsg := udm_message.NewHandlerMessage(udm_message.EventRegisterAmfNon3gppAccess, req)
-	udm_handler.SendMessage(handlerMsg)
+	handler.SendMessage(handlerMsg)
 	rsp := <-handlerMsg.ResponseChan
 
 	HTTPResponse := rsp.HTTPResponse

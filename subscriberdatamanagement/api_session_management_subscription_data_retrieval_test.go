@@ -10,11 +10,6 @@
 package subscriberdatamanagement_test
 
 import (
-
-	// "github.com/antihax/optional"
-
-	// "log"
-
 	"context"
 	"encoding/json"
 	"free5gc/lib/MongoDBLibrary"
@@ -23,8 +18,9 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
+	"free5gc/src/udm/handler"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_handler"
+	"free5gc/src/udm/subscriberdatamanagement"
 	"free5gc/src/udr/datarepository"
 	"net/http"
 	"reflect"
@@ -41,7 +37,7 @@ func TestGetSmData(t *testing.T) {
 
 	go func() {
 		router := gin.Default()
-		AddService(router)
+		subscriberdatamanagement.AddService(router)
 
 		udmLogPath := path_util.Gofree5gcPath("free5gc/udrmslkey.log")
 		udmPemPath := path_util.Gofree5gcPath("free5gc/support/TLS/udm.pem")
@@ -55,7 +51,7 @@ func TestGetSmData(t *testing.T) {
 	}()
 	// util.testInitUdmConfig()
 	udm_context.TestInit()
-	go udm_handler.Handle()
+	go handler.Handle()
 
 	go func() {
 		router := gin.Default()

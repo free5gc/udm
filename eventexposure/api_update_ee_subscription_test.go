@@ -19,7 +19,7 @@ import (
 	udm_context "free5gc/src/udm/context"
 	Nudm_EE_Server "free5gc/src/udm/eventexposure"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_handler"
+	"free5gc/src/udm/handler"
 	"net/http"
 	"testing"
 
@@ -31,7 +31,7 @@ import (
 func TestUpdateEeSubscription(t *testing.T) {
 
 	udm_context.TestInit()
-	go udm_handler.Handle()
+	go handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_EE_Server.AddService(router)

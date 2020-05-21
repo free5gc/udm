@@ -10,10 +10,10 @@
 package subscriberdatamanagement
 
 import (
-	"github.com/gin-gonic/gin"
 	"free5gc/lib/http_wrapper"
-	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_handler/udm_message"
+	"free5gc/src/udm/handler"
+	"free5gc/src/udm/handler/udm_message"
+	"github.com/gin-gonic/gin"
 )
 
 // GetIdTranslationResult - retrieve a UE's SUPI
@@ -24,7 +24,7 @@ func GetIdTranslationResult(c *gin.Context) {
 	req.Query.Set("SupportedFeatures", c.Query("supported-features"))
 
 	handleMsg := udm_message.NewHandlerMessage(udm_message.EventGetIdTranslationResult, req)
-	udm_handler.SendMessage(handleMsg)
+	handler.SendMessage(handleMsg)
 
 	rsp := <-handleMsg.ResponseChan
 

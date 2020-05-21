@@ -12,7 +12,7 @@ import (
 	"free5gc/src/udm/factory"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/producer/callback"
-	"free5gc/src/udm/udm_handler/udm_message"
+	"free5gc/src/udm/handler/udm_message"
 	"net/http"
 	"strconv"
 	"strings"

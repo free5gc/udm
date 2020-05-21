@@ -10,11 +10,11 @@ import (
 	"free5gc/src/udm/context"
 	"free5gc/src/udm/eventexposure"
 	"free5gc/src/udm/factory"
+	"free5gc/src/udm/handler"
 	"free5gc/src/udm/httpcallback"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/parameterprovision"
 	"free5gc/src/udm/subscriberdatamanagement"
-	"free5gc/src/udm/udm_handler"
 	"free5gc/src/udm/ueauthentication"
 	"free5gc/src/udm/uecontextmanagement"
 
@@ -145,7 +145,7 @@ func (udm *UDM) Start() {
 		}
 	}
 
-	go udm_handler.Handle()
+	go handler.Handle()
 	server, err := http2_util.NewServer(addr, udmLogPath, router)
 	if server == nil {
 		initLog.Errorln("Initialize HTTP server failed: %+v", err)

@@ -9,7 +9,7 @@ import (
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_handler"
+	"free5gc/src/udm/handler"
 	Nudm_UECM_Server "free5gc/src/udm/uecontextmanagement"
 	"net/http"
 	"testing"
@@ -36,7 +36,7 @@ func TestRegistrationAmf3gppAccess(t *testing.T) {
 	}()
 
 	udm_context.TestInit()
-	go udm_handler.Handle()
+	go handler.Handle()
 
 	go func() { // fake udr server
 		router := gin.Default()
