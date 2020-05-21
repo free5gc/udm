@@ -12,9 +12,9 @@ package parameterprovision
 import (
 	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi/models"
+	"free5gc/src/udm/handler"
+	udm_message "free5gc/src/udm/handler/message"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_handler/udm_message"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -40,7 +40,7 @@ func Update(c *gin.Context) {
 	req.Params["gspi"] = c.Params.ByName("gpsi")
 
 	handleMsg := udm_message.NewHandlerMessage(udm_message.EventUpdate, req)
-	udm_handler.SendMessage(handleMsg)
+	handler.SendMessage(handleMsg)
 
 	rsp := <-handleMsg.ResponseChan
 	HTTPResponse := rsp.HTTPResponse

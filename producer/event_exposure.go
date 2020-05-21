@@ -7,7 +7,7 @@ import (
 	"free5gc/lib/openapi/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	udm_context "free5gc/src/udm/context"
-	"free5gc/src/udm/udm_handler/udm_message"
+	udm_message "free5gc/src/udm/handler/message"
 	"net/http"
 
 	"github.com/antihax/optional"

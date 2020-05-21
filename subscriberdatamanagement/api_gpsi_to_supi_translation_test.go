@@ -20,7 +20,7 @@ import (
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
 	Nudm_SDM_Server "free5gc/src/udm/subscriberdatamanagement"
-	"free5gc/src/udm/udm_handler"
+	"free5gc/src/udm/handler"
 	"log"
 	"net/http"
 	"testing"
@@ -33,7 +33,7 @@ import (
 // GetIdTranslationResult - retrieve a UE's SUPI
 func TestGetIdTranslationResult(t *testing.T) {
 
-	go udm_handler.Handle()
+	go handler.Handle()
 	go func() { // udm server
 		router := gin.Default()
 		Nudm_SDM_Server.AddService(router)

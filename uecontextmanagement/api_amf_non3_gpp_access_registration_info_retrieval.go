@@ -12,8 +12,8 @@ package uecontextmanagement
 import (
 	// "fmt"
 	"free5gc/lib/http_wrapper"
-	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_handler/udm_message"
+	"free5gc/src/udm/handler"
+	udm_message "free5gc/src/udm/handler/message"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,7 +24,7 @@ func GetAmfNon3gppAccess(c *gin.Context) {
 	req.Query.Add("supported-features", c.Query("supported-features"))
 
 	handlerMsg := udm_message.NewHandlerMessage(udm_message.EventGetAmfNon3gppAccess, req)
-	udm_handler.SendMessage(handlerMsg)
+	handler.SendMessage(handlerMsg)
 	rsp := <-handlerMsg.ResponseChan
 
 	HTTPResponse := rsp.HTTPResponse

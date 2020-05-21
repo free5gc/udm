@@ -11,8 +11,8 @@ package subscriberdatamanagement
 
 import (
 	"free5gc/lib/http_wrapper"
-	"free5gc/src/udm/udm_handler"
-	"free5gc/src/udm/udm_handler/udm_message"
+	"free5gc/src/udm/handler"
+	udm_message "free5gc/src/udm/handler/message"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,7 +24,7 @@ func GetTraceData(c *gin.Context) {
 	req.Query.Set("plmn-id", c.Query("plmn-id"))
 
 	handlerMsg := udm_message.NewHandlerMessage(udm_message.EventGetTraceData, req)
-	udm_handler.SendMessage(handlerMsg)
+	handler.SendMessage(handlerMsg)
 
 	rsp := <-handlerMsg.ResponseChan
 

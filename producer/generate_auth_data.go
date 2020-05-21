@@ -14,7 +14,7 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/util_3gpp/suci"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_handler/udm_message"
+	udm_message "free5gc/src/udm/handler/message"
 	"math/rand"
 	"net/http"
 	"time"

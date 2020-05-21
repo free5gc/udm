@@ -19,7 +19,7 @@ import (
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
 	Nudm_SDM_Server "free5gc/src/udm/subscriberdatamanagement"
-	"free5gc/src/udm/udm_handler"
+	"free5gc/src/udm/handler"
 	"net/http"
 	"testing"
 
@@ -49,7 +49,7 @@ func TestGetTraceData(t *testing.T) {
 	}()
 
 	udm_context.TestInit()
-	go udm_handler.Handle()
+	go handler.Handle()
 
 	go func() { // fake udr server
 		router := gin.Default()

@@ -18,7 +18,7 @@ import (
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_handler"
+	"free5gc/src/udm/handler"
 	"net/http"
 	"testing"
 
@@ -58,7 +58,7 @@ func TestSubscribeToSharedData(t *testing.T) {
 	}()
 
 	udm_context.TestInit()
-	go udm_handler.Handle()
+	go handler.Handle()
 
 	udm_context.Init()
 	cfg := Nudm_SDM_Client.NewConfiguration()

@@ -13,7 +13,7 @@ import (
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/udm_handler"
+	"free5gc/src/udm/handler"
 	"free5gc/src/udm/util"
 	"math/big"
 	"net/http"
@@ -93,7 +93,7 @@ func TestUeAuthenticationsPost(t *testing.T) {
 	}()
 	// util.testInitUdmConfig()
 	udm_context.TestInit()
-	go udm_handler.Handle()
+	go handler.Handle()
 
 	go func() { // fake udr server
 		router := gin.Default()

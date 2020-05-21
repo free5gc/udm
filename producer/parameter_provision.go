@@ -5,7 +5,7 @@ import (
 	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
 	m "free5gc/lib/openapi/models"
-	"free5gc/src/udm/udm_handler/udm_message"
+	udm_message "free5gc/src/udm/handler/message"
 	"net/http"
 )
 
