@@ -2,7 +2,7 @@ package producer
 
 import (
 	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/handler/udm_message"
+	udm_message "free5gc/src/udm/handler/message"
 	"free5gc/src/udm/producer/callback"
 )
 

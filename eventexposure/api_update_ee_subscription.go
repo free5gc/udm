@@ -14,7 +14,7 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/handler"
-	"free5gc/src/udm/handler/udm_message"
+	udm_message "free5gc/src/udm/handler/message"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

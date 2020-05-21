@@ -12,7 +12,7 @@ package uecontextmanagement
 import (
 	"free5gc/lib/http_wrapper"
 	"free5gc/src/udm/handler"
-	"free5gc/src/udm/handler/udm_message"
+	udm_message "free5gc/src/udm/handler/message"
 	"github.com/gin-gonic/gin"
 )
 
