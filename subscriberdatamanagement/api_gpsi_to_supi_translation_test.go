@@ -12,21 +12,22 @@ package subscriberdatamanagement_test
 import (
 	"context"
 	"fmt"
-	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
 	"free5gc/lib/http2_util"
-	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi"
+	Nudm_SDM_Client "free5gc/lib/openapi/Nudm_SubscriberDataManagement"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
 	Nudm_SDM_Server "free5gc/src/udm/subscriberdatamanagement"
 	"free5gc/src/udm/udm_handler"
-	"github.com/antihax/optional"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"net/http"
 	"testing"
+
+	"github.com/antihax/optional"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 // GetIdTranslationResult - retrieve a UE's SUPI
@@ -87,7 +88,7 @@ func TestGetIdTranslationResult(t *testing.T) {
 		} else if err.Error() != resp.Status {
 			log.Panic(err)
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			fmt.Println("problemDetails: ", problemDetails)
 		}
 		return

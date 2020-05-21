@@ -12,17 +12,18 @@ package subscriberdatamanagement_test
 import (
 	"context"
 	"fmt"
-	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
 	"free5gc/lib/http2_util"
+	Nudm_SDM_Client "free5gc/lib/openapi/Nudm_SubscriberDataManagement"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_handler"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 // SubscribeToSharedData - subscribe to notifications for shared data

@@ -12,8 +12,8 @@ package subscriberdatamanagement_test
 import (
 	"context"
 	"fmt"
-	Nudm_SDM_Client "free5gc/lib/Nudm_SubscriberDataManagement"
 	"free5gc/lib/http2_util"
+	Nudm_SDM_Client "free5gc/lib/openapi/Nudm_SubscriberDataManagement"
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"

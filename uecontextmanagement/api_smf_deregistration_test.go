@@ -3,8 +3,8 @@ package uecontextmanagement_test
 import (
 	"context"
 	"fmt"
-	Nudm_UECM_Client "free5gc/lib/Nudm_UEContextManagement"
 	"free5gc/lib/http2_util"
+	Nudm_UECM_Client "free5gc/lib/openapi/Nudm_UEContextManagement"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

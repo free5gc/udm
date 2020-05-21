@@ -3,13 +3,14 @@ package producer
 import (
 	"context"
 	"fmt"
-	"free5gc/lib/Nudr_DataRepository"
-	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/udm_handler/udm_message"
-	"github.com/antihax/optional"
 	"net/http"
+
+	"github.com/antihax/optional"
 )
 
 func HandleCreateEeSubscription(httpChannel chan udm_message.HandlerResponseMessage, ueIdentity string, subscriptionID string, eesubscription models.EeSubscription) {
@@ -26,7 +27,7 @@ func HandleCreateEeSubscription(httpChannel chan udm_message.HandlerResponseMess
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -54,7 +55,7 @@ func HandleDeleteEeSubscription(httpChannel chan udm_message.HandlerResponseMess
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -86,7 +87,7 @@ func HandleUpdateEeSubscription(httpChannel chan udm_message.HandlerResponseMess
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return

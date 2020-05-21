@@ -3,8 +3,8 @@ package ueauthentication_test
 import (
 	"context"
 	"fmt"
-	Nudm_UEAU_Client "free5gc/lib/Nudm_UEAuthentication"
 	"free5gc/lib/http2_util"
+	Nudm_UEAU_Client "free5gc/lib/openapi/Nudm_UEAuthentication"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
