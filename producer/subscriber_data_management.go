@@ -3,9 +3,9 @@ package producer
 import (
 	"context"
 	"fmt"
-	"free5gc/lib/Nudm_SubscriberDataManagement"
-	Nudr "free5gc/lib/Nudr_DataRepository"
-	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/Nudm_SubscriberDataManagement"
+	Nudr "free5gc/lib/openapi/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
@@ -30,7 +30,7 @@ func HandleGetAmData(httpChannel chan udm_message.HandlerResponseMessage, supi s
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -61,7 +61,7 @@ func HandleGetIdTranslationResult(httpChannel chan udm_message.HandlerResponseMe
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -116,7 +116,7 @@ func HandleGetSupi(httpChannel chan udm_message.HandlerResponseMessage, supi str
 		} else if err1.Error() != res1.Status {
 			fmt.Println(err1.Error())
 		} else {
-			problemDetails.Cause = err1.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err1.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res1.StatusCode, problemDetails)
 		}
 		return
@@ -142,7 +142,7 @@ func HandleGetSupi(httpChannel chan udm_message.HandlerResponseMessage, supi str
 		} else if err2.Error() != res2.Status {
 			fmt.Println(err2.Error())
 		} else {
-			problemDetails.Cause = err2.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err2.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res2.StatusCode, problemDetails)
 		}
 		return
@@ -167,7 +167,7 @@ func HandleGetSupi(httpChannel chan udm_message.HandlerResponseMessage, supi str
 		} else if err3.Error() != res3.Status {
 			fmt.Println(err3.Error())
 		} else {
-			problemDetails.Cause = err3.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err3.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res3.StatusCode, problemDetails)
 		}
 		return
@@ -191,7 +191,7 @@ func HandleGetSupi(httpChannel chan udm_message.HandlerResponseMessage, supi str
 		} else if err4.Error() != res4.Status {
 			fmt.Println(err4.Error())
 		} else {
-			problemDetails.Cause = err4.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err4.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res4.StatusCode, problemDetails)
 		}
 		return
@@ -219,7 +219,7 @@ func HandleGetSupi(httpChannel chan udm_message.HandlerResponseMessage, supi str
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -277,7 +277,7 @@ func HandleGetSharedData(httpChannel chan udm_message.HandlerResponseMessage, sh
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -310,7 +310,7 @@ func HandleGetSmData(httpChannel chan udm_message.HandlerResponseMessage, supi s
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -363,7 +363,7 @@ func HandleGetNssai(httpChannel chan udm_message.HandlerResponseMessage, supi st
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -402,7 +402,7 @@ func HandleGetSmfSelectData(httpChannel chan udm_message.HandlerResponseMessage,
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -434,7 +434,7 @@ func HandleSubscribeToSharedData(httpChannel chan udm_message.HandlerResponseMes
 			fmt.Println(err.Error())
 			fmt.Println(res.Status)
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -473,7 +473,7 @@ func HandleSubscribe(httpChannel chan udm_message.HandlerResponseMessage, supi s
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -512,7 +512,7 @@ func HandleUnsubscribeForSharedData(httpChannel chan udm_message.HandlerResponse
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -538,7 +538,7 @@ func HandleUnsubscribe(httpChannel chan udm_message.HandlerResponseMessage, supi
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -568,7 +568,7 @@ func HandleModify(httpChannel chan udm_message.HandlerResponseMessage, supi stri
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -601,7 +601,7 @@ func HandleModifyForSharedData(httpChannel chan udm_message.HandlerResponseMessa
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -632,7 +632,7 @@ func HandleGetTraceData(httpChannel chan udm_message.HandlerResponseMessage, sup
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return
@@ -676,7 +676,7 @@ func HandleGetUeContextInSmfData(httpChannel chan udm_message.HandlerResponseMes
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		}
 		return

@@ -2,7 +2,7 @@ package producer
 
 import (
 	"context"
-	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
 	m "free5gc/lib/openapi/models"
 	"free5gc/src/udm/udm_handler/udm_message"
@@ -15,7 +15,7 @@ func HandleUpdate(httpChannel chan udm_message.HandlerResponseMessage, gpsi stri
 	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(context.Background(), gpsi, nil)
 	if err != nil {
 		var problemDetails m.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
 		return
 	}

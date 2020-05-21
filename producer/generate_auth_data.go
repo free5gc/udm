@@ -7,10 +7,10 @@ import (
 	// "fmt"
 	"github.com/antihax/optional"
 	// "free5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
-	"free5gc/lib/Nudr_DataRepository"
 	"free5gc/lib/UeauCommon"
 	"free5gc/lib/milenage"
-	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/util_3gpp/suci"
 	"free5gc/src/udm/logger"
@@ -230,7 +230,7 @@ func HandleConfirmAuthData(respChan chan udm_message.HandlerResponseMessage, sup
 	if err != nil {
 		logger.UeauLog.Errorln("[ConfirmAuth] ", err.Error())
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(respChan, nil, resp.StatusCode, problemDetails)
 	}
 	udm_message.SendHttpResponseMessage(respChan, nil, http.StatusCreated, nil)

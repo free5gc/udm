@@ -3,9 +3,9 @@ package producer
 import (
 	"context"
 	"fmt"
-	"free5gc/lib/Nudr_DataRepository"
-	Nudr "free5gc/lib/Nudr_DataRepository"
-	"free5gc/lib/openapi/common"
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/Nudr_DataRepository"
+	Nudr "free5gc/lib/openapi/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/consumer"
 	udm_context "free5gc/src/udm/context"
@@ -86,7 +86,7 @@ func HandleGetAmf3gppAccess(respChan chan udm_message.HandlerResponseMessage, ue
 	amf3GppAccessRegistration, resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.QueryAmfContext3gpp(context.Background(), ueID, &queryAmfContext3gppParamOpts)
 	if err != nil {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(respChan, nil, resp.StatusCode, problemDetails)
 		return
 	}
@@ -101,7 +101,7 @@ func HandleGetAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMessage,
 	amfNon3GppAccessRegistration, resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.QueryAmfContextNon3gpp(context.Background(), ueID, &queryAmfContextNon3gppParamOpts)
 	if err != nil {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(respChan, nil, resp.StatusCode, problemDetails)
 		return
 	}
@@ -125,7 +125,7 @@ func HandleRegistrationAmf3gppAccess(respChan chan udm_message.HandlerResponseMe
 	resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.CreateAmfContext3gpp(context.Background(), ueID, &createAmfContext3gppParamOpts)
 	if err != nil {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(respChan, nil, resp.StatusCode, problemDetails)
 		return
 	}
@@ -163,7 +163,7 @@ func HandleRegisterAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMes
 	resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.CreateAmfContextNon3gpp(context.Background(), ueID, &createAmfContextNon3gppParamOpts)
 	if err != nil {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(respChan, nil, resp.StatusCode, problemDetails)
 		return
 	}
@@ -251,7 +251,7 @@ func HandleUpdateAmf3gppAccess(respChan chan udm_message.HandlerResponseMessage,
 	resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.AmfContext3gpp(context.Background(), ueID, patchItemReqArray)
 	if err != nil {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(respChan, nil, resp.StatusCode, problemDetails)
 		return
 	}
@@ -324,7 +324,7 @@ func HandleUpdateAmfNon3gppAccess(respChan chan udm_message.HandlerResponseMessa
 	resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.AmfContextNon3gpp(context.Background(), ueID, patchItemReqArray)
 	if err != nil {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(respChan, nil, resp.StatusCode, problemDetails)
 		return
 	}
@@ -336,7 +336,7 @@ func HandleDeregistrationSmfRegistrations(respChan chan udm_message.HandlerRespo
 	resp, err := clientAPI.SMFRegistrationDocumentApi.DeleteSmfContext(context.Background(), ueID, pduSessionID)
 	if err != nil {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(respChan, nil, resp.StatusCode, problemDetails)
 		return
 	}
@@ -364,7 +364,7 @@ func HandleRegistrationSmfRegistrations(respChan chan udm_message.HandlerRespons
 	resp, err := clientAPI.SMFRegistrationDocumentApi.CreateSmfContextNon3gpp(context.Background(), ueID, pduID32, &createSmfContextNon3gppParamOpts)
 	if err != nil {
 		var problemDetails models.ProblemDetails
-		problemDetails.Cause = err.(common.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
+		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		udm_message.SendHttpResponseMessage(respChan, nil, resp.StatusCode, problemDetails)
 		return
 	}

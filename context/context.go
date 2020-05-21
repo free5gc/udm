@@ -3,8 +3,8 @@ package context
 import (
 	// "fmt"
 	"fmt"
-	"free5gc/lib/Nnrf_NFDiscovery"
 	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/Nnrf_NFDiscovery"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/factory"
 	"strconv"

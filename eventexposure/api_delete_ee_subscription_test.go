@@ -12,18 +12,19 @@ package eventexposure_test
 import (
 	"context"
 	"fmt"
-	Nudm_EE_Client "free5gc/lib/Nudm_EventExposure"
 	"free5gc/lib/http2_util"
+	Nudm_EE_Client "free5gc/lib/openapi/Nudm_EventExposure"
 	"free5gc/lib/openapi/models"
 	"free5gc/lib/path_util"
 	udm_context "free5gc/src/udm/context"
 	Nudm_EE_Server "free5gc/src/udm/eventexposure"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/udm_handler"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 // DeleteEeSubscription - Unsubscribe
