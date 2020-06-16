@@ -124,12 +124,13 @@ func (udm *UDM) Start() {
 		udmPemPath = path_util.Gofree5gcPath(sbi.Tls.Pem)
 		udmKeyPath = path_util.Gofree5gcPath(sbi.Tls.Key)
 	}
-	addr := fmt.Sprintf("%s:%d", sbi.IPv4Addr, sbi.Port)
 
 	self := context.UDM_Self()
 	// util.InitUDMContext(self)
 	context.Init()
 	context.UDM_Self().InitNFService(serviceName, config.Info.Version)
+
+	addr := fmt.Sprintf("%s:%d", self.ServerIPv4, self.HttpIpv4Port)
 
 	proflie, err := consumer.BuildNFInstance(self)
 	if err != nil {

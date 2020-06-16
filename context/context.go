@@ -30,6 +30,7 @@ func Init() {
 
 type UDMContext struct {
 	Name              string
+	ServerIPv4        string
 	NfId              string
 	GroupId           string
 	HttpIpv4Port      int
