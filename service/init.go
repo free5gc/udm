@@ -71,13 +71,18 @@ func (*UDM) Initialize(c *cli.Context) {
 		factory.InitConfigFactory(DefaultUdmConfigPath)
 	}
 
-	initLog.Traceln("UDM debug level(string):", app.ContextSelf().Logger.UDM.DebugLevel)
 	if app.ContextSelf().Logger.UDM.DebugLevel != "" {
-		initLog.Infoln("UDM debug level(string):", app.ContextSelf().Logger.UDM.DebugLevel)
 		level, err := logrus.ParseLevel(app.ContextSelf().Logger.UDM.DebugLevel)
-		if err == nil {
+		if err != nil {
+			initLog.Warnf("Log level [%s] is not valid, set to [info] level", app.ContextSelf().Logger.UDM.DebugLevel)
+			logger.SetLogLevel(logrus.InfoLevel)
+		} else {
 			logger.SetLogLevel(level)
+			initLog.Infof("Log level is set to [%s] level", level)
 		}
+	} else {
+		initLog.Infoln("Log level is default set to [info] level")
+		logger.SetLogLevel(logrus.InfoLevel)
 	}
 
 	logger.SetReportCaller(app.ContextSelf().Logger.UDM.ReportCaller)
