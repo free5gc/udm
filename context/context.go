@@ -30,11 +30,11 @@ func Init() {
 
 type UDMContext struct {
 	Name              string
-	ServerIPv4        string
 	NfId              string
 	GroupId           string
 	HttpIpv4Port      int
 	HttpIPv4Address   string
+	BindingIPv4		  string
 	UriScheme         models.UriScheme
 	NfService         map[models.ServiceName]models.NfService
 	NFDiscoveryClient *Nnrf_NFDiscovery.APIClient

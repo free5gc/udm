@@ -135,7 +135,7 @@ func (udm *UDM) Start() {
 	context.Init()
 	context.UDM_Self().InitNFService(serviceName, config.Info.Version)
 
-	addr := fmt.Sprintf("%s:%d", self.ServerIPv4, self.HttpIpv4Port)
+	addr := fmt.Sprintf("%s:%d", self.BindingIPv4, self.HttpIpv4Port)
 
 	proflie, err := consumer.BuildNFInstance(self)
 	if err != nil {

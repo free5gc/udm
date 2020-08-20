@@ -19,8 +19,6 @@ type Info struct {
 type Configuration struct {
 	UdmName string `yaml:"udmName,omitempty"`
 
-	ServerIPv4 string `yaml:"serverIPv4,omitempty"`
-
 	Sbi *Sbi `yaml:"sbi,omitempty"`
 
 	ServiceNameList []string `yaml:"serviceNameList,omitempty"`
@@ -36,8 +34,9 @@ type Configuration struct {
 
 type Sbi struct {
 	Scheme   string `yaml:"scheme"`
-	IPv4Addr string `yaml:"ipv4Addr,omitempty"`
+	RegisterIPv4 string `yaml:"registerIPv4,omitempty"` // IP that is registered at NRF.
 	// IPv6Addr string `yaml:"ipv6Addr,omitempty"`
+	BindingIPv4 string `yaml:"bindingIPv4,omitempty"` // IP used to run the server in the node.
 	Port int  `yaml:"port,omitempty"`
 	Tls  *Tls `yaml:"tls,omitempty"`
 }
