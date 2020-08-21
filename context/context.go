@@ -33,7 +33,8 @@ type UDMContext struct {
 	NfId              string
 	GroupId           string
 	HttpIpv4Port      int
-	HttpIPv4Address   string
+	HttpIPv4Address   string // IP register to NRF
+	BindingIPv4       string
 	UriScheme         models.UriScheme
 	NfService         map[models.ServiceName]models.NfService
 	NFDiscoveryClient *Nnrf_NFDiscovery.APIClient

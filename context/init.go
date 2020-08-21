@@ -6,6 +6,7 @@ import (
 	"free5gc/lib/path_util"
 	"free5gc/src/udm/factory"
 	"free5gc/src/udm/logger"
+	"os"
 
 	"github.com/google/uuid"
 )
@@ -31,17 +32,28 @@ func InitUDMContext(context *UDMContext) {
 	context.HttpIpv4Port = 29503
 	context.HttpIPv4Address = "127.0.0.1"
 	if sbi != nil {
-		if sbi.IPv4Addr != "" {
-			context.HttpIPv4Address = sbi.IPv4Addr
+		if sbi.RegisterIPv4 != "" {
+			context.HttpIPv4Address = sbi.RegisterIPv4
 		}
 		if sbi.Port != 0 {
 			context.HttpIpv4Port = sbi.Port
+		}
+		context.BindingIPv4 = os.Getenv(sbi.BindingIPv4)
+		if context.BindingIPv4 != "" {
+			logger.UtilLog.Info("Parsing ServerIPv4 address from ENV Variable.")
+		} else {
+			context.BindingIPv4 = sbi.BindingIPv4
+			if context.BindingIPv4 == "" {
+				logger.UtilLog.Info("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
+				context.BindingIPv4 = "0.0.0.0"
+			}
 		}
 	}
 	if configuration.NrfUri != "" {
 		context.NrfUri = configuration.NrfUri
 	} else {
-		context.NrfUri = fmt.Sprintf("%s://%s:%d", context.UriScheme, context.HttpIPv4Address, 29510)
+		logger.UtilLog.Info("NRF Uri is empty! Using localhost as NRF IPv4 address.")
+		context.NrfUri = fmt.Sprintf("%s://%s:%d", context.UriScheme, "127.0.0.1", 29510)
 	}
 	servingNameList := configuration.ServiceNameList
 
