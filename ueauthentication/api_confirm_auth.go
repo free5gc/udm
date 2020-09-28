@@ -11,27 +11,42 @@ package ueauthentication
 
 import (
 	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/handler"
-	udm_message "free5gc/src/udm/handler/message"
+	"free5gc/src/udm/producer"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 // ConfirmAuth - Create a new confirmation event
-func ConfirmAuth(c *gin.Context) {
+func HTTPConfirmAuth(c *gin.Context) {
 	var authEvent models.AuthEvent
-	err := c.ShouldBindJSON(&authEvent)
+	// step 1: retrieve http request body
+	requestBody, err := c.GetRawData()
 	if err != nil {
-		logger.UeauLog.Errorln(err)
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.UeauLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
+
+	// step 2: convert requestBody to openapi models
+	err = openapi.Deserialize(&authEvent, requestBody, "application/json")
+	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
 			Detail: problemDetail,
 		}
+		logger.UeauLog.Errorln(problemDetail)
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
@@ -39,10 +54,18 @@ func ConfirmAuth(c *gin.Context) {
 	req := http_wrapper.NewRequest(c.Request, authEvent)
 	req.Params["supi"] = c.Params.ByName("supi")
 
-	handlerMsg := udm_message.NewHandlerMessage(udm_message.EventConfirmAuth, req)
-	handler.SendMessage(handlerMsg)
-	rsp := <-handlerMsg.ResponseChan
+	rsp := producer.HandleConfirmAuthDataRequest(req)
 
-	HTTPResponse := rsp.HTTPResponse
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
+	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
+	if err != nil {
+		logger.UeauLog.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(rsp.Status, "application/json", responseBody)
+	}
 }

@@ -10,10 +10,12 @@
 package ueauthentication
 
 import (
+	"free5gc/lib/logger_util"
 	"free5gc/src/udm/logger"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,7 +43,7 @@ type Routes []Route
 
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	AddService(router)
 	return router
 }
@@ -49,7 +51,7 @@ func NewRouter() *gin.Engine {
 func genAuthDataHandlerFunc(c *gin.Context) {
 	c.Params = append(c.Params, gin.Param{Key: "supiOrSuci", Value: c.Param("supi")})
 	if strings.ToUpper("Post") == c.Request.Method {
-		GenerateAuthData(c)
+		HttpGenerateAuthData(c)
 		return
 	}
 
@@ -97,7 +99,7 @@ var routes = Routes{
 		"ConfirmAuth",
 		strings.ToUpper("Post"),
 		"/:supi/auth-events",
-		ConfirmAuth,
+		HTTPConfirmAuth,
 	},
 }
 
@@ -106,6 +108,6 @@ var specialRoutes = Routes{
 		"GenerateAuthData",
 		strings.ToUpper("Post"),
 		"/:supiOrSuci/security-information/generate-auth-data",
-		GenerateAuthData,
+		HttpGenerateAuthData,
 	},
 }

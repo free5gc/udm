@@ -11,25 +11,41 @@ package uecontextmanagement
 
 import (
 	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/handler"
-	udm_message "free5gc/src/udm/handler/message"
+	"free5gc/src/udm/producer"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 // UpdateAmfNon3gppAccess - update a parameter in the AMF registration for non-3GPP access
-func UpdateAmfNon3gppAccess(c *gin.Context) {
+func HTTPUpdateAmfNon3gppAccess(c *gin.Context) {
 	var amfNon3GppAccessRegistrationModification models.AmfNon3GppAccessRegistrationModification
-	if err := c.ShouldBindJSON(&amfNon3GppAccessRegistrationModification); err != nil {
-		logger.UeauLog.Errorln(err)
+	// step 1: retrieve http request body
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.UecmLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
+
+	// step 2: convert requestBody to openapi models
+	err = openapi.Deserialize(&amfNon3GppAccessRegistrationModification, requestBody, "application/json")
+	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
 			Detail: problemDetail,
 		}
+		logger.UecmLog.Errorln(problemDetail)
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
@@ -37,11 +53,19 @@ func UpdateAmfNon3gppAccess(c *gin.Context) {
 	req := http_wrapper.NewRequest(c.Request, amfNon3GppAccessRegistrationModification)
 	req.Params["ueId"] = c.Param("ueId")
 
-	handlerMsg := udm_message.NewHandlerMessage(udm_message.EventUpdateAmfNon3gppAccess, req)
-	handler.SendMessage(handlerMsg)
-	rsp := <-handlerMsg.ResponseChan
+	rsp := producer.HandleUpdateAmfNon3gppAccessRequest(req)
 
-	HTTPResponse := rsp.HTTPResponse
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
+	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
+	if err != nil {
+		logger.UecmLog.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(rsp.Status, "application/json", responseBody)
+	}
 	return
 }

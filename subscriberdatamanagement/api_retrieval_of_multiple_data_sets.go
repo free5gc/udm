@@ -11,25 +11,35 @@ package subscriberdatamanagement
 
 import (
 	"free5gc/lib/http_wrapper"
-	"free5gc/src/udm/handler"
-	udm_message "free5gc/src/udm/handler/message"
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/models"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/producer"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // GetSupi - retrieve multiple data sets
-func GetSupi(c *gin.Context) {
+func HTTPGetSupi(c *gin.Context) {
 
 	req := http_wrapper.NewRequest(c.Request, nil)
 	req.Params["supi"] = c.Params.ByName("supi")
 	req.Query.Set("plmn-id", c.Query("plmn-id"))
+	req.Query.Set("dataset-names", c.Query("dataset-names"))
+	req.Query.Set("supported-features", c.Query("supported-features"))
 
-	handleMsg := udm_message.NewHandlerMessage(udm_message.EventGetSupi, req)
-	handler.SendMessage(handleMsg)
-
-	rsp := <-handleMsg.ResponseChan
-
-	HTTPResponse := rsp.HTTPResponse
-
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
+	rsp := producer.HandleGetSupiRequest(req)
+	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
+	if err != nil {
+		logger.SdmLog.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(rsp.Status, "application/json", responseBody)
+	}
 
 }

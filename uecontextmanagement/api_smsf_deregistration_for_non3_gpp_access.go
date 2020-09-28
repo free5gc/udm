@@ -16,6 +16,6 @@ import (
 )
 
 // DeregistrationSmsfNon3gppAccess - delete SMSF registration for non 3GPP access
-func DeregistrationSmsfNon3gppAccess(c *gin.Context) {
+func HTTPDeregistrationSmsfNon3gppAccess(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }

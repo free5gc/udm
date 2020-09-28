@@ -10,23 +10,34 @@
 package subscriberdatamanagement
 
 import (
-	"fmt"
 	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
-	"free5gc/src/udm/handler"
-	udm_message "free5gc/src/udm/handler/message"
-	"net/http"
-
+	"free5gc/src/udm/producer"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // Modify - modify the subscription
-func Modify(c *gin.Context) {
-	fmt.Println("asdasd")
-
+func HTTPModify(c *gin.Context) {
 	var sdmSubsModificationReq models.SdmSubsModification
-	err := c.ShouldBindJSON(&sdmSubsModificationReq)
+	// step 1: retrieve http request body
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.SdmLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
+
+	// step 2: convert requestBody to openapi models
+	err = openapi.Deserialize(&sdmSubsModificationReq, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
 		rsp := models.ProblemDetails{
@@ -34,7 +45,7 @@ func Modify(c *gin.Context) {
 			Status: http.StatusBadRequest,
 			Detail: problemDetail,
 		}
-		logger.Handlelog.Errorln(problemDetail)
+		logger.SdmLog.Errorln(problemDetail)
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
@@ -43,22 +54,41 @@ func Modify(c *gin.Context) {
 	req.Params["supi"] = c.Params.ByName("supi")
 	req.Params["subscriptionId"] = c.Params.ByName("subscriptionId")
 
-	handleMsg := udm_message.NewHandlerMessage(udm_message.EventModify, req)
-	handler.SendMessage(handleMsg)
-
-	rsp := <-handleMsg.ResponseChan
-
-	HTTPResponse := rsp.HTTPResponse
-
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
-
+	rsp := producer.HandleModifyRequest(req)
+	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
+	if err != nil {
+		logger.SdmLog.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(rsp.Status, "application/json", responseBody)
+	}
 }
 
 // ModifyForSharedData - modify the subscription
-func ModifyForSharedData(c *gin.Context) {
+func HTTPModifyForSharedData(c *gin.Context) {
 
 	var sharedDataSubscriptions models.SdmSubsModification
-	err := c.ShouldBindJSON(&sharedDataSubscriptions)
+	// step 1: retrieve http request body
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.SdmLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
+
+	// step 2: convert requestBody to openapi models
+	err = openapi.Deserialize(&sharedDataSubscriptions, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
 		rsp := models.ProblemDetails{
@@ -75,13 +105,19 @@ func ModifyForSharedData(c *gin.Context) {
 	req.Params["supi"] = c.Params.ByName("supi")
 	req.Params["subscriptionId"] = c.Params.ByName("subscriptionId")
 
-	handleMsg := udm_message.NewHandlerMessage(udm_message.EventModifyForSharedData, req)
-	handler.SendMessage(handleMsg)
+	rsp := producer.HandleModifyForSharedDataRequest(req)
 
-	rsp := <-handleMsg.ResponseChan
-
-	HTTPResponse := rsp.HTTPResponse
-
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
+	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
+	if err != nil {
+		logger.SdmLog.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(rsp.Status, "application/json", responseBody)
+	}
 
 }

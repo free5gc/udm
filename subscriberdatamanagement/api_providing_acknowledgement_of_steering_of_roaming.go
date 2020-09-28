@@ -16,6 +16,6 @@ import (
 )
 
 // Info - Nudm_Sdm Info service operation
-func Info(c *gin.Context) {
+func HTTPInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }

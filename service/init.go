@@ -3,27 +3,27 @@ package service
 import (
 	"bufio"
 	"fmt"
+	"os/exec"
+	"sync"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+
 	"free5gc/lib/http2_util"
+	"free5gc/lib/logger_util"
 	"free5gc/lib/path_util"
 	"free5gc/src/app"
 	"free5gc/src/udm/consumer"
 	"free5gc/src/udm/context"
 	"free5gc/src/udm/eventexposure"
 	"free5gc/src/udm/factory"
-	"free5gc/src/udm/handler"
 	"free5gc/src/udm/httpcallback"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/parameterprovision"
 	"free5gc/src/udm/subscriberdatamanagement"
 	"free5gc/src/udm/ueauthentication"
 	"free5gc/src/udm/uecontextmanagement"
-
-	"os/exec"
-	"sync"
-
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"free5gc/src/udm/util"
 )
 
 type UDM struct{}
@@ -112,7 +112,7 @@ func (udm *UDM) Start() {
 
 	initLog.Infoln("Server started")
 
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 
 	eventexposure.AddService(router)
 	httpcallback.AddService(router)
@@ -131,11 +131,10 @@ func (udm *UDM) Start() {
 	}
 
 	self := context.UDM_Self()
-	// util.InitUDMContext(self)
-	context.Init()
+	util.InitUDMContext(self)
 	context.UDM_Self().InitNFService(serviceName, config.Info.Version)
 
-	addr := fmt.Sprintf("%s:%d", self.BindingIPv4, self.HttpIpv4Port)
+	addr := fmt.Sprintf("%s:%d", self.BindingIPv4, self.SBIPort)
 
 	proflie, err := consumer.BuildNFInstance(self)
 	if err != nil {
@@ -151,15 +150,14 @@ func (udm *UDM) Start() {
 		}
 	}
 
-	go handler.Handle()
 	server, err := http2_util.NewServer(addr, udmLogPath, router)
 	if server == nil {
-		initLog.Errorln("Initialize HTTP server failed: %+v", err)
+		initLog.Errorf("Initialize HTTP server failed: %+v", err)
 		return
 	}
 
 	if err != nil {
-		initLog.Warnln("Initialize HTTP server: +%v", err)
+		initLog.Warnf("Initialize HTTP server: +%v", err)
 	}
 
 	serverScheme := factory.UdmConfig.Configuration.Sbi.Scheme
@@ -170,7 +168,7 @@ func (udm *UDM) Start() {
 	}
 
 	if err != nil {
-		initLog.Fatalln("HTTP server setup failed: %+v", err)
+		initLog.Fatalf("HTTP server setup failed: %+v", err)
 	}
 }
 
@@ -210,7 +208,7 @@ func (udm *UDM) Exec(c *cli.Context) error {
 	}()
 
 	go func() {
-		if err := command.Start(); err != nil {
+		if err = command.Start(); err != nil {
 			fmt.Printf("UDM Start error: %v", err)
 		}
 		wg.Done()

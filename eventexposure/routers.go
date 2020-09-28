@@ -10,6 +10,8 @@
 package eventexposure
 
 import (
+	"free5gc/lib/logger_util"
+	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 
@@ -33,7 +35,7 @@ type Routes []Route
 
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	AddService(router)
 	return router
 }
@@ -72,23 +74,23 @@ var routes = Routes{
 	},
 
 	{
-		"CreateEeSubscription",
+		"HTTPCreateEeSubscription",
 		strings.ToUpper("Post"),
 		"/:ueIdentity/ee-subscriptions",
-		CreateEeSubscription,
+		HTTPCreateEeSubscription,
 	},
 
 	{
-		"DeleteEeSubscription",
+		"HTTPDeleteEeSubscription",
 		strings.ToUpper("Delete"),
 		"/:ueIdentity/ee-subscriptions/:subscriptionId",
-		DeleteEeSubscription,
+		HTTPDeleteEeSubscription,
 	},
 
 	{
-		"UpdateEeSubscription",
+		"HTTPUpdateEeSubscription",
 		strings.ToUpper("Patch"),
 		"/:ueIdentity/ee-subscriptions/:subscriptionId",
-		UpdateEeSubscription,
+		HTTPUpdateEeSubscription,
 	},
 }

@@ -16,6 +16,6 @@ import (
 )
 
 // GetSmsfNon3gppAccess - retrieve the SMSF registration for non-3GPP access information
-func GetSmsfNon3gppAccess(c *gin.Context) {
+func HTTPGetSmsfNon3gppAccess(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }

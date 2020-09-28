@@ -11,25 +11,19 @@ package eventexposure
 
 import (
 	"free5gc/lib/http_wrapper"
-	"free5gc/src/udm/handler"
-	udm_message "free5gc/src/udm/handler/message"
+	"free5gc/src/udm/producer"
+
 	"github.com/gin-gonic/gin"
 )
 
 // DeleteEeSubscription - Unsubscribe
-func DeleteEeSubscription(c *gin.Context) {
+func HTTPDeleteEeSubscription(c *gin.Context) {
 
 	req := http_wrapper.NewRequest(c.Request, nil)
 	req.Params["ueIdentity"] = c.Params.ByName("ueIdentity")
 	req.Params["subscriptionID"] = c.Params.ByName("subscriptionId")
 
-	handlerMsg := udm_message.NewHandlerMessage(udm_message.EventDeleteEeSubscription, req)
-	handler.SendMessage(handlerMsg)
-
-	rsp := <-handlerMsg.ResponseChan
-
-	HTTPResponse := rsp.HTTPResponse
-
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
-
+	rsp := producer.HandleDeleteEeSubscription(req)
+	// only return 204 no content
+	c.Status(rsp.Status)
 }

@@ -11,19 +11,35 @@ package parameterprovision
 
 import (
 	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/handler"
-	udm_message "free5gc/src/udm/handler/message"
 	"free5gc/src/udm/logger"
+	"free5gc/src/udm/producer"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 // Update - provision parameters
-func Update(c *gin.Context) {
+func HTTPUpdate(c *gin.Context) {
 
 	var ppDataReq models.PpData
-	err := c.ShouldBindJSON(&ppDataReq)
+
+	// step 1: retrieve http request body
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.PpLop.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
+
+	// step 2: convert requestBody to openapi models
+	err = openapi.Deserialize(&ppDataReq, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
 		rsp := models.ProblemDetails{
@@ -39,11 +55,19 @@ func Update(c *gin.Context) {
 	req := http_wrapper.NewRequest(c.Request, ppDataReq)
 	req.Params["gspi"] = c.Params.ByName("gpsi")
 
-	handleMsg := udm_message.NewHandlerMessage(udm_message.EventUpdate, req)
-	handler.SendMessage(handleMsg)
+	rsp := producer.HandleUpdateRequest(req)
 
-	rsp := <-handleMsg.ResponseChan
-	HTTPResponse := rsp.HTTPResponse
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
+	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
+	if err != nil {
+		logger.PpLop.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(rsp.Status, "application/json", responseBody)
+	}
 
 }

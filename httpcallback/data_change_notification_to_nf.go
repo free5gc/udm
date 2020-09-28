@@ -2,19 +2,33 @@ package httpcallback
 
 import (
 	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/handler"
-	udm_message "free5gc/src/udm/handler/message"
 	"free5gc/src/udm/logger"
+	"free5gc/src/udm/producer"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func DataChangeNotificationToNF(c *gin.Context) {
+func HTTPDataChangeNotificationToNF(c *gin.Context) {
 
-	var request models.DataChangeNotify
+	var dataChangeNotify models.DataChangeNotify
+	// step 1: retrieve http request body
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.CallbackLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
 
-	err := c.ShouldBindJSON(&request)
+	// step 2: convert requestBody to openapi models
+	err = openapi.Deserialize(&dataChangeNotify, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
 		rsp := models.ProblemDetails{
@@ -24,17 +38,23 @@ func DataChangeNotificationToNF(c *gin.Context) {
 		}
 		logger.CallbackLog.Errorln(problemDetail)
 		c.JSON(http.StatusBadRequest, rsp)
+		return
 	}
 
-	req := http_wrapper.NewRequest(c.Request, request)
+	req := http_wrapper.NewRequest(c.Request, dataChangeNotify)
 	req.Params["supi"] = c.Params.ByName("supi")
 
-	handleMsg := udm_message.NewHandlerMessage(udm_message.EventDataChangeNotificationToNF, req)
-	handler.SendMessage(handleMsg)
-
-	rsp := <-handleMsg.ResponseChan
-
-	HTTPResponse := rsp.HTTPResponse
-
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
+	rsp := producer.HandleDataChangeNotificationToNFRequest(req)
+	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
+	if err != nil {
+		logger.CallbackLog.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(rsp.Status, "application/json", responseBody)
+	}
 }

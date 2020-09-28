@@ -10,6 +10,8 @@
 package uecontextmanagement
 
 import (
+	"free5gc/lib/logger_util"
+	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 
@@ -33,7 +35,7 @@ type Routes []Route
 
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	AddService(router)
 	return router
 }
@@ -76,97 +78,97 @@ var routes = Routes{
 		"GetAmf3gppAccess",
 		strings.ToUpper("Get"),
 		"/:ueId/registrations/amf-3gpp-access",
-		GetAmf3gppAccess,
+		HTTPGetAmf3gppAccess,
 	},
 
 	{
 		"GetAmfNon3gppAccess",
 		strings.ToUpper("Get"),
 		"/:ueId/registrations/amf-non-3gpp-access",
-		GetAmfNon3gppAccess,
+		HTTPGetAmfNon3gppAccess,
 	},
 
 	{
 		"RegistrationAmf3gppAccess",
 		strings.ToUpper("Put"),
 		"/:ueId/registrations/amf-3gpp-access",
-		RegistrationAmf3gppAccess,
+		HTTPRegistrationAmf3gppAccess,
 	},
 
 	{
 		"Register",
 		strings.ToUpper("Put"),
 		"/:ueId/registrations/amf-non-3gpp-access",
-		Register,
+		HTTPRegistrationAmfNon3gppAccess,
 	},
 
 	{
 		"UpdateAmf3gppAccess",
 		strings.ToUpper("Patch"),
 		"/:ueId/registrations/amf-3gpp-access",
-		UpdateAmf3gppAccess,
+		HTTPUpdateAmf3gppAccess,
 	},
 
 	{
 		"UpdateAmfNon3gppAccess",
 		strings.ToUpper("Patch"),
 		"/:ueId/registrations/amf-non-3gpp-access",
-		UpdateAmfNon3gppAccess,
+		HTTPUpdateAmfNon3gppAccess,
 	},
 
 	{
 		"DeregistrationSmfRegistrations",
 		strings.ToUpper("Delete"),
 		"/:ueId/registrations/smf-registrations/:pduSessionId",
-		DeregistrationSmfRegistrations,
+		HTTPDeregistrationSmfRegistrations,
 	},
 
 	{
 		"RegistrationSmfRegistrations",
 		strings.ToUpper("Put"),
 		"/:ueId/registrations/smf-registrations/:pduSessionId",
-		RegistrationSmfRegistrations,
+		HTTPRegistrationSmfRegistrations,
 	},
 
 	{
 		"GetSmsf3gppAccess",
 		strings.ToUpper("Get"),
 		"/:ueId/registrations/smsf-3gpp-access",
-		GetSmsf3gppAccess,
+		HTTPGetSmsf3gppAccess,
 	},
 
 	{
 		"DeregistrationSmsf3gppAccess",
 		strings.ToUpper("Delete"),
 		"/:ueId/registrations/smsf-3gpp-access",
-		DeregistrationSmsf3gppAccess,
+		HTTPDeregistrationSmsf3gppAccess,
 	},
 
 	{
 		"DeregistrationSmsfNon3gppAccess",
 		strings.ToUpper("Delete"),
 		"/:ueId/registrations/smsf-non-3gpp-access",
-		DeregistrationSmsfNon3gppAccess,
+		HTTPDeregistrationSmsfNon3gppAccess,
 	},
 
 	{
 		"GetSmsfNon3gppAccess",
 		strings.ToUpper("Get"),
 		"/:ueId/registrations/smsf-non-3gpp-access",
-		GetSmsfNon3gppAccess,
+		HTTPGetSmsfNon3gppAccess,
 	},
 
 	{
 		"UpdateSMSFReg3GPP",
 		strings.ToUpper("Put"),
 		"/:ueId/registrations/smsf-3gpp-access",
-		UpdateSMSFReg3GPP,
+		HTTPUpdateSMSFReg3GPP,
 	},
 
 	{
 		"RegistrationSmsfNon3gppAccess",
 		strings.ToUpper("Put"),
 		"/:ueId/registrations/smsf-non-3gpp-access",
-		RegistrationSmsfNon3gppAccess,
+		HTTPRegistrationSmsfNon3gppAccess,
 	},
 }
