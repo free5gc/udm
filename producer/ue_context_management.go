@@ -409,7 +409,10 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 
 		return problemDetails
 	}
-
+	if request.PurgeFlag {
+		udmUe, _ := udm_context.UDM_Self().UdmUeFindBySupi(ueID)
+		udmUe.Amf3GppAccessRegistration = nil
+	}
 	return nil
 }
 

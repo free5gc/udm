@@ -15,15 +15,16 @@ import (
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/logger"
 	"free5gc/src/udm/producer"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Unsubscribe - unsubscribe from notifications
 func HTTPUnsubscribe(c *gin.Context) {
 
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ueId"] = c.Params.ByName("ueId")
+	req.Params["supi"] = c.Params.ByName("supi")
 	req.Params["subscriptionId"] = c.Params.ByName("subscriptionId")
 
 	rsp := producer.HandleUnsubscribeRequest(req)
