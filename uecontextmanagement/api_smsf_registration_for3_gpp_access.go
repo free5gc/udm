@@ -16,6 +16,6 @@ import (
 )
 
 // UpdateSMSFReg3GPP - register as SMSF for 3GPP access
-func UpdateSMSFReg3GPP(c *gin.Context) {
+func HTTPUpdateSMSFReg3GPP(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }

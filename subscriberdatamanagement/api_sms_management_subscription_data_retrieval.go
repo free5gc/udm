@@ -16,6 +16,6 @@ import (
 )
 
 // GetSmsMngData - retrieve a UE's SMS Management Subscription Data
-func GetSmsMngData(c *gin.Context) {
+func HTTPGetSmsMngData(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }

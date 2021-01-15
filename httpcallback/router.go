@@ -1,11 +1,13 @@
 package httpcallback
 
 import (
+	"free5gc/lib/logger_util"
 	"free5gc/src/udm/logger"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 var HttpLog *logrus.Entry
@@ -31,7 +33,7 @@ type Routes []Route
 
 // NewRouter returns a new router
 func NewRouter() *gin.Engine {
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	AddService(router)
 	return router
 }
@@ -73,6 +75,6 @@ var routes = Routes{
 		"DataChangeNotificationToNF",
 		strings.ToUpper("Post"),
 		"/sdm-subscriptions",
-		DataChangeNotificationToNF,
+		HTTPDataChangeNotificationToNF,
 	},
 }

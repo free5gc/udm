@@ -11,20 +11,33 @@ package eventexposure
 
 import (
 	"free5gc/lib/http_wrapper"
+	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/handler"
-	udm_message "free5gc/src/udm/handler/message"
 	"free5gc/src/udm/logger"
-	"github.com/gin-gonic/gin"
+	"free5gc/src/udm/producer"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-// CreateEeSubscription - Subscribe
-func CreateEeSubscription(c *gin.Context) {
-
+// HTTPCreateEeSubscription - Subscribe
+func HTTPCreateEeSubscription(c *gin.Context) {
 	var eeSubscriptionReq models.EeSubscription
 
-	err := c.ShouldBindJSON(&eeSubscriptionReq)
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		logger.EeLog.Errorf("Get Request Body error: %+v", err)
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
+
+	err = openapi.Deserialize(&eeSubscriptionReq, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
 		rsp := models.ProblemDetails{
@@ -39,15 +52,19 @@ func CreateEeSubscription(c *gin.Context) {
 
 	req := http_wrapper.NewRequest(c.Request, eeSubscriptionReq)
 	req.Params["ueIdentity"] = c.Params.ByName("ueIdentity")
-	req.Params["subscriptionID"] = c.Params.ByName("subscriptionId")
 
-	handlerMsg := udm_message.NewHandlerMessage(udm_message.EventCreateEeSubscription, req)
-	handler.SendMessage(handlerMsg)
+	rsp := producer.HandleCreateEeSubscription(req)
 
-	rsp := <-handlerMsg.ResponseChan
-
-	HTTPResponse := rsp.HTTPResponse
-
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
-
+	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
+	if err != nil {
+		logger.EeLog.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(rsp.Status, "application/json", responseBody)
+	}
 }

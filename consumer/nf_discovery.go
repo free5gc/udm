@@ -19,7 +19,8 @@ const (
 	NFDiscoveryToUDRParamGpsi
 )
 
-func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType, param Nnrf_NFDiscovery.SearchNFInstancesParamOpts) (result models.SearchResult, err error) {
+func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
+	param Nnrf_NFDiscovery.SearchNFInstancesParamOpts) (result models.SearchResult, err error) {
 
 	// config := factory.UdmConfig
 	// nrfclient := config.Configuration.Nrfclient
@@ -29,7 +30,8 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType, pa
 	configuration.SetBasePath(nrfUri) //addr
 	clientNRF := Nnrf_NFDiscovery.NewAPIClient(configuration)
 
-	result, res, err1 := clientNRF.NFInstancesStoreApi.SearchNFInstances(context.TODO(), targetNfType, requestNfType, &param)
+	result, res, err1 := clientNRF.NFInstancesStoreApi.SearchNFInstances(context.TODO(), targetNfType,
+		requestNfType, &param)
 	if err1 != nil {
 		err = err1
 		return

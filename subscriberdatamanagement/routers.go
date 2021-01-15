@@ -10,6 +10,8 @@
 package subscriberdatamanagement
 
 import (
+	"free5gc/lib/logger_util"
+	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 
@@ -33,7 +35,7 @@ type Routes []Route
 
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
-	router := gin.Default()
+	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	AddService(router)
 	return router
 }
@@ -49,7 +51,7 @@ func oneLayerPathHandlerFunc(c *gin.Context) {
 
 	// special case for :supi
 	if c.Request.Method == strings.ToUpper("Get") {
-		GetSupi(c)
+		HTTPGetSupi(c)
 		return
 	}
 
@@ -62,20 +64,20 @@ func twoLayerPathHandlerFunc(c *gin.Context) {
 
 	// for "/shared-data-subscriptions/:subscriptionId"
 	if supi == "shared-data-subscriptions" && strings.ToUpper("Delete") == c.Request.Method {
-		UnsubscribeForSharedData(c)
+		HTTPUnsubscribeForSharedData(c)
 		return
 	}
 
 	// for "/shared-data-subscriptions/:subscriptionId"
 	if supi == "shared-data-subscriptions" && strings.ToUpper("Patch") == c.Request.Method {
-		ModifyForSharedData(c)
+		HTTPModifyForSharedData(c)
 		return
 	}
 
 	// for "/:gpsi/id-translation-result"
 	if op == "id-translation-result" && strings.ToUpper("Get") == c.Request.Method {
 		c.Params = append(c.Params, gin.Param{Key: "gpsi", Value: c.Param("supi")})
-		GetIdTranslationResult(c)
+		HTTPGetIdTranslationResult(c)
 		return
 	}
 
@@ -98,13 +100,13 @@ func threeLayerPathHandlerFunc(c *gin.Context) {
 		tmpParams = append(tmpParams, gin.Param{Key: "supi", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
-		Unsubscribe(c)
+		HTTPUnsubscribe(c)
 		return
 	}
 
 	// for "/:supi/am-data/sor-ack"
 	if op == "am-data" && strings.ToUpper("Put") == c.Request.Method {
-		Info(c)
+		HTTPInfo(c)
 		return
 	}
 
@@ -114,7 +116,7 @@ func threeLayerPathHandlerFunc(c *gin.Context) {
 		tmpParams = append(tmpParams, gin.Param{Key: "supi", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
-		Modify(c)
+		HTTPModify(c)
 		return
 	}
 
@@ -170,21 +172,21 @@ var specialRouter = Routes{
 		"GetIdTranslationResult",
 		strings.ToUpper("Get"),
 		"/:gpsi/id-translation-result",
-		GetIdTranslationResult,
+		HTTPGetIdTranslationResult,
 	},
 
 	{
 		"UnsubscribeForSharedData",
 		strings.ToUpper("Delete"),
 		"/shared-data-subscriptions/:subscriptionId",
-		UnsubscribeForSharedData,
+		HTTPUnsubscribeForSharedData,
 	},
 
 	{
 		"ModifyForSharedData",
 		strings.ToUpper("Patch"),
 		"/shared-data-subscriptions/:subscriptionId",
-		ModifyForSharedData,
+		HTTPModifyForSharedData,
 	},
 }
 
@@ -193,21 +195,21 @@ var oneLayerPathRouter = Routes{
 		"GetSupi",
 		strings.ToUpper("Get"),
 		"/:supi",
-		GetSupi,
+		HTTPGetSupi,
 	},
 
 	{
 		"GetSharedData",
 		strings.ToUpper("Get"),
 		"/shared-data",
-		GetSharedData,
+		HTTPGetSharedData,
 	},
 
 	{
 		"SubscribeToSharedData",
 		strings.ToUpper("Post"),
 		"/shared-data-subscriptions",
-		SubscribeToSharedData,
+		HTTPSubscribeToSharedData,
 	},
 }
 
@@ -216,70 +218,70 @@ var twoLayerPathRouter = Routes{
 		"GetAmData",
 		strings.ToUpper("Get"),
 		"/:supi/am-data",
-		GetAmData,
+		HTTPGetAmData,
 	},
 
 	{
 		"GetSmfSelectData",
 		strings.ToUpper("Get"),
 		"/:supi/smf-select-data",
-		GetSmfSelectData,
+		HTTPGetSmfSelectData,
 	},
 
 	{
 		"GetSmsMngData",
 		strings.ToUpper("Get"),
 		"/:supi/sms-mng-data",
-		GetSmsMngData,
+		HTTPGetSmsMngData,
 	},
 
 	{
 		"GetSmsData",
 		strings.ToUpper("Get"),
 		"/:supi/sms-data",
-		GetSmsData,
+		HTTPGetSmsData,
 	},
 
 	{
 		"GetSmData",
 		strings.ToUpper("Get"),
 		"/:supi/sm-data",
-		GetSmData,
+		HTTPGetSmData,
 	},
 
 	{
 		"GetNssai",
 		strings.ToUpper("Get"),
 		"/:supi/nssai",
-		GetNssai,
+		HTTPGetNssai,
 	},
 
 	{
 		"Subscribe",
 		strings.ToUpper("Post"),
 		"/:supi/sdm-subscriptions",
-		Subscribe,
+		HTTPSubscribe,
 	},
 
 	{
 		"GetTraceData",
 		strings.ToUpper("Get"),
 		"/:supi/trace-data",
-		GetTraceData,
+		HTTPGetTraceData,
 	},
 
 	{
 		"GetUeContextInSmfData",
 		strings.ToUpper("Get"),
 		"/:supi/ue-context-in-smf-data",
-		GetUeContextInSmfData,
+		HTTPGetUeContextInSmfData,
 	},
 
 	{
 		"GetUeContextInSmsfData",
 		strings.ToUpper("Get"),
 		"/:supi/ue-context-in-smsf-data",
-		GetUeContextInSmsfData,
+		HTTPGetUeContextInSmsfData,
 	},
 }
 
@@ -288,28 +290,28 @@ var threeLayerPathRouter = Routes{
 		"Unsubscribe",
 		strings.ToUpper("Delete"),
 		"/:supi/sdm-subscriptions/:subscriptionId",
-		Unsubscribe,
+		HTTPUnsubscribe,
 	},
 
 	{
 		"Info",
 		strings.ToUpper("Put"),
 		"/:supi/am-data/sor-ack",
-		Info,
+		HTTPInfo,
 	},
 
 	{
 		"PutUpuAck",
 		strings.ToUpper("Put"),
 		"/:supi/am-data/upu-ack",
-		PutUpuAck,
+		HTTPPutUpuAck,
 	},
 
 	{
 		"Modify",
 		strings.ToUpper("Patch"),
 		"/:supi/sdm-subscriptions/:subscriptionId",
-		Modify,
+		HTTPModify,
 	},
 }
 
@@ -325,118 +327,118 @@ var routesBackup = Routes{
 		"GetAmData",
 		strings.ToUpper("Get"),
 		"/:supi/am-data",
-		GetAmData,
+		HTTPGetAmData,
 	},
 
 	{
 		"Info",
 		strings.ToUpper("Put"),
 		"/:supi/am-data/sor-ack",
-		Info,
+		HTTPInfo,
 	},
 
 	{
 		"GetSupi",
 		strings.ToUpper("Get"),
 		"/:supi",
-		GetSupi,
+		HTTPGetSupi,
 	},
 
 	{
 		"GetSharedData",
 		strings.ToUpper("Get"),
 		"/shared-data",
-		GetSharedData,
+		HTTPGetSharedData,
 	},
 
 	{
 		"GetSmfSelectData",
 		strings.ToUpper("Get"),
 		"/:supi/smf-select-data",
-		GetSmfSelectData,
+		HTTPGetSmfSelectData,
 	},
 
 	{
 		"GetSmsMngData",
 		strings.ToUpper("Get"),
 		"/:supi/sms-mng-data",
-		GetSmsMngData,
+		HTTPGetSmsMngData,
 	},
 
 	{
 		"GetSmsData",
 		strings.ToUpper("Get"),
 		"/:supi/sms-data",
-		GetSmsData,
+		HTTPGetSmsData,
 	},
 
 	{
 		"GetSmData",
 		strings.ToUpper("Get"),
 		"/:supi/sm-data",
-		GetSmData,
+		HTTPGetSmData,
 	},
 
 	{
 		"GetNssai",
 		strings.ToUpper("Get"),
 		"/:supi/nssai",
-		GetNssai,
+		HTTPGetNssai,
 	},
 
 	{
 		"Subscribe",
 		strings.ToUpper("Post"),
 		"/:supi/sdm-subscriptions",
-		Subscribe,
+		HTTPSubscribe,
 	},
 
 	{
 		"SubscribeToSharedData",
 		strings.ToUpper("Post"),
 		"/shared-data-subscriptions",
-		SubscribeToSharedData,
+		HTTPSubscribeToSharedData,
 	},
 
 	{
 		"Unsubscribe",
 		strings.ToUpper("Delete"),
 		"/:supi/sdm-subscriptions/:subscriptionId",
-		Unsubscribe,
+		HTTPUnsubscribe,
 	},
 
 	{
 		"UnsubscribeForSharedData",
 		strings.ToUpper("Delete"),
 		"/shared-data-subscriptions/:subscriptionId",
-		UnsubscribeForSharedData,
+		HTTPUnsubscribeForSharedData,
 	},
 
 	{
 		"GetTraceData",
 		strings.ToUpper("Get"),
 		"/:supi/trace-data",
-		GetTraceData,
+		HTTPGetTraceData,
 	},
 
 	{
 		"GetUeContextInSmfData",
 		strings.ToUpper("Get"),
 		"/:supi/ue-context-in-smf-data",
-		GetUeContextInSmfData,
+		HTTPGetUeContextInSmfData,
 	},
 
 	{
 		"GetUeContextInSmsfData",
 		strings.ToUpper("Get"),
 		"/:supi/ue-context-in-smsf-data",
-		GetUeContextInSmsfData,
+		HTTPGetUeContextInSmsfData,
 	},
 
 	{
 		"GetIdTranslationResult",
 		strings.ToUpper("Get"),
 		"/:gpsi/id-translation-result",
-		GetIdTranslationResult,
+		HTTPGetIdTranslationResult,
 	},
 }

@@ -16,6 +16,6 @@ import (
 )
 
 // RegistrationSmsfNon3gppAccess - register as SMSF for non-3GPP access
-func RegistrationSmsfNon3gppAccess(c *gin.Context) {
+func HTTPRegistrationSmsfNon3gppAccess(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }

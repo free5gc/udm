@@ -1,11 +1,10 @@
 package logger
 
 import (
-	"fmt"
 	"os"
-	"runtime"
-	"strings"
+	"time"
 
+	formatter "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/sirupsen/logrus"
 
 	"free5gc/lib/logger_conf"
@@ -24,30 +23,19 @@ var PpLop *logrus.Entry
 var EeLog *logrus.Entry
 var UtilLog *logrus.Entry
 var CallbackLog *logrus.Entry
+var ContextLog *logrus.Entry
+var GinLog *logrus.Entry
 
 func init() {
 	log = logrus.New()
-	log.SetReportCaller(true)
+	log.SetReportCaller(false)
 
-	log.Formatter = &logrus.TextFormatter{
-		ForceColors:               true,
-		DisableColors:             false,
-		EnvironmentOverrideColors: false,
-		DisableTimestamp:          false,
-		FullTimestamp:             true,
-		TimestampFormat:           "",
-		DisableSorting:            false,
-		SortingFunc:               nil,
-		DisableLevelTruncation:    false,
-		QuoteEmptyFields:          false,
-		FieldMap:                  nil,
-		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
-			orgFilename, _ := os.Getwd()
-			repopath := orgFilename
-			repopath = strings.Replace(repopath, "/bin", "", 1)
-			filename := strings.Replace(f.File, repopath, "", -1)
-			return fmt.Sprintf("%s()", f.Function), fmt.Sprintf("%s:%d", filename, f.Line)
-		},
+	log.Formatter = &formatter.Formatter{
+		TimestampFormat: time.RFC3339,
+		TrimMessages:    true,
+		NoFieldsSpace:   true,
+		HideKeys:        true,
+		FieldsOrder:     []string{"component", "category"},
 	}
 
 	free5gcLogHook, err := logger_util.NewFileHook(logger_conf.Free5gcLogFile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
@@ -60,17 +48,19 @@ func init() {
 		log.Hooks.Add(selfLogHook)
 	}
 
-	AppLog = log.WithFields(logrus.Fields{"UDM": "app"})
-	InitLog = log.WithFields(logrus.Fields{"UDM": "init"})
-	Handlelog = log.WithFields(logrus.Fields{"UDM": "Handler"})
-	HttpLog = log.WithFields(logrus.Fields{"UDM": "HTTP"})
-	UeauLog = log.WithFields(logrus.Fields{"UDM": "UEAU"})
-	UecmLog = log.WithFields(logrus.Fields{"UDM": "UECM"})
-	SdmLog = log.WithFields(logrus.Fields{"UDM": "SDM"})
-	PpLop = log.WithFields(logrus.Fields{"UDM": "PP"})
-	EeLog = log.WithFields(logrus.Fields{"UDM": "EE"})
-	UtilLog = log.WithFields(logrus.Fields{"UDM": "Util"})
-	CallbackLog = log.WithFields(logrus.Fields{"UDM": "Callback"})
+	AppLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "App"})
+	InitLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "Init"})
+	Handlelog = log.WithFields(logrus.Fields{"component": "UDM", "category": "Handler"})
+	HttpLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "HTTP"})
+	UeauLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "UEAU"})
+	UecmLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "UECM"})
+	SdmLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "SDM"})
+	PpLop = log.WithFields(logrus.Fields{"component": "UDM", "category": "PP"})
+	EeLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "EE"})
+	UtilLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "Util"})
+	CallbackLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "Callback"})
+	ContextLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "Context"})
+	GinLog = log.WithFields(logrus.Fields{"component": "UDM", "category": "GIN"})
 }
 
 func SetLogLevel(level logrus.Level) {

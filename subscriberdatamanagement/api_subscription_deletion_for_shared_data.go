@@ -11,24 +11,31 @@ package subscriberdatamanagement
 
 import (
 	"free5gc/lib/http_wrapper"
-	"free5gc/src/udm/handler"
-	udm_message "free5gc/src/udm/handler/message"
-
+	"free5gc/lib/openapi"
+	"free5gc/lib/openapi/models"
+	"free5gc/src/udm/logger"
+	"free5gc/src/udm/producer"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // UnsubscribeForSharedData - unsubscribe from notifications for shared data
-func UnsubscribeForSharedData(c *gin.Context) {
+func HTTPUnsubscribeForSharedData(c *gin.Context) {
 
 	req := http_wrapper.NewRequest(c.Request, nil)
 	req.Params["subscriptionId"] = c.Params.ByName("subscriptionId")
 
-	handleMsg := udm_message.NewHandlerMessage(udm_message.EventUnsubscribeForSharedData, req)
-	handler.SendMessage(handleMsg)
-
-	rsp := <-handleMsg.ResponseChan
-	HTTPResponse := rsp.HTTPResponse
-
-	c.JSON(HTTPResponse.Status, HTTPResponse.Body)
-
+	rsp := producer.HandleUnsubscribeForSharedDataRequest(req)
+	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
+	if err != nil {
+		logger.SdmLog.Errorln(err)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Cause:  "SYSTEM_FAILURE",
+			Detail: err.Error(),
+		}
+		c.JSON(http.StatusInternalServerError, problemDetails)
+	} else {
+		c.Data(rsp.Status, "application/json", responseBody)
+	}
 }

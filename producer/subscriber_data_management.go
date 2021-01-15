@@ -3,93 +3,185 @@ package producer
 import (
 	"context"
 	"fmt"
+	"free5gc/lib/http_wrapper"
 	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/Nudm_SubscriberDataManagement"
 	Nudr "free5gc/lib/openapi/Nudr_DataRepository"
 	"free5gc/lib/openapi/models"
 	udm_context "free5gc/src/udm/context"
 	"free5gc/src/udm/logger"
-	udm_message "free5gc/src/udm/handler/message"
 	"net/http"
 	"strconv"
 
 	"github.com/antihax/optional"
 )
 
-func HandleGetAmData(httpChannel chan udm_message.HandlerResponseMessage, supi string, plmnID string, supportedFeatures string) {
+func HandleGetAmDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle GetAmData")
+
+	// step 2: retrieve request
+	supi := request.Params["supi"]
+	plmnID := request.Query.Get("plmn-id")
+	supportedFeatures := request.Query.Get("supported-features")
+
+	// step 3: handle the message
+	response, problemDetails := getAmDataProcedure(supi, plmnID, supportedFeatures)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+// GetAmDataProcedure
+func getAmDataProcedure(supi string, plmnID string, supportedFeatures string) (
+	response *models.AccessAndMobilitySubscriptionData, problemDetails *models.ProblemDetails) {
 	var queryAmDataParamOpts Nudr.QueryAmDataParamOpts
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 
 	clientAPI := createUDMClientToUDR(supi, false)
-	accessAndMobilitySubscriptionDataResp, res, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.QueryAmData(context.Background(),
-		supi, plmnID, &queryAmDataParamOpts)
+	accessAndMobilitySubscriptionDataResp, res, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.
+		QueryAmData(context.Background(), supi, plmnID, &queryAmDataParamOpts)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
 			fmt.Println(err.Error())
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
 		}
-		return
 	}
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
-		udmUe.AccessAndMobilitySubscriptionData = &accessAndMobilitySubscriptionDataResp
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, *udmUe.AccessAndMobilitySubscriptionData)
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe.SetAMSubsriptionData(&accessAndMobilitySubscriptionDataResp)
+		return &accessAndMobilitySubscriptionDataResp, nil
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+		return nil, problemDetails
 	}
 }
 
-func HandleGetIdTranslationResult(httpChannel chan udm_message.HandlerResponseMessage, gpsi string) {
+func HandleGetIdTranslationResultRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle GetIdTranslationResultRequest")
 
+	// step 2: retrieve request
+	gpsi := request.Params["gpsi"]
+
+	// step 3: handle the message
+	response, problemDetails := getIdTranslationResultProcedure(gpsi)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func getIdTranslationResultProcedure(gpsi string) (response *models.IdTranslationResult,
+	problemDetails *models.ProblemDetails) {
 	var idTranslationResult models.IdTranslationResult
 	var getIdentityDataParamOpts Nudr.GetIdentityDataParamOpts
 	clientAPI := createUDMClientToUDR(gpsi, false)
-	idTranslationResultResp, res, err := clientAPI.QueryIdentityDataBySUPIOrGPSIDocumentApi.GetIdentityData(context.Background(), gpsi, &getIdentityDataParamOpts)
+	idTranslationResultResp, res, err := clientAPI.QueryIdentityDataBySUPIOrGPSIDocumentApi.GetIdentityData(
+		context.Background(), gpsi, &getIdentityDataParamOpts)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
 			fmt.Println(err.Error())
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 
 	if res.StatusCode == http.StatusOK {
 		idList := udm_context.UDM_Self().GpsiSupiList
 		idList = idTranslationResultResp
 		if idList.SupiList != nil {
-			idTranslationResult.Supi = udm_context.GetCorrespondingSupi(idList) // GetCorrespondingSupi get corresponding Supi(here IMSI) matching the given Gpsi from the queried SUPI list from UDR
+			// GetCorrespondingSupi get corresponding Supi(here IMSI) matching the given Gpsi from the queried SUPI list from UDR
+			idTranslationResult.Supi = udm_context.GetCorrespondingSupi(idList)
 			idTranslationResult.Gpsi = gpsi
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, idTranslationResult)
+
+			return &idTranslationResult, nil
 		} else {
-			var problemDetail models.ProblemDetails
-			problemDetail.Cause = "USER_NOT_FOUND" // SupiList are empty
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetail)
+			problemDetails = &models.ProblemDetails{
+				Status: http.StatusNotFound,
+				Cause:  "USER_NOT_FOUND",
+			}
+
+			return nil, problemDetails
 		}
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
-	}
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
 
+		return nil, problemDetails
+	}
 }
 
-func HandleGetSupi(httpChannel chan udm_message.HandlerResponseMessage, supi string, plmnID string, dataSetNames []string, supportedFeatures string) {
+func HandleGetSupiRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle GetSupiRequest")
 
+	// step 2: retrieve request
+	supi := request.Params["supi"]
+	plmnID := request.Query.Get("plmn-id")
+	dataSetNames := request.Query["dataset-names"]
+	supportedFeatures := request.Query.Get("supported-features")
+
+	// step 3: handle the message
+	response, problemDetails := getSupiProcedure(supi, plmnID, dataSetNames, supportedFeatures)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func getSupiProcedure(supi string, plmnID string, dataSetNames []string, supportedFeatures string) (
+	response *models.SubscriptionDataSets, problemDetails *models.ProblemDetails) {
 	clientAPI := createUDMClientToUDR(supi, false)
 	var subscriptionDataSets, subsDataSetBody models.SubscriptionDataSets
 	var ueContextInSmfDataResp models.UeContextInSmfData
@@ -104,125 +196,155 @@ func HandleGetSupi(httpChannel chan udm_message.HandlerResponseMessage, supi str
 
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	querySmfSelectDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
-	udm_context.CreateSubsDataSetsForUe(supi, subsDataSetBody)
+	udm_context.UDM_Self().CreateSubsDataSetsForUe(supi, subsDataSetBody)
 
 	var body models.AccessAndMobilitySubscriptionData
-	udm_context.CreateAccessMobilitySubsDataForUe(supi, body)
-	amData, res1, err1 := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.QueryAmData(context.Background(), supi, plmnID, &queryAmDataParamOpts)
+	udm_context.UDM_Self().CreateAccessMobilitySubsDataForUe(supi, body)
+	amData, res1, err1 := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.QueryAmData(
+		context.Background(), supi, plmnID, &queryAmDataParamOpts)
 	if err1 != nil {
-		var problemDetails models.ProblemDetails
 		if res1 == nil {
 			fmt.Println(err1.Error())
 		} else if err1.Error() != res1.Status {
 			fmt.Println(err1.Error())
 		} else {
-			problemDetails.Cause = err1.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res1.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res1.StatusCode),
+				Cause:  err1.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err1.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 	if res1.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
-		udmUe.AccessAndMobilitySubscriptionData = &amData
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe.SetAMSubsriptionData(&amData)
 		subscriptionDataSets.AmData = &amData
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		fmt.Printf(problemDetails.Cause)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+
+		return nil, problemDetails
 	}
 
 	var smfSelSubsbody models.SmfSelectionSubscriptionData
-	udm_context.CreateSmfSelectionSubsDatadforUe(supi, smfSelSubsbody)
+	udm_context.UDM_Self().CreateSmfSelectionSubsDataforUe(supi, smfSelSubsbody)
 	smfSelData, res2, err2 := clientAPI.SMFSelectionSubscriptionDataDocumentApi.QuerySmfSelectData(context.Background(),
 		supi, plmnID, &querySmfSelectDataParamOpts)
 	if err2 != nil {
-		var problemDetails models.ProblemDetails
 		if res2 == nil {
-			fmt.Println(err2.Error())
+			logger.SdmLog.Errorln(err2.Error())
 		} else if err2.Error() != res2.Status {
-			fmt.Println(err2.Error())
+			logger.SdmLog.Errorln(err2.Error())
 		} else {
-			problemDetails.Cause = err2.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res2.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res2.StatusCode),
+				Cause:  err2.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err2.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 	if res2.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
-		udmUe.SmfSelSubsData = &smfSelData
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe.SetSmfSelectionSubsData(&smfSelData)
 		subscriptionDataSets.SmfSelData = &smfSelData
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		fmt.Printf(problemDetails.Cause)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+
+		return nil, problemDetails
 	}
 
 	var TraceDatabody models.TraceData
-	udm_context.CreateTraceDataforUe(supi, TraceDatabody)
-	traceData, res3, err3 := clientAPI.TraceDataDocumentApi.QueryTraceData(context.Background(), supi, plmnID, &queryTraceDataParamOpts)
+	udm_context.UDM_Self().CreateTraceDataforUe(supi, TraceDatabody)
+	traceData, res3, err3 := clientAPI.TraceDataDocumentApi.QueryTraceData(
+		context.Background(), supi, plmnID, &queryTraceDataParamOpts)
 	if err3 != nil {
-		var problemDetails models.ProblemDetails
 		if res3 == nil {
 			fmt.Println(err3.Error())
 		} else if err3.Error() != res3.Status {
 			fmt.Println(err3.Error())
 		} else {
-			problemDetails.Cause = err3.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res3.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res3.StatusCode),
+				Cause:  err3.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err3.Error(),
+			}
 		}
-		return
+		return nil, problemDetails
 	}
 	if res3.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
 		udmUe.TraceData = &traceData
 		udmUe.TraceDataResponse.TraceData = &traceData
 		subscriptionDataSets.TraceData = &traceData
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		fmt.Printf(problemDetails.Cause)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+
+		return nil, problemDetails
 	}
 
-	sessionManagementSubscriptionData, res4, err4 := clientAPI.SessionManagementSubscriptionDataApi.QuerySmData(context.Background(), supi, plmnID, &querySmDataParamOpts)
+	sessionManagementSubscriptionData, res4, err4 := clientAPI.SessionManagementSubscriptionDataApi.
+		QuerySmData(context.Background(), supi, plmnID, &querySmDataParamOpts)
 	if err4 != nil {
-		var problemDetails models.ProblemDetails
 		if res4 == nil {
 			fmt.Println(err4.Error())
 		} else if err4.Error() != res4.Status {
 			fmt.Println(err4.Error())
 		} else {
-			problemDetails.Cause = err4.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res4.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res4.StatusCode),
+				Cause:  err4.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err4.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 	if res4.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
-		smData, _, _, _ := udm_context.ManageSmData(sessionManagementSubscriptionData, "", "")
-		udmUe.SessionManagementSubsData = smData
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		smData, _, _, _ := udm_context.UDM_Self().ManageSmData(sessionManagementSubscriptionData, "", "")
+		udmUe.SetSMSubsData(smData)
 		subscriptionDataSets.SmData = sessionManagementSubscriptionData
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		fmt.Printf(problemDetails.Cause)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+
+		return nil, problemDetails
 	}
 
 	var UeContextInSmfbody models.UeContextInSmfData
 	var querySmfRegListParamOpts Nudr.QuerySmfRegListParamOpts
 	querySmfRegListParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
-	udm_context.CreateUeContextInSmfDataforUe(supi, UeContextInSmfbody)
-	pdusess, res, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(context.Background(), supi, &querySmfRegListParamOpts)
+	udm_context.UDM_Self().CreateUeContextInSmfDataforUe(supi, UeContextInSmfbody)
+	pdusess, res, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(
+		context.Background(), supi, &querySmfRegListParamOpts)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
 			fmt.Println(err.Error())
 		} else if err.Error() != res.Status {
 			fmt.Println(err.Error())
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 
 	for _, element := range pdusess {
@@ -244,7 +366,7 @@ func HandleGetSupi(httpChannel chan udm_message.HandlerResponseMessage, supi str
 	ueContextInSmfDataResp.PgwInfo = pgwInfoArray
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
 		udmUe.UeCtxtInSmfData = &ueContextInSmfDataResp
 	} else {
 		var problemDetails models.ProblemDetails
@@ -252,17 +374,47 @@ func HandleGetSupi(httpChannel chan udm_message.HandlerResponseMessage, supi str
 		fmt.Printf(problemDetails.Cause)
 	}
 
-	if (res.StatusCode == http.StatusOK) && (res1.StatusCode == http.StatusOK) && (res2.StatusCode == http.StatusOK) && (res3.StatusCode == http.StatusOK) && (res4.StatusCode == http.StatusOK) {
+	if (res.StatusCode == http.StatusOK) && (res1.StatusCode == http.StatusOK) &&
+		(res2.StatusCode == http.StatusOK) && (res3.StatusCode == http.StatusOK) &&
+		(res4.StatusCode == http.StatusOK) {
 		subscriptionDataSets.UecSmfData = &ueContextInSmfDataResp
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, subscriptionDataSets)
+		return &subscriptionDataSets, nil
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+
+		return nil, problemDetails
 	}
 }
 
-func HandleGetSharedData(httpChannel chan udm_message.HandlerResponseMessage, sharedDataIds []string, supportedFeatures string) {
+func HandleGetSharedDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle GetSharedData")
+
+	// step 2: retrieve request
+	sharedDataIds := request.Query["sharedDataIds"]
+	supportedFeatures := request.Query.Get("supported-features")
+	// step 3: handle the message
+	response, problemDetails := getSharedDataProcedure(sharedDataIds, supportedFeatures)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func getSharedDataProcedure(sharedDataIds []string, supportedFeatures string) (
+	response []models.SharedData, problemDetails *models.ProblemDetails) {
 
 	clientAPI := createUDMClientToUDR("", true)
 	var getSharedDataParamOpts Nudr.GetSharedDataParamOpts
@@ -271,321 +423,583 @@ func HandleGetSharedData(httpChannel chan udm_message.HandlerResponseMessage, sh
 	sharedDataResp, res, err := clientAPI.RetrievalOfSharedDataApi.GetSharedData(context.Background(), sharedDataIds,
 		&getSharedDataParamOpts)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			logger.SdmLog.Warnln(err)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 
 	if res.StatusCode == http.StatusOK {
 		udm_context.UDM_Self().SharedSubsDataMap = udm_context.MappingSharedData(sharedDataResp)
 		sharedData := udm_context.ObtainRequiredSharedData(sharedDataIds, sharedDataResp)
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, sharedData)
+		return sharedData, nil
 	} else {
-		var problemDetail models.ProblemDetails
-		problemDetail.Cause = "DATA_NOT_FOUND"
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetail)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+		return nil, problemDetails
 	}
 }
 
-func HandleGetSmData(httpChannel chan udm_message.HandlerResponseMessage, supi string, plmnID string, Dnn string, Snssai string, supportedFeatures string) {
-	logger.Handlelog.Infof("HandleGetSmData SUPI[%s] PLMNID[%s] DNN[%s] SNssai[%s]", supi, plmnID, Dnn, Snssai)
+func HandleGetSmDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle GetSmData")
+
+	// step 2: retrieve request
+	supi := request.Params["supi"]
+	plmnID := request.Query.Get("plmn-id")
+	Dnn := request.Query.Get("dnn")
+	Snssai := request.Query.Get("single-nssai")
+	supportedFeatures := request.Query.Get("supported-features")
+
+	// step 3: handle the message
+	response, problemDetails := getSmDataProcedure(supi, plmnID, Dnn, Snssai, supportedFeatures)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func getSmDataProcedure(supi string, plmnID string, Dnn string, Snssai string, supportedFeatures string) (
+	response interface{}, problemDetails *models.ProblemDetails) {
+	logger.SdmLog.Infof("getSmDataProcedure: SUPI[%s] PLMNID[%s] DNN[%s] SNssai[%s]", supi, plmnID, Dnn, Snssai)
 
 	clientAPI := createUDMClientToUDR(supi, false)
 	var querySmDataParamOpts Nudr.QuerySmDataParamOpts
 	querySmDataParamOpts.SingleNssai = optional.NewInterface(Snssai)
 
-	sessionManagementSubscriptionDataResp, res, err := clientAPI.SessionManagementSubscriptionDataApi.QuerySmData(context.Background(),
-		supi, plmnID, &querySmDataParamOpts)
+	sessionManagementSubscriptionDataResp, res, err := clientAPI.SessionManagementSubscriptionDataApi.
+		QuerySmData(context.Background(), supi, plmnID, &querySmDataParamOpts)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			logger.SdmLog.Warnln(err)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
-		var snssaikey string
-		var AllDnnConfigsbyDnn []models.DnnConfiguration
-		var AllDnns []map[string]models.DnnConfiguration
-		udmUe.SessionManagementSubsData, snssaikey, AllDnnConfigsbyDnn, AllDnns = udm_context.ManageSmData(sessionManagementSubscriptionDataResp, Snssai, Dnn)
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		smData, snssaikey, AllDnnConfigsbyDnn, AllDnns := udm_context.UDM_Self().ManageSmData(
+			sessionManagementSubscriptionDataResp, Snssai, Dnn)
+		udmUe.SetSMSubsData(smData)
 
 		var rspSMSubDataList = make([]models.SessionManagementSubscriptionData, 0, 4)
+
+		udmUe.SmSubsDataLock.RLock()
 		for _, eachSMSubData := range udmUe.SessionManagementSubsData {
 			rspSMSubDataList = append(rspSMSubDataList, eachSMSubData)
 		}
+		udmUe.SmSubsDataLock.RUnlock()
 
 		switch {
 		case Snssai == "" && Dnn == "":
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, AllDnns)
+			return AllDnns, nil
 		case Snssai != "" && Dnn == "":
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, udmUe.SessionManagementSubsData[snssaikey].DnnConfigurations)
+			udmUe.SmSubsDataLock.RLock()
+			defer udmUe.SmSubsDataLock.RUnlock()
+			return udmUe.SessionManagementSubsData[snssaikey].DnnConfigurations, nil
 		case Snssai == "" && Dnn != "":
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, AllDnnConfigsbyDnn)
+			return AllDnnConfigsbyDnn, nil
 		case Snssai != "" && Dnn != "":
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, rspSMSubDataList)
+			return rspSMSubDataList, nil
 		default:
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, udmUe.SessionManagementSubsData)
+			udmUe.SmSubsDataLock.RLock()
+			defer udmUe.SmSubsDataLock.RUnlock()
+			return udmUe.SessionManagementSubsData, nil
 		}
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+
+		return nil, problemDetails
 	}
+
 }
 
-func HandleGetNssai(httpChannel chan udm_message.HandlerResponseMessage, supi string, plmnID string, supportedFeatures string) {
+func HandleGetNssaiRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle GetNssai")
 
+	// step 2: retrieve request
+	supi := request.Params["supi"]
+	plmnID := request.Query.Get("plmn-id")
+	supportedFeatures := request.Query.Get("supported-features")
+
+	// step 3: handle the message
+	response, problemDetails := getNssaiProcedure(supi, plmnID, supportedFeatures)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func getNssaiProcedure(supi string, plmnID string, supportedFeatures string) (reponse *models.Nssai,
+	problemDetails *models.ProblemDetails) {
 	var queryAmDataParamOpts Nudr.QueryAmDataParamOpts
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	var nssaiResp models.Nssai
 	clientAPI := createUDMClientToUDR(supi, false)
 
-	accessAndMobilitySubscriptionDataResp, res, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.QueryAmData(context.Background(),
-		supi, plmnID, &queryAmDataParamOpts)
+	accessAndMobilitySubscriptionDataResp, res, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.
+		QueryAmData(context.Background(), supi, plmnID, &queryAmDataParamOpts)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			logger.SdmLog.Warnln(err)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 	nssaiResp = *accessAndMobilitySubscriptionDataResp.Nssai
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
 		udmUe.Nssai = &nssaiResp
-		if plmnID != "" {
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, udmUe.Nssai)
-		} else {
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, udmUe.Nssai)
-		}
+		return udmUe.Nssai, nil
 	} else {
-		var problemDetail models.ProblemDetails
-		problemDetail.Cause = "DATA_NOT_FOUND"
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetail)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+		return nil, problemDetails
 	}
 }
 
-func HandleGetSmfSelectData(httpChannel chan udm_message.HandlerResponseMessage, supi string, plmnID string, supportedFeatures string) {
+func HandleGetSmfSelectDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle GetSmfSelectData")
 
+	// step 2: retrieve request
+	supi := request.Params["supi"]
+	plmnID := request.Query.Get("plmn-id")
+	supportedFeatures := request.Query.Get("supported-features")
+
+	// step 3: handle the message
+	response, problemDetails := getSmfSelectDataProcedure(supi, plmnID, supportedFeatures)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func getSmfSelectDataProcedure(supi string, plmnID string, supportedFeatures string) (
+	response *models.SmfSelectionSubscriptionData, problemDetails *models.ProblemDetails) {
 	var querySmfSelectDataParamOpts Nudr.QuerySmfSelectDataParamOpts
 	querySmfSelectDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	var body models.SmfSelectionSubscriptionData
 	clientAPI := createUDMClientToUDR(supi, false)
-	udm_context.CreateSmfSelectionSubsDatadforUe(supi, body)
+	udm_context.UDM_Self().CreateSmfSelectionSubsDataforUe(supi, body)
 
-	smfSelectionSubscriptionDataResp, res, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.QuerySmfSelectData(context.Background(),
-		supi, plmnID, &querySmfSelectDataParamOpts)
+	smfSelectionSubscriptionDataResp, res, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.
+		QuerySmfSelectData(context.Background(), supi, plmnID, &querySmfSelectDataParamOpts)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			logger.SdmLog.Warnln(err)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
 		}
 		return
 	}
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
-		udmUe.SmfSelSubsData = &smfSelectionSubscriptionDataResp
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, *udmUe.SmfSelSubsData)
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe.SetSmfSelectionSubsData(&smfSelectionSubscriptionDataResp)
+		return udmUe.SmfSelSubsData, nil
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+		return nil, problemDetails
 	}
 }
 
-func HandleSubscribeToSharedData(httpChannel chan udm_message.HandlerResponseMessage, sdmSubscription models.SdmSubscription) {
-	var body *models.SdmSubscription
+func HandleSubscribeToSharedDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle SubscribeToSharedData")
+
+	// step 2: retrieve request
+	sdmSubscription := request.Body.(models.SdmSubscription)
+
+	// step 3: handle the message
+	header, response, problemDetails := subscribeToSharedDataProcedure(&sdmSubscription)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusCreated, header, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	} else {
+		return http_wrapper.NewResponse(http.StatusNotFound, nil, nil)
+	}
+}
+
+func subscribeToSharedDataProcedure(sdmSubscription *models.SdmSubscription) (
+	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
 	cfg := Nudm_SubscriberDataManagement.NewConfiguration()
 	udmClientAPI := Nudm_SubscriberDataManagement.NewAPIClient(cfg)
-	udm_context.CreateSubstoNotifSharedData(sdmSubscription.SubscriptionId, body)
 
-	sdmSubscriptionResp, res, err := udmClientAPI.SubscriptionCreationForSharedDataApi.SubscribeToSharedData(context.Background(), sdmSubscription)
+	sdmSubscriptionResp, res, err := udmClientAPI.SubscriptionCreationForSharedDataApi.SubscribeToSharedData(
+		context.Background(), *sdmSubscription)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
-			fmt.Println(res.Status)
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+			return nil, nil, problemDetails
 		}
-		return
 	}
 
 	if res.StatusCode == http.StatusCreated {
-		h := make(http.Header)
-		udmUe := udm_context.CreateUdmUe(sdmSubscriptionResp.SubscriptionId)
-		udmUe.SubscribeToNotifSharedDataChange = &sdmSubscriptionResp
-		h.Set("Location", udmUe.GetLocationURI2(udm_context.LocationUriSharedDataSubscription, "supi"))
-		udm_message.SendHttpResponseMessage(httpChannel, h, http.StatusCreated, *udmUe.SubscribeToNotifSharedDataChange)
+		header = make(http.Header)
+		udm_context.UDM_Self().CreateSubstoNotifSharedData(sdmSubscriptionResp.SubscriptionId, &sdmSubscriptionResp)
+		reourceUri := udm_context.UDM_Self().GetSDMUri() + "//shared-data-subscriptions/" + sdmSubscriptionResp.SubscriptionId
+		header.Set("Location", reourceUri)
+		return header, &sdmSubscriptionResp, nil
 	} else if res.StatusCode == http.StatusNotFound {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+
+		return nil, nil, problemDetails
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "UNSUPPORTED_RESOURCE_URI"
-		problemDetails.Status = 501
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotImplemented, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotImplemented,
+			Cause:  "UNSUPPORTED_RESOURCE_URI",
+		}
+
+		return nil, nil, problemDetails
 	}
 }
 
-func HandleSubscribe(httpChannel chan udm_message.HandlerResponseMessage, supi string, subscriptionID string, sdmSubscription models.SdmSubscription) {
+func HandleSubscribeRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle Subscribe")
 
-	var body *models.SdmSubscription
+	// step 2: retrieve request
+	sdmSubscription := request.Body.(models.SdmSubscription)
+	supi := request.Params["supi"]
+
+	// step 3: handle the message
+	header, response, problemDetails := subscribeProcedure(&sdmSubscription, supi)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusCreated, header, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	} else {
+		return http_wrapper.NewResponse(http.StatusNotFound, nil, nil)
+	}
+}
+
+func subscribeProcedure(sdmSubscription *models.SdmSubscription, supi string) (
+	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
 	clientAPI := createUDMClientToUDR(supi, false)
-	udm_context.CreateSubscriptiontoNotifChange(subscriptionID, body)
 
-	sdmSubscriptionResp, res, err := clientAPI.SDMSubscriptionsCollectionApi.CreateSdmSubscriptions(context.Background(), supi, sdmSubscription)
+	sdmSubscriptionResp, res, err := clientAPI.SDMSubscriptionsCollectionApi.CreateSdmSubscriptions(
+		context.Background(), supi, *sdmSubscription)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			logger.SdmLog.Warnln(err)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+			return nil, nil, problemDetails
 		}
-		return
 	}
 
 	if res.StatusCode == http.StatusCreated {
-		h := make(http.Header)
-		udmUe := udm_context.CreateUdmUe(subscriptionID)
-		udmUe.SubscribeToNotifChange = &sdmSubscriptionResp
-		h.Set("Location", udmUe.GetLocationURI2(udm_context.LocationUriSdmSubscription, supi))
-		udm_message.SendHttpResponseMessage(httpChannel, h, http.StatusCreated, *udmUe.SubscribeToNotifChange)
+		header = make(http.Header)
+		udmUe, _ := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if udmUe == nil {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
+		udmUe.CreateSubscriptiontoNotifChange(sdmSubscriptionResp.SubscriptionId, &sdmSubscriptionResp)
+		header.Set("Location", udmUe.GetLocationURI2(udm_context.LocationUriSdmSubscription, supi))
+		return header, &sdmSubscriptionResp, nil
 
 	} else if res.StatusCode == http.StatusNotFound {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+		return nil, nil, problemDetails
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "UNSUPPORTED_RESOURCE_URI"
-		problemDetails.Status = 501
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotImplemented, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotImplemented,
+			Cause:  "UNSUPPORTED_RESOURCE_URI",
+		}
+		return nil, nil, problemDetails
 	}
 }
 
-func HandleUnsubscribeForSharedData(httpChannel chan udm_message.HandlerResponseMessage, subscriptionID string) {
+func HandleUnsubscribeForSharedDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	logger.SdmLog.Infof("Handle UnsubscribeForSharedData")
 
+	// step 2: retrieve request
+	subscriptionID := request.Params["subscriptionId"]
+	// step 3: handle the message
+	problemDetails := unsubscribeForSharedDataProcedure(subscriptionID)
+
+	// step 4: process the return value from step 3
+	if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+
+	return http_wrapper.NewResponse(http.StatusNoContent, nil, nil)
+}
+
+func unsubscribeForSharedDataProcedure(subscriptionID string) *models.ProblemDetails {
 	cfg := Nudm_SubscriberDataManagement.NewConfiguration()
 	udmClientAPI := Nudm_SubscriberDataManagement.NewAPIClient(cfg)
 
-	res, err := udmClientAPI.SubscriptionDeletionForSharedDataApi.UnsubscribeForSharedData(context.Background(), subscriptionID)
+	res, err := udmClientAPI.SubscriptionDeletionForSharedDataApi.UnsubscribeForSharedData(
+		context.Background(), subscriptionID)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			logger.SdmLog.Warnln(err)
+			problemDetails := &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+			return problemDetails
 		}
-		return
 	}
 	if res.StatusCode == http.StatusNoContent {
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNoContent, nil)
+		return nil
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+		return problemDetails
 	}
 }
 
-func HandleUnsubscribe(httpChannel chan udm_message.HandlerResponseMessage, supi string, subscriptionID string) {
+func HandleUnsubscribeRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	logger.SdmLog.Infof("Handle Unsubscribe")
 
+	// step 2: retrieve request
+	supi := request.Params["supi"]
+	subscriptionID := request.Params["subscriptionId"]
+
+	// step 3: handle the message
+	problemDetails := unsubscribeProcedure(supi, subscriptionID)
+
+	// step 4: process the return value from step 3
+	if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+
+	return http_wrapper.NewResponse(http.StatusNoContent, nil, nil)
+}
+
+func unsubscribeProcedure(supi string, subscriptionID string) *models.ProblemDetails {
 	clientAPI := createUDMClientToUDR(supi, false)
 	res, err := clientAPI.SDMSubscriptionDocumentApi.RemovesdmSubscriptions(context.Background(), "====", subscriptionID)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			logger.SdmLog.Warnln(err)
+			problemDetails := &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+			return problemDetails
 		}
-		return
 	}
 	if res.StatusCode == http.StatusNoContent {
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNoContent, nil)
+		return nil
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "USER_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "USER_NOT_FOUND",
+		}
+		return problemDetails
 	}
 }
 
-func HandleModify(httpChannel chan udm_message.HandlerResponseMessage, supi string, subscriptionID string, sdmSubsModification models.SdmSubsModification) {
+func HandleModifyRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle Modify")
 
+	// step 2: retrieve request
+	sdmSubsModification := request.Body.(models.SdmSubsModification)
+	supi := request.Params["supi"]
+	subscriptionID := request.Params["subscriptionId"]
+
+	// step 3: handle the message
+	response, problemDetails := modifyProcedure(&sdmSubsModification, supi, subscriptionID)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func modifyProcedure(sdmSubsModification *models.SdmSubsModification, supi string, subscriptionID string) (
+	response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
 	clientAPI := createUDMClientToUDR(supi, false)
 	sdmSubscription := models.SdmSubscription{}
 	body := Nudr.UpdatesdmsubscriptionsParamOpts{
 		SdmSubscription: optional.NewInterface(sdmSubscription),
 	}
-	res, err := clientAPI.SDMSubscriptionDocumentApi.Updatesdmsubscriptions(context.Background(), supi, subscriptionID, &body)
+	res, err := clientAPI.SDMSubscriptionDocumentApi.Updatesdmsubscriptions(
+		context.Background(), supi, subscriptionID, &body)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
 		}
-		return
 	}
 
 	if res.StatusCode == http.StatusOK {
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, sdmSubscription)
+		return &sdmSubscription, nil
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "USER_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "USER_NOT_FOUND",
+		}
+
+		return nil, problemDetails
 	}
 }
 
-func HandleModifyForSharedData(httpChannel chan udm_message.HandlerResponseMessage, supi string, subscriptionID string, sdmSubsModification models.SdmSubsModification) {
+func HandleModifyForSharedDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle ModifyForSharedData")
 
+	// step 2: retrieve request
+	sdmSubsModification := request.Body.(models.SdmSubsModification)
+	supi := request.Params["supi"]
+	subscriptionID := request.Params["subscriptionId"]
+
+	// step 3: handle the message
+	response, problemDetails := modifyForSharedDataProcedure(&sdmSubsModification, supi, subscriptionID)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func modifyForSharedDataProcedure(sdmSubsModification *models.SdmSubsModification, supi string,
+	subscriptionID string) (response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
 	clientAPI := createUDMClientToUDR(supi, false)
 	var sdmSubscription models.SdmSubscription
 	sdmSubs := models.SdmSubscription{}
@@ -593,72 +1007,128 @@ func HandleModifyForSharedData(httpChannel chan udm_message.HandlerResponseMessa
 		SdmSubscription: optional.NewInterface(sdmSubs),
 	}
 
-	res, err := clientAPI.SDMSubscriptionDocumentApi.Updatesdmsubscriptions(context.Background(), supi, subscriptionID, &body)
+	res, err := clientAPI.SDMSubscriptionDocumentApi.Updatesdmsubscriptions(
+		context.Background(), supi, subscriptionID, &body)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
 		}
-		return
 	}
 
 	if res.StatusCode == http.StatusOK {
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, sdmSubscription)
+		return &sdmSubscription, nil
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "USER_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "USER_NOT_FOUND",
+		}
+
+		return nil, problemDetails
 	}
 }
 
-func HandleGetTraceData(httpChannel chan udm_message.HandlerResponseMessage, supi string, plmnID string) {
+func HandleGetTraceDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle GetTraceData")
 
+	// step 2: retrieve request
+	supi := request.Params["supi"]
+	plmnID := request.Query.Get("plmn-id")
+
+	// step 3: handle the message
+	response, problemDetails := getTraceDataProcedure(supi, plmnID)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func getTraceDataProcedure(supi string, plmnID string) (
+	response *models.TraceData, problemDetails *models.ProblemDetails) {
 	var body models.TraceData
 	var queryTraceDataParamOpts Nudr.QueryTraceDataParamOpts
 	clientAPI := createUDMClientToUDR(supi, false)
-	udm_context.CreateTraceDataforUe(supi, body)
+	udm_context.UDM_Self().CreateTraceDataforUe(supi, body)
 
-	traceDataRes, res, err := clientAPI.TraceDataDocumentApi.QueryTraceData(context.Background(), supi, plmnID, &queryTraceDataParamOpts)
+	traceDataRes, res, err := clientAPI.TraceDataDocumentApi.QueryTraceData(
+		context.Background(), supi, plmnID, &queryTraceDataParamOpts)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
 		udmUe.TraceData = &traceDataRes
 		udmUe.TraceDataResponse.TraceData = &traceDataRes
 
-		if plmnID != "" {
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, *udmUe.TraceDataResponse.TraceData)
-		} else {
-			udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, *udmUe.TraceDataResponse.TraceData) // If "plmn-id" is not included, UDM shall return the Trace Data for the SUPI associated to the HPLMN
-		}
+		return udmUe.TraceDataResponse.TraceData, nil
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "USER_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
-	}
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "USER_NOT_FOUND",
+		}
 
+		return nil, problemDetails
+	}
 }
 
-func HandleGetUeContextInSmfData(httpChannel chan udm_message.HandlerResponseMessage, supi string, supportedFeatures string) {
+func HandleGetUeContextInSmfDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
+	// step 1: log
+	logger.SdmLog.Infof("Handle GetUeContextInSmfData")
 
+	// step 2: retrieve request
+	supi := request.Params["supi"]
+	supportedFeatures := request.Query.Get("supported-features")
+
+	// step 3: handle the message
+	response, problemDetails := getUeContextInSmfDataProcedure(supi, supportedFeatures)
+
+	// step 4: process the return value from step 3
+	if response != nil {
+		// status code is based on SPEC, and option headers
+		return http_wrapper.NewResponse(http.StatusOK, nil, response)
+	} else if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	problemDetails = &models.ProblemDetails{
+		Status: http.StatusForbidden,
+		Cause:  "UNSPECIFIED",
+	}
+	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+}
+
+func getUeContextInSmfDataProcedure(supi string, supportedFeatures string) (
+	response *models.UeContextInSmfData, problemDetails *models.ProblemDetails) {
 	var body models.UeContextInSmfData
 	var ueContextInSmfData models.UeContextInSmfData
 	var pgwInfoArray []models.PgwInfo
@@ -666,20 +1136,25 @@ func HandleGetUeContextInSmfData(httpChannel chan udm_message.HandlerResponseMes
 	querySmfRegListParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	clientAPI := createUDMClientToUDR(supi, false)
 	pduSessionMap := make(map[string]models.PduSession)
-	udm_context.CreateUeContextInSmfDataforUe(supi, body)
+	udm_context.UDM_Self().CreateUeContextInSmfDataforUe(supi, body)
 
-	pdusess, res, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(context.Background(), supi, &querySmfRegListParamOpts)
+	pdusess, res, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(
+		context.Background(), supi, &querySmfRegListParamOpts)
 	if err != nil {
-		var problemDetails models.ProblemDetails
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Infoln(err)
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Infoln(err)
 		} else {
-			problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
-			udm_message.SendHttpResponseMessage(httpChannel, nil, res.StatusCode, problemDetails)
+			logger.SdmLog.Infoln(err)
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+
+			return nil, problemDetails
 		}
-		return
 	}
 
 	for _, element := range pdusess {
@@ -701,13 +1176,14 @@ func HandleGetUeContextInSmfData(httpChannel chan udm_message.HandlerResponseMes
 	ueContextInSmfData.PgwInfo = pgwInfoArray
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.CreateUdmUe(supi)
+		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
 		udmUe.UeCtxtInSmfData = &ueContextInSmfData
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusOK, *udmUe.UeCtxtInSmfData)
+		return udmUe.UeCtxtInSmfData, nil
 	} else {
-		var problemDetails models.ProblemDetails
-		problemDetails.Cause = "DATA_NOT_FOUND"
-		problemDetails.Status = 404
-		udm_message.SendHttpResponseMessage(httpChannel, nil, http.StatusNotFound, problemDetails)
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
+		return nil, problemDetails
 	}
 }

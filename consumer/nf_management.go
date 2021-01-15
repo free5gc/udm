@@ -26,16 +26,17 @@ func BuildNFInstance(udmContext *udm_context.UDMContext) (profile models.NfProfi
 	var udmInfo models.UdmInfo
 	profile.UdmInfo = &udmInfo
 	profile.UdmInfo.GroupId = udmContext.GroupId
-	if udmContext.HttpIPv4Address == "" {
+	if udmContext.RegisterIPv4 == "" {
 		err = fmt.Errorf("UDM Address is empty")
 		return
 	}
-	profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.HttpIPv4Address)
+	profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIPv4)
 
 	return
 }
 
-func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfile) (resouceNrfUri string, retrieveNfInstanceId string, err error) {
+func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfile) (resouceNrfUri string,
+	retrieveNfInstanceId string, err error) {
 
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(nrfUri)
@@ -65,5 +66,5 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 			fmt.Println("NRF return wrong status code", status)
 		}
 	}
-	return
+	return resouceNrfUri, retrieveNfInstanceId, err
 }

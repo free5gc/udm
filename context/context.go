@@ -1,18 +1,20 @@
 package context
 
 import (
-	// "fmt"
 	"fmt"
+	"math"
+	"strconv"
+	"strings"
+	"sync"
+
+	"free5gc/lib/idgenerator"
 	"free5gc/lib/openapi"
 	"free5gc/lib/openapi/Nnrf_NFDiscovery"
 	"free5gc/lib/openapi/models"
 	"free5gc/src/udm/factory"
-	"strconv"
-	"strings"
 )
 
 var udmContext UDMContext
-var udmUeContext UdmUeContext
 
 const (
 	LocationUriAmf3GppAccessRegistration int = iota
@@ -22,32 +24,34 @@ const (
 	LocationUriSharedDataSubscription
 )
 
-func Init() {
-	UDM_Self().UdmUePool = make(map[string]*UdmUeContext)
+func init() {
 	UDM_Self().NfService = make(map[models.ServiceName]models.NfService)
-	InitUDMContext(&udmContext)
+	UDM_Self().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
 }
 
 type UDMContext struct {
-	Name              string
-	NfId              string
-	GroupId           string
-	HttpIpv4Port      int
-	HttpIPv4Address   string
-	UriScheme         models.UriScheme
-	NfService         map[models.ServiceName]models.NfService
-	NFDiscoveryClient *Nnrf_NFDiscovery.APIClient
-	UdmUePool         map[string]*UdmUeContext // supi as key
-	UdmNFPool         map[string]*UdmNFContext // SubscriptionID as key
-	NrfUri            string
-	GpsiSupiList      models.IdentityData
-	SharedSubsDataMap map[string]models.SharedData // sharedDataIds as key
-	Keys              *factory.Keys
+	Name                           string
+	NfId                           string
+	GroupId                        string
+	SBIPort                        int
+	RegisterIPv4                   string // IP register to NRF
+	BindingIPv4                    string
+	UriScheme                      models.UriScheme
+	NfService                      map[models.ServiceName]models.NfService
+	NFDiscoveryClient              *Nnrf_NFDiscovery.APIClient
+	UdmUePool                      sync.Map // map[supi]*UdmUeContext
+	NrfUri                         string
+	GpsiSupiList                   models.IdentityData
+	SharedSubsDataMap              map[string]models.SharedData // sharedDataIds as key
+	SubscriptionOfSharedDataChange sync.Map                     // subscriptionID as key
+	Keys                           *factory.Keys
+	EeSubscriptionIDGenerator      *idgenerator.IDGenerator
 }
 
 type UdmUeContext struct {
 	Supi                              string
-	GpsiFromReq                       string
+	Gpsi                              string
+	ExternalGroupID                   string
 	Nssai                             *models.Nssai
 	Amf3GppAccessRegistration         *models.Amf3GppAccessRegistration
 	AmfNon3GppAccessRegistration      *models.AmfNon3GppAccessRegistration
@@ -58,21 +62,21 @@ type UdmUeContext struct {
 	TraceData                         *models.TraceData
 	SessionManagementSubsData         map[string]models.SessionManagementSubscriptionData
 	SubsDataSets                      *models.SubscriptionDataSets
-	SubscribeToNotifChange            *models.SdmSubscription
+	SubscribeToNotifChange            map[string]*models.SdmSubscription
 	SubscribeToNotifSharedDataChange  *models.SdmSubscription
 	PduSessionID                      string
 	UdrUri                            string
-	CreatedEeSubscription             models.CreatedEeSubscription
 	UdmSubsToNotify                   map[string]*models.SubscriptionDataSubscriptions
+	EeSubscriptions                   map[string]*models.EeSubscription // subscriptionID as key
+	amSubsDataLock                    sync.Mutex
+	smfSelSubsDataLock                sync.Mutex
+	SmSubsDataLock                    sync.RWMutex
 }
 
-// Functions related to EE services
-func CreateEeSusbContext(ueId string, body models.CreatedEeSubscription) {
-	udmUe := UDM_Self().UdmUePool[ueId]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(ueId)
-	}
-	udmUe.CreatedEeSubscription = body
+func (ue *UdmUeContext) init() {
+	ue.UdmSubsToNotify = make(map[string]*models.SubscriptionDataSubscriptions)
+	ue.EeSubscriptions = make(map[string]*models.EeSubscription)
+	ue.SubscribeToNotifChange = make(map[string]*models.SdmSubscription)
 }
 
 type UdmNFContext struct {
@@ -81,35 +85,38 @@ type UdmNFContext struct {
 	SubscribeToNotifSharedDataChange *models.SdmSubscription // SubscriptionID as key
 }
 
-func GetUdmProfileAHNPublicKey() string {
-	return udmContext.Keys.UdmProfileAHNPublicKey
+func (context *UDMContext) GetUdmProfileAHNPublicKey() string {
+	return context.Keys.UdmProfileAHNPublicKey
 }
 
-func GetUdmProfileAHNPrivateKey() string {
-	return udmContext.Keys.UdmProfileAHNPrivateKey
+func (context *UDMContext) GetUdmProfileAHNPrivateKey() string {
+	return context.Keys.UdmProfileAHNPrivateKey
 }
 
-func GetUdmProfileBHNPublicKey() string {
-	return udmContext.Keys.UdmProfileBHNPublicKey
+func (context *UDMContext) GetUdmProfileBHNPublicKey() string {
+	return context.Keys.UdmProfileBHNPublicKey
 }
 
-func GetUdmProfileBHNPrivateKey() string {
-	return udmContext.Keys.UdmProfileBHNPrivateKey
+func (context *UDMContext) GetUdmProfileBHNPrivateKey() string {
+	return context.Keys.UdmProfileBHNPrivateKey
 }
 
-func ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string, dnnFromReq string) (mp map[string]models.SessionManagementSubscriptionData, ind string,
+func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string,
+	dnnFromReq string) (mp map[string]models.SessionManagementSubscriptionData, ind string,
 	Dnns []models.DnnConfiguration, allDnns []map[string]models.DnnConfiguration) {
 
 	smDataMap := make(map[string]models.SessionManagementSubscriptionData)
 	sNssaiList := make([]string, len(smDatafromUDR))
-	AllDnnConfigsbyDnn := make([]models.DnnConfiguration, 1, len(sNssaiList)) // to obtain all DNN configurations identified by "dnn" for all network slices where such DNN is available
-	AllDnns := make([]map[string]models.DnnConfiguration, len(smDatafromUDR)) // to obtain all DNN configurations for all network slice(s)
-	var snssaikey string                                                      // Required snssai to obtain all DNN configurations
+	// to obtain all DNN configurations identified by "dnn" for all network slices where such DNN is available
+	AllDnnConfigsbyDnn := make([]models.DnnConfiguration, 1, len(sNssaiList))
+	// to obtain all DNN configurations for all network slice(s)
+	AllDnns := make([]map[string]models.DnnConfiguration, len(smDatafromUDR))
+	var snssaikey string // Required snssai to obtain all DNN configurations
 
 	for idx, smSubscriptionData := range smDatafromUDR {
 		singleNssaiStr := openapi.MarshToJsonString(smSubscriptionData.SingleNssai)[0]
 		smDataMap[singleNssaiStr] = smSubscriptionData
-		sNssaiList = append(sNssaiList, singleNssaiStr)
+		// sNssaiList = append(sNssaiList, singleNssaiStr)
 		AllDnns[idx] = smSubscriptionData.DnnConfigurations
 		if strings.Contains(singleNssaiStr, snssaiFromReq) {
 			snssaikey = singleNssaiStr
@@ -121,15 +128,6 @@ func ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snss
 	}
 
 	return smDataMap, snssaikey, AllDnnConfigsbyDnn, AllDnns
-}
-
-// Check if SessionMgtSubsData context exists
-func UdmUeSessionMgtSubsDataExisting(Supi string) bool {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe.SessionManagementSubsData != nil {
-		return udmUe.SessionManagementSubsData == nil
-	}
-	return true
 }
 
 // HandleGetSharedData related functions
@@ -182,214 +180,179 @@ func GetCorrespondingSupi(list models.IdentityData) (id string) {
 }
 
 // functions related to Retrieval of multiple datasets(GetSupi)
-func CreateSubsDataSetsForUe(Supi string, body models.SubscriptionDataSets) {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(Supi)
+func (context *UDMContext) CreateSubsDataSetsForUe(supi string, body models.SubscriptionDataSets) {
+	ue, ok := context.UdmUeFindBySupi(supi)
+	if !ok {
+		ue = context.NewUdmUe(supi)
 	}
-	udmUe.SubsDataSets = &body
-}
-
-func UdmUeSubsDataSetsExisting(Supi string) bool {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.SubsDataSets == nil
-	}
-	return true
+	ue.SubsDataSets = &body
 }
 
 // Functions related to the trace data configuration
-func CreateTraceDataforUe(Supi string, body models.TraceData) {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(Supi)
+func (context *UDMContext) CreateTraceDataforUe(supi string, body models.TraceData) {
+	ue, ok := context.UdmUeFindBySupi(supi)
+	if !ok {
+		ue = context.NewUdmUe(supi)
 	}
-	udmUe.TraceData = &body
-}
-
-func UdmUeTraceDataExisting(Supi string) bool {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.TraceData == nil
-	}
-	return true
+	ue.TraceData = &body
 }
 
 // functions related to sdmSubscription (subscribe to notification of data change)
-func CreateSubscriptiontoNotifChange(SubscriptionID string, body *models.SdmSubscription) {
-	udmUe := UDM_Self().UdmUePool[SubscriptionID]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(SubscriptionID)
+func (udmUeContext *UdmUeContext) CreateSubscriptiontoNotifChange(subscriptionID string, body *models.SdmSubscription) {
+	if _, exist := udmUeContext.SubscribeToNotifChange[subscriptionID]; !exist {
+		udmUeContext.SubscribeToNotifChange[subscriptionID] = body
 	}
-	udmUe.SubscribeToNotifChange = body
 }
 
-func UdmNfCntxtNotExisting(SubscriptionID string) bool {
-	udmNf := UDM_Self().UdmNFPool[SubscriptionID]
-	if udmNf != nil {
-		return udmNf.SubscribeToNotifChange == nil
-	}
-	return true
-}
-
-func CreateSubstoNotifSharedData(SubscriptionID string, body *models.SdmSubscription) {
-	udmUe := UDM_Self().UdmUePool[SubscriptionID]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(SubscriptionID)
-	}
-	udmUe.SubscribeToNotifSharedDataChange = body
-}
-
-func UdmNfCntxtSharedDataExisting(SubscriptionID string) bool {
-	udmNf := UDM_Self().UdmNFPool[SubscriptionID]
-	if udmNf != nil {
-		return udmNf.SubscribeToNotifSharedDataChange == nil
-	}
-	return true
+// TODO: this function has wrong UE pool key with subscriptionID
+func (context *UDMContext) CreateSubstoNotifSharedData(subscriptionID string, body *models.SdmSubscription) {
+	context.SubscriptionOfSharedDataChange.Store(subscriptionID, body)
 }
 
 // functions related UecontextInSmfData
-func CreateUeContextInSmfDataforUe(Supi string, body models.UeContextInSmfData) {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(Supi)
+func (context *UDMContext) CreateUeContextInSmfDataforUe(supi string, body models.UeContextInSmfData) {
+	ue, ok := context.UdmUeFindBySupi(supi)
+	if !ok {
+		ue = context.NewUdmUe(supi)
 	}
-	udmUe.UeCtxtInSmfData = &body
-}
-
-func UdmUeCtxtInSmfDataExisting(Supi string) bool {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.UeCtxtInSmfData == nil
-	}
-	return true
+	ue.UeCtxtInSmfData = &body
 }
 
 // functions for SmfSelectionSubscriptionData
-func CreateSmfSelectionSubsDatadforUe(Supi string, body models.SmfSelectionSubscriptionData) {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(Supi)
+func (context *UDMContext) CreateSmfSelectionSubsDataforUe(supi string, body models.SmfSelectionSubscriptionData) {
+	ue, ok := context.UdmUeFindBySupi(supi)
+	if !ok {
+		ue = context.NewUdmUe(supi)
 	}
-	udmUe.SmfSelSubsData = &body
+	ue.SmfSelSubsData = &body
 }
 
-func UdmueSmfSelSubsDataNotExisting(Supi string) bool {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.SmfSelSubsData == nil
-	}
-	return true
+// SetSmfSelectionSubsData ... functions to set SmfSelectionSubscriptionData
+func (udmUeContext *UdmUeContext) SetSmfSelectionSubsData(smfSelSubsData *models.SmfSelectionSubscriptionData) {
+	udmUeContext.smfSelSubsDataLock.Lock()
+	defer udmUeContext.smfSelSubsDataLock.Unlock()
+	udmUeContext.SmfSelSubsData = smfSelSubsData
 }
 
-func CreateUdmUe(Supi string) (udmUe *UdmUeContext) {
-	udmUe = new(UdmUeContext)
-	udmUe.Supi = Supi
-	UDM_Self().UdmUePool[Supi] = udmUe
-	return
-}
-func CreateUdmNf(SubscriptionID string) (udmNf *UdmNFContext) {
-	udmNf = new(UdmNFContext)
-	udmNf.SubscriptionID = SubscriptionID
-	UDM_Self().UdmNFPool[SubscriptionID] = udmNf
-	return
+// SetSMSubsData ... functions to set SessionManagementSubsData
+func (udmUeContext *UdmUeContext) SetSMSubsData(smSubsData map[string]models.SessionManagementSubscriptionData) {
+	udmUeContext.SmSubsDataLock.Lock()
+	defer udmUeContext.SmSubsDataLock.Unlock()
+	udmUeContext.SessionManagementSubsData = smSubsData
 }
 
-// Check if Access and Mobility Subscription Data context exists
-func UdmUeAccessMobilitySubsDataExisting(Supi string) bool {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe.AccessAndMobilitySubscriptionData != nil {
-		return udmUe.AccessAndMobilitySubscriptionData == nil
+func (context *UDMContext) NewUdmUe(supi string) *UdmUeContext {
+	ue := new(UdmUeContext)
+	ue.init()
+	ue.Supi = supi
+	context.UdmUePool.Store(supi, ue)
+	return ue
+}
+
+func (context *UDMContext) UdmUeFindBySupi(supi string) (*UdmUeContext, bool) {
+	if value, ok := context.UdmUePool.Load(supi); ok {
+		return value.(*UdmUeContext), ok
+	} else {
+		return nil, false
 	}
-	return true
+}
+
+func (context *UDMContext) UdmUeFindByGpsi(gpsi string) (*UdmUeContext, bool) {
+	var ue *UdmUeContext
+	ok := false
+	context.UdmUePool.Range(func(key, value interface{}) bool {
+		candidate := value.(*UdmUeContext)
+		if candidate.Gpsi == gpsi {
+			ue = candidate
+			ok = true
+			return false
+		}
+		return true
+	})
+	return ue, ok
 }
 
 // Function to create the AccessAndMobilitySubscriptionData for Ue
-func CreateAccessMobilitySubsDataForUe(Supi string, body models.AccessAndMobilitySubscriptionData) {
-	UdmUe := UDM_Self().UdmUePool[Supi]
-	if UdmUe == nil {
-		UdmUe = CreateUdmUe(Supi)
+func (context *UDMContext) CreateAccessMobilitySubsDataForUe(supi string,
+	body models.AccessAndMobilitySubscriptionData) {
+	ue, ok := context.UdmUeFindBySupi(supi)
+	if !ok {
+		ue = context.NewUdmUe(supi)
 	}
-	UdmUe.AccessAndMobilitySubscriptionData = &body
+	ue.AccessAndMobilitySubscriptionData = &body
 }
 
-func GetAccessMobilitySubsDataForUe(Supi string) *models.AccessAndMobilitySubscriptionData {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.AccessAndMobilitySubscriptionData
-	}
-	return nil
+// Function to set the AccessAndMobilitySubscriptionData for Ue
+func (udmUeContext *UdmUeContext) SetAMSubsriptionData(amData *models.AccessAndMobilitySubscriptionData) {
+	udmUeContext.amSubsDataLock.Lock()
+	defer udmUeContext.amSubsDataLock.Unlock()
+	udmUeContext.AccessAndMobilitySubscriptionData = amData
 }
 
-func UdmAmf3gppRegContextExists(Supi string) bool {
-	if udmUe := UDM_Self().UdmUePool[Supi]; udmUe != nil {
-		return udmUe.Amf3GppAccessRegistration != nil
-	}
-	return false
-}
-
-func UdmAmfNon3gppRegContextExists(Supi string) bool {
-	if udmUe := UDM_Self().UdmUePool[Supi]; udmUe != nil {
-		return udmUe.AmfNon3GppAccessRegistration != nil
-	}
-	return false
-}
-
-func UdmSmfRegContextNotExists(Supi string) bool {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.PduSessionID == ""
-	}
-	return true
-}
-
-func CreateAmf3gppRegContext(Supi string, body models.Amf3GppAccessRegistration) {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(Supi)
-	}
-	udmUe.Amf3GppAccessRegistration = &body
-}
-
-func CreateAmfNon3gppRegContext(Supi string, body models.AmfNon3GppAccessRegistration) {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(Supi)
-	}
-	udmUe.AmfNon3GppAccessRegistration = &body
-}
-
-func CreateSmfRegContext(Supi string, pduSessionID string) {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe == nil {
-		udmUe = CreateUdmUe(Supi)
-	}
-	if udmUe.PduSessionID == "" {
-		udmUe.PduSessionID = pduSessionID
+func (context *UDMContext) UdmAmf3gppRegContextExists(supi string) bool {
+	if ue, ok := context.UdmUeFindBySupi(supi); ok {
+		return ue.Amf3GppAccessRegistration != nil
+	} else {
+		return false
 	}
 }
 
-func GetAmf3gppRegContext(Supi string) *models.Amf3GppAccessRegistration {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.Amf3GppAccessRegistration
+func (context *UDMContext) UdmAmfNon3gppRegContextExists(supi string) bool {
+	if ue, ok := context.UdmUeFindBySupi(supi); ok {
+		return ue.AmfNon3GppAccessRegistration != nil
+	} else {
+		return false
 	}
-	return nil
 }
 
-func GetAmfNon3gppRegContext(Supi string) *models.AmfNon3GppAccessRegistration {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.AmfNon3GppAccessRegistration
+func (context *UDMContext) UdmSmfRegContextNotExists(supi string) bool {
+	if ue, ok := context.UdmUeFindBySupi(supi); ok {
+		return ue.PduSessionID == ""
+	} else {
+		return true
 	}
-	return nil
 }
-func GetSmfRegContext(Supi string) string {
-	udmUe := UDM_Self().UdmUePool[Supi]
-	if udmUe != nil {
-		return udmUe.PduSessionID
+
+func (context *UDMContext) CreateAmf3gppRegContext(supi string, body models.Amf3GppAccessRegistration) {
+	ue, ok := context.UdmUeFindBySupi(supi)
+	if !ok {
+		ue = context.NewUdmUe(supi)
 	}
-	return ""
+	ue.Amf3GppAccessRegistration = &body
+}
+
+func (context *UDMContext) CreateAmfNon3gppRegContext(supi string, body models.AmfNon3GppAccessRegistration) {
+	ue, ok := context.UdmUeFindBySupi(supi)
+	if !ok {
+		ue = context.NewUdmUe(supi)
+	}
+	ue.AmfNon3GppAccessRegistration = &body
+}
+
+func (context *UDMContext) CreateSmfRegContext(supi string, pduSessionID string) {
+	ue, ok := context.UdmUeFindBySupi(supi)
+	if !ok {
+		ue = context.NewUdmUe(supi)
+	}
+	if ue.PduSessionID == "" {
+		ue.PduSessionID = pduSessionID
+	}
+}
+
+func (context *UDMContext) GetAmf3gppRegContext(supi string) *models.Amf3GppAccessRegistration {
+	if ue, ok := context.UdmUeFindBySupi(supi); ok {
+		return ue.Amf3GppAccessRegistration
+	} else {
+		return nil
+	}
+}
+
+func (context *UDMContext) GetAmfNon3gppRegContext(supi string) *models.AmfNon3GppAccessRegistration {
+	if ue, ok := context.UdmUeFindBySupi(supi); ok {
+		return ue.AmfNon3GppAccessRegistration
+	} else {
+		return nil
+	}
 }
 
 func (ue *UdmUeContext) GetLocationURI(types int) string {
@@ -449,7 +412,12 @@ func (ue *UdmUeContext) SameAsStoredGUAMINon3gpp(inGuami models.Guami) bool {
 }
 
 func (context *UDMContext) GetIPv4Uri() string {
-	return fmt.Sprintf("%s://%s:%d", context.UriScheme, context.HttpIPv4Address, context.HttpIpv4Port)
+	return fmt.Sprintf("%s://%s:%d", context.UriScheme, context.RegisterIPv4, context.SBIPort)
+}
+
+//GetSDMUri ... get subscriber data management sevice uri
+func (context *UDMContext) GetSDMUri() string {
+	return context.GetIPv4Uri() + "/nudm-sdm/v1"
 }
 
 func (context *UDMContext) InitNFService(serviceName []string, version string) {
@@ -471,9 +439,9 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 			ApiPrefix:       context.GetIPv4Uri(),
 			IpEndPoints: &[]models.IpEndPoint{
 				{
-					Ipv4Address: context.HttpIPv4Address,
+					Ipv4Address: context.RegisterIPv4,
 					Transport:   models.TransportProtocol_TCP,
-					Port:        int32(context.HttpIpv4Port),
+					Port:        int32(context.SBIPort),
 				},
 			},
 		}
@@ -482,8 +450,4 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 
 func UDM_Self() *UDMContext {
 	return &udmContext
-}
-
-func UdmUe_self() *UdmUeContext {
-	return &udmUeContext
 }

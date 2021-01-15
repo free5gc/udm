@@ -16,6 +16,6 @@ import (
 )
 
 // PutUpuAck - Nudm_Sdm Info for UPU service operation
-func PutUpuAck(c *gin.Context) {
+func HTTPPutUpuAck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
