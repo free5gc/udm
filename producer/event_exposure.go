@@ -1,13 +1,14 @@
 package producer
 
 import (
-	"free5gc/lib/http_wrapper"
-	"free5gc/lib/openapi/models"
-	udm_context "free5gc/src/udm/context"
-	"free5gc/src/udm/logger"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/free5gc/http_wrapper"
+	"github.com/free5gc/openapi/models"
+	udm_context "github.com/free5gc/udm/context"
+	"github.com/free5gc/udm/logger"
 )
 
 func HandleCreateEeSubscription(request *http_wrapper.Request) *http_wrapper.Response {

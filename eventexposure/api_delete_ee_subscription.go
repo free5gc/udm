@@ -10,15 +10,14 @@
 package eventexposure
 
 import (
-	"free5gc/lib/http_wrapper"
-	"free5gc/src/udm/producer"
-
 	"github.com/gin-gonic/gin"
+
+	"github.com/free5gc/http_wrapper"
+	"github.com/free5gc/udm/producer"
 )
 
 // DeleteEeSubscription - Unsubscribe
 func HTTPDeleteEeSubscription(c *gin.Context) {
-
 	req := http_wrapper.NewRequest(c.Request, nil)
 	req.Params["ueIdentity"] = c.Params.ByName("ueIdentity")
 	req.Params["subscriptionID"] = c.Params.ByName("subscriptionId")

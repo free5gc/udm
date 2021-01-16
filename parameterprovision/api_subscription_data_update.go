@@ -10,18 +10,19 @@
 package parameterprovision
 
 import (
-	"free5gc/lib/http_wrapper"
-	"free5gc/lib/openapi"
-	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/logger"
-	"free5gc/src/udm/producer"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/free5gc/http_wrapper"
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/udm/logger"
+	"github.com/free5gc/udm/producer"
 )
 
 // Update - provision parameters
 func HTTPUpdate(c *gin.Context) {
-
 	var ppDataReq models.PpData
 
 	// step 1: retrieve http request body
@@ -33,7 +34,7 @@ func HTTPUpdate(c *gin.Context) {
 			Detail: err.Error(),
 			Cause:  "SYSTEM_FAILURE",
 		}
-		logger.PpLop.Errorf("Get Request Body error: %+v", err)
+		logger.PpLog.Errorf("Get Request Body error: %+v", err)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -47,7 +48,7 @@ func HTTPUpdate(c *gin.Context) {
 			Status: http.StatusBadRequest,
 			Detail: problemDetail,
 		}
-		logger.PpLop.Errorln(problemDetail)
+		logger.PpLog.Errorln(problemDetail)
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
@@ -59,7 +60,7 @@ func HTTPUpdate(c *gin.Context) {
 
 	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
 	if err != nil {
-		logger.PpLop.Errorln(err)
+		logger.PpLog.Errorln(err)
 		problemDetails := models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "SYSTEM_FAILURE",
@@ -69,5 +70,4 @@ func HTTPUpdate(c *gin.Context) {
 	} else {
 		c.Data(rsp.Status, "application/json", responseBody)
 	}
-
 }

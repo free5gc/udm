@@ -2,12 +2,13 @@ package callback
 
 import (
 	"context"
-	"free5gc/lib/openapi/Nudm_SubscriberDataManagement"
-	"free5gc/lib/openapi/Nudm_UEContextManagement"
-	"free5gc/lib/openapi/models"
-	udm_context "free5gc/src/udm/context"
-	"free5gc/src/udm/logger"
 	"net/http"
+
+	"github.com/free5gc/openapi/Nudm_SubscriberDataManagement"
+	"github.com/free5gc/openapi/Nudm_UEContextManagement"
+	"github.com/free5gc/openapi/models"
+	udm_context "github.com/free5gc/udm/context"
+	"github.com/free5gc/udm/logger"
 )
 
 func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi string) *models.ProblemDetails {
@@ -38,6 +39,11 @@ func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi strin
 				}
 			}
 		}
+		defer func() {
+			if rspCloseErr := httpResponse.Body.Close(); rspCloseErr != nil {
+				logger.HttpLog.Errorf("OnDataChangeNotification response body cannot close: %+v", rspCloseErr)
+			}
+		}()
 	}
 
 	return problemDetails
@@ -71,6 +77,11 @@ func SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationU
 			return problemDetails
 		}
 	}
+	defer func() {
+		if rspCloseErr := httpResponse.Body.Close(); rspCloseErr != nil {
+			logger.HttpLog.Errorf("DeregistrationNotify response body cannot close: %+v", rspCloseErr)
+		}
+	}()
 
 	return nil
 }

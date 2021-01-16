@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"free5gc/src/app"
-	"free5gc/src/udm/logger"
-	"free5gc/src/udm/service"
-	"free5gc/src/udm/version"
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"os"
+
+	"github.com/free5gc/udm/logger"
+	"github.com/free5gc/udm/service"
+	"github.com/free5gc/version"
 )
 
 var UDM = &service.UDM{}
@@ -28,15 +29,17 @@ func main() {
 	app.Action = action
 	app.Flags = UDM.GetCliCmd()
 	if err := app.Run(os.Args); err != nil {
-		fmt.Printf("UDM Run error: %v", err)
+		appLog.Errorf("UDM Run error: %v", err)
 	}
-
-	// appLog.Infoln(app.Name)
-
 }
 
-func action(c *cli.Context) {
-	app.AppInitializeWillInitialize(c.String("free5gccfg"))
-	UDM.Initialize(c)
+func action(c *cli.Context) error {
+	if err := UDM.Initialize(c); err != nil {
+		logger.CfgLog.Errorf("%+v", err)
+		return fmt.Errorf("Failed to initialize !!")
+	}
+
 	UDM.Start()
+
+	return nil
 }

@@ -10,27 +10,35 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"free5gc/src/udm/logger"
+	"github.com/free5gc/udm/logger"
 )
 
 var UdmConfig Config
 
-func checkErr(err error) {
-	if err != nil {
-		err = fmt.Errorf("[Configuration] %s", err.Error())
-		logger.AppLog.Fatal(err)
+// TODO: Support configuration update from REST api
+func InitConfigFactory(f string) error {
+	if content, err := ioutil.ReadFile(f); err != nil {
+		return err
+	} else {
+		UdmConfig = Config{}
+
+		if yamlErr := yaml.Unmarshal(content, &UdmConfig); yamlErr != nil {
+			return yamlErr
+		}
 	}
+
+	return nil
 }
 
-// TODO: Support configuration update from REST api
-func InitConfigFactory(f string) {
-	content, err := ioutil.ReadFile(f)
-	checkErr(err)
+func CheckConfigVersion() error {
+	currentVersion := UdmConfig.GetVersion()
 
-	UdmConfig = Config{}
+	if currentVersion != UDM_EXPECTED_CONFIG_VERSION {
+		return fmt.Errorf("config version is [%s], but expected is [%s].",
+			currentVersion, UDM_EXPECTED_CONFIG_VERSION)
+	}
 
-	err = yaml.Unmarshal([]byte(content), &UdmConfig)
-	checkErr(err)
+	logger.CfgLog.Infof("config version [%s]", currentVersion)
 
-	logger.InitLog.Infof("Successfully initialize configuration %s", f)
+	return nil
 }

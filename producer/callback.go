@@ -1,14 +1,15 @@
 package producer
 
 import (
-	"free5gc/lib/http_wrapper"
-	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/logger"
-	"free5gc/src/udm/producer/callback"
 	"net/http"
+
+	"github.com/free5gc/http_wrapper"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/udm/logger"
+	"github.com/free5gc/udm/producer/callback"
 )
 
-//HandleDataChangeNotificationToNFRequest ... Send Data Change Notification
+// HandleDataChangeNotificationToNFRequest ... Send Data Change Notification
 func HandleDataChangeNotificationToNFRequest(request *http_wrapper.Request) *http_wrapper.Response {
 	// step 1: log
 	logger.CallbackLog.Infof("Handle DataChangeNotificationToNF")

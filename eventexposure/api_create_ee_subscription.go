@@ -10,14 +10,15 @@
 package eventexposure
 
 import (
-	"free5gc/lib/http_wrapper"
-	"free5gc/lib/openapi"
-	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/logger"
-	"free5gc/src/udm/producer"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/free5gc/http_wrapper"
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/udm/logger"
+	"github.com/free5gc/udm/producer"
 )
 
 // HTTPCreateEeSubscription - Subscribe

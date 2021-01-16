@@ -3,31 +3,26 @@ package consumer
 import (
 	"context"
 	"fmt"
-
-	// "github.com/antihax/optional"
-	"free5gc/lib/openapi/Nnrf_NFDiscovery"
-	"free5gc/lib/openapi/models"
-	udm_context "free5gc/src/udm/context"
-	"free5gc/src/udm/logger"
-	"free5gc/src/udm/util"
 	"net/http"
+
+	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
+	"github.com/free5gc/openapi/models"
+	udm_context "github.com/free5gc/udm/context"
+	"github.com/free5gc/udm/logger"
+	"github.com/free5gc/udm/util"
 )
 
 const (
-	NFDiscoveryToUDRParamSupi int = iota
+	NFDiscoveryToUDRParamNone int = iota
+	NFDiscoveryToUDRParamSupi
 	NFDiscoveryToUDRParamExtGroupId
 	NFDiscoveryToUDRParamGpsi
 )
 
 func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 	param Nnrf_NFDiscovery.SearchNFInstancesParamOpts) (result models.SearchResult, err error) {
-
-	// config := factory.UdmConfig
-	// nrfclient := config.Configuration.Nrfclient
-	// addr := fmt.Sprintf("%s://%s:%d", nrfclient.Scheme, nrfclient.Ipv4Addr, nrfclient.Port)
-
 	configuration := Nnrf_NFDiscovery.NewConfiguration()
-	configuration.SetBasePath(nrfUri) //addr
+	configuration.SetBasePath(nrfUri) // addr
 	clientNRF := Nnrf_NFDiscovery.NewAPIClient(configuration)
 
 	result, res, err1 := clientNRF.NFInstancesStoreApi.SearchNFInstances(context.TODO(), targetNfType,
@@ -36,6 +31,12 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 		err = err1
 		return
 	}
+	defer func() {
+		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
+			logger.Handlelog.Errorf("SearchNFInstances response body cannot close: %+v", rspCloseErr)
+		}
+	}()
+
 	if res != nil && res.StatusCode == http.StatusTemporaryRedirect {
 		err = fmt.Errorf("Temporary Redirect For Non NRF Consumer")
 	}
@@ -43,7 +44,6 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 }
 
 func SendNFIntancesUDR(id string, types int) string {
-
 	self := udm_context.UDM_Self()
 	targetNfType := models.NfType_UDR
 	requestNfType := models.NfType_UDM
