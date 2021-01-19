@@ -10,14 +10,14 @@
 package ueauthentication
 
 import (
-	"free5gc/lib/logger_util"
-	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"github.com/gin-gonic/gin"
+	"github.com/free5gc/logger_util"
+	"github.com/free5gc/udm/logger"
 )
 
 var HttpLog *logrus.Entry
@@ -76,7 +76,7 @@ func AddService(engine *gin.Engine) *gin.RouterGroup {
 		}
 	}
 
-	var genAuthDataPath = "/:supi/security-information/generate-auth-data"
+	genAuthDataPath := "/:supi/security-information/generate-auth-data"
 	group.Any(genAuthDataPath, genAuthDataHandlerFunc)
 
 	return group

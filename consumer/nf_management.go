@@ -3,12 +3,15 @@ package consumer
 import (
 	"context"
 	"fmt"
-	"free5gc/lib/openapi/Nnrf_NFManagement"
-	"free5gc/lib/openapi/models"
-	udm_context "free5gc/src/udm/context"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/Nnrf_NFManagement"
+	"github.com/free5gc/openapi/models"
+	udm_context "github.com/free5gc/udm/context"
+	"github.com/free5gc/udm/logger"
 )
 
 func BuildNFInstance(udmContext *udm_context.UDMContext) (profile models.NfProfile, err error) {
@@ -37,7 +40,6 @@ func BuildNFInstance(udmContext *udm_context.UDMContext) (profile models.NfProfi
 
 func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfile) (resouceNrfUri string,
 	retrieveNfInstanceId string, err error) {
-
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(nrfUri)
 	client := Nnrf_NFManagement.NewAPIClient(configuration)
@@ -46,11 +48,17 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 	for {
 		_, res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), nfInstanceId, profile)
 		if err != nil || res == nil {
-			//TODO : add log
+			// TODO : add log
 			fmt.Println(fmt.Errorf("UDM register to NRF Error[%v]", err.Error()))
 			time.Sleep(2 * time.Second)
 			continue
 		}
+		defer func() {
+			if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
+				logger.ConsumerLog.Errorf("GetIdentityData response body cannot close: %+v", rspCloseErr)
+			}
+		}()
+
 		status := res.StatusCode
 		if status == http.StatusOK {
 			// NFUpdate
@@ -67,4 +75,36 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 		}
 	}
 	return resouceNrfUri, retrieveNfInstanceId, err
+}
+
+func SendDeregisterNFInstance() (problemDetails *models.ProblemDetails, err error) {
+	logger.ConsumerLog.Infof("Send Deregister NFInstance")
+
+	udmSelf := udm_context.UDM_Self()
+	// Set client and set url
+	configuration := Nnrf_NFManagement.NewConfiguration()
+	configuration.SetBasePath(udmSelf.NrfUri)
+	client := Nnrf_NFManagement.NewAPIClient(configuration)
+
+	var res *http.Response
+
+	res, err = client.NFInstanceIDDocumentApi.DeregisterNFInstance(context.Background(), udmSelf.NfId)
+	if err == nil {
+		return
+	} else if res != nil {
+		defer func() {
+			if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
+				logger.ConsumerLog.Errorf("DeregisterNFInstance response body cannot close: %+v", rspCloseErr)
+			}
+		}()
+
+		if res.Status != err.Error() {
+			return
+		}
+		problem := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		problemDetails = &problem
+	} else {
+		err = openapi.ReportError("server no response")
+	}
+	return
 }

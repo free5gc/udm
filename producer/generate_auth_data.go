@@ -2,32 +2,37 @@ package producer
 
 import (
 	"context"
+	cryptoRand "crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"free5gc/lib/http_wrapper"
-	"github.com/antihax/optional"
-	// "free5gc/lib/CommonConsumerTestData/UDM/TestGenAuthData"
-	cryptoRand "crypto/rand"
-	"free5gc/lib/UeauCommon"
-	"free5gc/lib/milenage"
-	"free5gc/lib/openapi"
-	"free5gc/lib/openapi/Nudr_DataRepository"
-	"free5gc/lib/openapi/models"
-	"free5gc/lib/util_3gpp/suci"
-	"free5gc/src/udm/logger"
 	"math/big"
 	"math/rand"
 	"net/http"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/antihax/optional"
+
+	"github.com/free5gc/UeauCommon"
+	"github.com/free5gc/http_wrapper"
+	"github.com/free5gc/milenage"
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/Nudr_DataRepository"
+	"github.com/free5gc/openapi/models"
+	udm_context "github.com/free5gc/udm/context"
+	"github.com/free5gc/udm/logger"
+	"github.com/free5gc/udm/util"
+	"github.com/free5gc/util_3gpp/suci"
 )
 
-const SqnMAx int64 = 0x7FFFFFFFFFF
-const ind int64 = 32
-const keyStrLen int = 32
-const opStrLen int = 32
-const opcStrLen int = 32
+const (
+	SqnMAx    int64 = 0x7FFFFFFFFFF
+	ind       int64 = 32
+	keyStrLen int   = 32
+	opStrLen  int   = 32
+	opcStrLen int   = 32
+)
 
 const (
 	authenticationRejected string = "AUTHENTICATION_REJECTED"
@@ -76,7 +81,6 @@ func strictHex(s string, n int) string {
 	} else {
 		return s[l-n : l]
 	}
-
 }
 
 func HandleGenerateAuthDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
@@ -102,7 +106,6 @@ func HandleGenerateAuthDataRequest(request *http_wrapper.Request) *http_wrapper.
 		Cause:  "UNSPECIFIED",
 	}
 	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
-
 }
 
 func HandleConfirmAuthDataRequest(request *http_wrapper.Request) *http_wrapper.Response {
@@ -125,7 +128,10 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 	optInterface := optional.NewInterface(authEvent)
 	createAuthParam.AuthEvent = optInterface
 
-	client := createUDMClientToUDR(supi, false)
+	client, err := createUDMClientToUDR(supi)
+	if err != nil {
+		return util.ProblemDetailsSystemFailure(err.Error())
+	}
 	resp, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
 		context.Background(), supi, &createAuthParam)
 	if err != nil {
@@ -138,6 +144,11 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 		logger.UeauLog.Errorln("[ConfirmAuth] ", err.Error())
 		return problemDetails
 	}
+	defer func() {
+		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
+			logger.UeauLog.Errorf("CreateAuthenticationStatus response body cannot close: %+v", rspCloseErr)
+		}
+	}()
 
 	return nil
 }
@@ -148,7 +159,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 
 	response = &models.AuthenticationInfoResult{}
 	rand.Seed(time.Now().UnixNano())
-	supi, err := suci.ToSupi(supiOrSuci)
+	supi, err := suci.ToSupi(supiOrSuci, udm_context.UDM_Self().GetUdmProfileAHNPrivateKey())
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
@@ -162,8 +173,11 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 
 	logger.UeauLog.Tracef("supi conversion => %s\n", supi)
 
-	client := createUDMClientToUDR(supi, false)
-	authSubs, _, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(context.Background(), supi, nil)
+	client, err := createUDMClientToUDR(supi)
+	if err != nil {
+		return nil, util.ProblemDetailsSystemFailure(err.Error())
+	}
+	authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(context.Background(), supi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
@@ -174,6 +188,11 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 		logger.UeauLog.Errorln("Return from UDR QueryAuthSubsData error")
 		return nil, problemDetails
 	}
+	defer func() {
+		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
+			logger.SdmLog.Errorf("QueryAuthSubsData response body cannot close: %+v", rspCloseErr)
+		}
+	}()
 
 	/*
 		K, RAND, CK, IK: 128 bits (16 bytes) (hex len = 32)
@@ -429,7 +448,9 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 		},
 	}
 
-	_, err = client.AuthenticationDataDocumentApi.ModifyAuthentication(context.Background(), supi, patchItemArray)
+	var rsp *http.Response
+	rsp, err = client.AuthenticationDataDocumentApi.ModifyAuthentication(
+		context.Background(), supi, patchItemArray)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
@@ -440,6 +461,11 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 		logger.UeauLog.Errorln("update sqn error", err)
 		return nil, problemDetails
 	}
+	defer func() {
+		if rspCloseErr := rsp.Body.Close(); rspCloseErr != nil {
+			logger.SdmLog.Errorf("ModifyAuthentication response body cannot close: %+v", rspCloseErr)
+		}
+	}()
 
 	// Run milenage
 	macA, macS := make([]byte, 8), make([]byte, 8)

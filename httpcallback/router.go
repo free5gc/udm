@@ -1,13 +1,14 @@
 package httpcallback
 
 import (
-	"free5gc/lib/logger_util"
-	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+
+	"github.com/free5gc/logger_util"
+	"github.com/free5gc/udm/logger"
 )
 
 var HttpLog *logrus.Entry

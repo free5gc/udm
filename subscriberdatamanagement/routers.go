@@ -10,12 +10,13 @@
 package subscriberdatamanagement
 
 import (
-	"free5gc/lib/logger_util"
-	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/free5gc/logger_util"
+	"github.com/free5gc/udm/logger"
 )
 
 // Route is the information for every URI.
@@ -41,7 +42,7 @@ func NewRouter() *gin.Engine {
 }
 
 func oneLayerPathHandlerFunc(c *gin.Context) {
-	var supi = c.Param("supi")
+	supi := c.Param("supi")
 	for _, route := range oneLayerPathRouter {
 		if strings.Contains(route.Pattern, supi) && route.Method == c.Request.Method {
 			route.HandlerFunc(c)
@@ -59,8 +60,8 @@ func oneLayerPathHandlerFunc(c *gin.Context) {
 }
 
 func twoLayerPathHandlerFunc(c *gin.Context) {
-	var supi = c.Param("supi")
-	var op = c.Param("subscriptionId")
+	supi := c.Param("supi")
+	op := c.Param("subscriptionId")
 
 	// for "/shared-data-subscriptions/:subscriptionId"
 	if supi == "shared-data-subscriptions" && strings.ToUpper("Delete") == c.Request.Method {
@@ -92,7 +93,7 @@ func twoLayerPathHandlerFunc(c *gin.Context) {
 }
 
 func threeLayerPathHandlerFunc(c *gin.Context) {
-	var op = c.Param("subscriptionId")
+	op := c.Param("subscriptionId")
 
 	// for "/:supi/sdm-subscriptions/:subscriptionId"
 	if op == "sdm-subscriptions" && strings.ToUpper("Delete") == c.Request.Method {
@@ -141,13 +142,13 @@ func AddService(engine *gin.Engine) *gin.RouterGroup {
 		}
 	}
 
-	var oneLayerPath = "/:supi"
+	oneLayerPath := "/:supi"
 	group.Any(oneLayerPath, oneLayerPathHandlerFunc)
 
-	var twoLayerPath = "/:supi/:subscriptionId"
+	twoLayerPath := "/:supi/:subscriptionId"
 	group.Any(twoLayerPath, twoLayerPathHandlerFunc)
 
-	var threeLayerPath = "/:supi/:subscriptionId/:thirdLayer"
+	threeLayerPath := "/:supi/:subscriptionId/:thirdLayer"
 	group.Any(threeLayerPath, threeLayerPathHandlerFunc)
 
 	return group

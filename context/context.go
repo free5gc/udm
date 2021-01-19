@@ -7,11 +7,11 @@ import (
 	"strings"
 	"sync"
 
-	"free5gc/lib/idgenerator"
-	"free5gc/lib/openapi"
-	"free5gc/lib/openapi/Nnrf_NFDiscovery"
-	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/factory"
+	"github.com/free5gc/idgenerator"
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/udm/factory"
 )
 
 var udmContext UDMContext
@@ -104,11 +104,10 @@ func (context *UDMContext) GetUdmProfileBHNPrivateKey() string {
 func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string,
 	dnnFromReq string) (mp map[string]models.SessionManagementSubscriptionData, ind string,
 	Dnns []models.DnnConfiguration, allDnns []map[string]models.DnnConfiguration) {
-
 	smDataMap := make(map[string]models.SessionManagementSubscriptionData)
 	sNssaiList := make([]string, len(smDatafromUDR))
 	// to obtain all DNN configurations identified by "dnn" for all network slices where such DNN is available
-	AllDnnConfigsbyDnn := make([]models.DnnConfiguration, 1, len(sNssaiList))
+	AllDnnConfigsbyDnn := make([]models.DnnConfiguration, len(sNssaiList))
 	// to obtain all DNN configurations for all network slice(s)
 	AllDnns := make([]map[string]models.DnnConfiguration, len(smDatafromUDR))
 	var snssaikey string // Required snssai to obtain all DNN configurations
@@ -415,7 +414,7 @@ func (context *UDMContext) GetIPv4Uri() string {
 	return fmt.Sprintf("%s://%s:%d", context.UriScheme, context.RegisterIPv4, context.SBIPort)
 }
 
-//GetSDMUri ... get subscriber data management sevice uri
+// GetSDMUri ... get subscriber data management service uri
 func (context *UDMContext) GetSDMUri() string {
 	return context.GetIPv4Uri() + "/nudm-sdm/v1"
 }

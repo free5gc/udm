@@ -3,46 +3,37 @@ package producer
 import (
 	"context"
 	"fmt"
-	"free5gc/lib/http_wrapper"
-	"free5gc/lib/openapi"
-	"free5gc/lib/openapi/Nudr_DataRepository"
-	Nudr "free5gc/lib/openapi/Nudr_DataRepository"
-	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/consumer"
-	udm_context "free5gc/src/udm/context"
-	"free5gc/src/udm/factory"
-	"free5gc/src/udm/logger"
-	"free5gc/src/udm/producer/callback"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/antihax/optional"
+
+	"github.com/free5gc/http_wrapper"
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/Nudr_DataRepository"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/udm/consumer"
+	udm_context "github.com/free5gc/udm/context"
+	"github.com/free5gc/udm/logger"
+	"github.com/free5gc/udm/producer/callback"
+	"github.com/free5gc/udm/util"
 )
 
-func createUDMClientToUDR(id string, nonUe bool) *Nudr_DataRepository.APIClient {
-	var addr string
-	if !nonUe {
-		addr = getUdrUri(id)
+func createUDMClientToUDR(id string) (*Nudr_DataRepository.APIClient, error) {
+	uri := getUdrURI(id)
+	if uri == "" {
+		logger.Handlelog.Errorf("ID[%s] does not match any UDR", id)
+		return nil, fmt.Errorf("No UDR URI found")
 	}
-	if addr == "" {
-		// dafault
-		if !nonUe {
-			logger.Handlelog.Warnf("Use default UDR Uri bacause ID[%s] does not match any UDR", id)
-		}
-		config := factory.UdmConfig
-		udrclient := config.Configuration.Udrclient
-		addr = fmt.Sprintf("%s://%s:%d", udrclient.Scheme, udrclient.Ipv4Addr, udrclient.Port)
-	}
-	cfg := Nudr.NewConfiguration()
-	cfg.SetBasePath(addr)
-	clientAPI := Nudr.NewAPIClient(cfg)
-	return clientAPI
+	cfg := Nudr_DataRepository.NewConfiguration()
+	cfg.SetBasePath(uri)
+	clientAPI := Nudr_DataRepository.NewAPIClient(cfg)
+	return clientAPI, nil
 }
 
-func getUdrUri(id string) string {
-	// supi
-	if strings.Contains(id, "imsi") || strings.Contains(id, "nai") {
+func getUdrURI(id string) string {
+	if strings.Contains(id, "imsi") || strings.Contains(id, "nai") { // supi
 		ue, ok := udm_context.UDM_Self().UdmUeFindBySupi(id)
 		if ok {
 			if ue.UdrUri == "" {
@@ -55,25 +46,25 @@ func getUdrUri(id string) string {
 			return ue.UdrUri
 		}
 	} else if strings.Contains(id, "pei") {
-		var udrUri string
+		var udrURI string
 		udm_context.UDM_Self().UdmUePool.Range(func(key, value interface{}) bool {
 			ue := value.(*udm_context.UdmUeContext)
 			if ue.Amf3GppAccessRegistration != nil && ue.Amf3GppAccessRegistration.Pei == id {
 				if ue.UdrUri == "" {
 					ue.UdrUri = consumer.SendNFIntancesUDR(ue.Supi, consumer.NFDiscoveryToUDRParamSupi)
 				}
-				udrUri = ue.UdrUri
+				udrURI = ue.UdrUri
 				return false
 			} else if ue.AmfNon3GppAccessRegistration != nil && ue.AmfNon3GppAccessRegistration.Pei == id {
 				if ue.UdrUri == "" {
 					ue.UdrUri = consumer.SendNFIntancesUDR(ue.Supi, consumer.NFDiscoveryToUDRParamSupi)
 				}
-				udrUri = ue.UdrUri
+				udrURI = ue.UdrUri
 				return false
 			}
 			return true
 		})
-		return udrUri
+		return udrURI
 	} else if strings.Contains(id, "extgroupid") {
 		// extra group id
 		return consumer.SendNFIntancesUDR(id, consumer.NFDiscoveryToUDRParamExtGroupId)
@@ -81,7 +72,7 @@ func getUdrUri(id string) string {
 		// gpsi
 		return consumer.SendNFIntancesUDR(id, consumer.NFDiscoveryToUDRParamGpsi)
 	}
-	return ""
+	return consumer.SendNFIntancesUDR("", consumer.NFDiscoveryToUDRParamNone)
 }
 
 func HandleGetAmf3gppAccessRequest(request *http_wrapper.Request) *http_wrapper.Response {
@@ -114,7 +105,11 @@ func GetAmf3gppAccessProcedure(ueID string, supportedFeatures string) (
 	var queryAmfContext3gppParamOpts Nudr_DataRepository.QueryAmfContext3gppParamOpts
 	queryAmfContext3gppParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 
-	clientAPI := createUDMClientToUDR(ueID, false)
+	clientAPI, err := createUDMClientToUDR(ueID)
+	if err != nil {
+		return nil, util.ProblemDetailsSystemFailure(err.Error())
+	}
+
 	amf3GppAccessRegistration, resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.
 		QueryAmfContext3gpp(context.Background(), ueID, &queryAmfContext3gppParamOpts)
 	if err != nil {
@@ -125,6 +120,12 @@ func GetAmf3gppAccessProcedure(ueID string, supportedFeatures string) (
 		}
 		return nil, problemDetails
 	}
+	defer func() {
+		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
+			logger.SdmLog.Errorf("QueryAmfContext3gpp response body cannot close: %+v", rspCloseErr)
+		}
+	}()
+
 	return &amf3GppAccessRegistration, nil
 }
 
@@ -153,13 +154,16 @@ func HandleGetAmfNon3gppAccessRequest(request *http_wrapper.Request) *http_wrapp
 		Cause:  "UNSPECIFIED",
 	}
 	return http_wrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
-
 }
 
 func GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts Nudr_DataRepository.
 	QueryAmfContextNon3gppParamOpts, ueID string) (response *models.AmfNon3GppAccessRegistration,
 	problemDetails *models.ProblemDetails) {
-	clientAPI := createUDMClientToUDR(ueID, false)
+	clientAPI, err := createUDMClientToUDR(ueID)
+	if err != nil {
+		return nil, util.ProblemDetailsSystemFailure(err.Error())
+	}
+
 	amfNon3GppAccessRegistration, resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
 		QueryAmfContextNon3gpp(context.Background(), ueID, &queryAmfContextNon3gppParamOpts)
 	if err != nil {
@@ -170,6 +174,11 @@ func GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts Nudr_DataRepos
 		}
 		return nil, problemDetails
 	}
+	defer func() {
+		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
+			logger.SdmLog.Errorf("QueryAmfContext3gpp response body cannot close: %+v", rspCloseErr)
+		}
+	}()
 
 	return &amfNon3GppAccessRegistration, nil
 }
@@ -209,7 +218,11 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 
 	udm_context.UDM_Self().CreateAmf3gppRegContext(ueID, registerRequest)
 
-	clientAPI := createUDMClientToUDR(ueID, false)
+	clientAPI, err := createUDMClientToUDR(ueID)
+	if err != nil {
+		return nil, nil, util.ProblemDetailsSystemFailure(err.Error())
+	}
+
 	var createAmfContext3gppParamOpts Nudr_DataRepository.CreateAmfContext3gppParamOpts
 	optInterface := optional.NewInterface(registerRequest)
 	createAmfContext3gppParamOpts.Amf3GppAccessRegistration = optInterface
@@ -224,6 +237,11 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 		}
 		return nil, nil, problemDetails
 	}
+	defer func() {
+		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
+			logger.UecmLog.Errorf("CreateAmfContext3gpp response body cannot close: %+v", rspCloseErr)
+		}
+	}()
 
 	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
 	// corresponding to the same (e.g. 3GPP) access, if one exists
@@ -277,7 +295,11 @@ func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRe
 
 	udm_context.UDM_Self().CreateAmfNon3gppRegContext(ueID, registerRequest)
 
-	clientAPI := createUDMClientToUDR(ueID, false)
+	clientAPI, err := createUDMClientToUDR(ueID)
+	if err != nil {
+		return nil, nil, util.ProblemDetailsSystemFailure(err.Error())
+	}
+
 	var createAmfContextNon3gppParamOpts Nudr_DataRepository.CreateAmfContextNon3gppParamOpts
 	optInterface := optional.NewInterface(registerRequest)
 	createAmfContextNon3gppParamOpts.AmfNon3GppAccessRegistration = optInterface
@@ -291,6 +313,11 @@ func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRe
 		}
 		return nil, nil, problemDetails
 	}
+	defer func() {
+		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
+			logger.UecmLog.Errorf("CreateAmfContext3gpp response body cannot close: %+v", rspCloseErr)
+		}
+	}()
 
 	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
 	// corresponding to the same (e.g. 3GPP) access, if one exists
@@ -397,7 +424,11 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
 	}
 
-	clientAPI := createUDMClientToUDR(ueID, false)
+	clientAPI, err := createUDMClientToUDR(ueID)
+	if err != nil {
+		return util.ProblemDetailsSystemFailure(err.Error())
+	}
+
 	resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.AmfContext3gpp(context.Background(), ueID,
 		patchItemReqArray)
 	if err != nil {
@@ -413,6 +444,12 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 		udmUe, _ := udm_context.UDM_Self().UdmUeFindBySupi(ueID)
 		udmUe.Amf3GppAccessRegistration = nil
 	}
+	defer func() {
+		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
+			logger.UecmLog.Errorf("AmfContext3gpp response body cannot close: %+v", rspCloseErr)
+		}
+	}()
+
 	return nil
 }
 
@@ -501,7 +538,11 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
 	}
 
-	clientAPI := createUDMClientToUDR(ueID, false)
+	clientAPI, err := createUDMClientToUDR(ueID)
+	if err != nil {
+		return util.ProblemDetailsSystemFailure(err.Error())
+	}
+
 	resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.AmfContextNon3gpp(context.Background(),
 		ueID, patchItemReqArray)
 	if err != nil {
@@ -512,6 +553,12 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 		}
 		return problemDetails
 	}
+	defer func() {
+		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
+			logger.UecmLog.Errorf("AmfContextNon3gpp response body cannot close: %+v", rspCloseErr)
+		}
+	}()
+
 	return nil
 }
 
@@ -535,7 +582,11 @@ func HandleDeregistrationSmfRegistrations(request *http_wrapper.Request) *http_w
 }
 
 func DeregistrationSmfRegistrationsProcedure(ueID string, pduSessionID string) (problemDetails *models.ProblemDetails) {
-	clientAPI := createUDMClientToUDR(ueID, false)
+	clientAPI, err := createUDMClientToUDR(ueID)
+	if err != nil {
+		return util.ProblemDetailsSystemFailure(err.Error())
+	}
+
 	resp, err := clientAPI.SMFRegistrationDocumentApi.DeleteSmfContext(context.Background(), ueID, pduSessionID)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
@@ -545,6 +596,12 @@ func DeregistrationSmfRegistrationsProcedure(ueID string, pduSessionID string) (
 		}
 		return problemDetails
 	}
+	defer func() {
+		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
+			logger.UecmLog.Errorf("DeleteSmfContext response body cannot close: %+v", rspCloseErr)
+		}
+	}()
+
 	return nil
 }
 
@@ -568,7 +625,7 @@ func HandleRegistrationSmfRegistrationsRequest(request *http_wrapper.Request) *h
 	} else if problemDetails != nil {
 		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
 	} else {
-		//all nil
+		// all nil
 		return http_wrapper.NewResponse(http.StatusNoContent, nil, nil)
 	}
 }
@@ -592,7 +649,11 @@ func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID
 	optInterface := optional.NewInterface(request)
 	createSmfContextNon3gppParamOpts.SmfRegistration = optInterface
 
-	clientAPI := createUDMClientToUDR(ueID, false)
+	clientAPI, err := createUDMClientToUDR(ueID)
+	if err != nil {
+		return nil, nil, util.ProblemDetailsSystemFailure(err.Error())
+	}
+
 	resp, err := clientAPI.SMFRegistrationDocumentApi.CreateSmfContextNon3gpp(context.Background(), ueID,
 		pduID32, &createSmfContextNon3gppParamOpts)
 	if err != nil {
@@ -604,6 +665,11 @@ func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID
 		}
 		return nil, nil, problemDetails
 	}
+	defer func() {
+		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
+			logger.UecmLog.Errorf("CreateSmfContextNon3gpp response body cannot close: %+v", rspCloseErr)
+		}
+	}()
 
 	if contextExisted {
 		return nil, nil, nil

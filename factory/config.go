@@ -4,32 +4,37 @@
 
 package factory
 
-type Config struct {
-	Info *Info `yaml:"info"`
+import (
+	"github.com/free5gc/logger_util"
+)
 
-	Configuration *Configuration `yaml:"configuration"`
+const (
+	UDM_EXPECTED_CONFIG_VERSION = "1.0.0"
+)
+
+type Config struct {
+	Info          *Info               `yaml:"info"`
+	Configuration *Configuration      `yaml:"configuration"`
+	Logger        *logger_util.Logger `yaml:"logger"`
 }
 
 type Info struct {
-	Version string `yaml:"version,omitempty"`
-
+	Version     string `yaml:"version,omitempty"`
 	Description string `yaml:"description,omitempty"`
 }
 
+const (
+	UDM_DEFAULT_IPV4     = "127.0.0.3"
+	UDM_DEFAULT_PORT     = "8000"
+	UDM_DEFAULT_PORT_INT = 8000
+)
+
 type Configuration struct {
-	UdmName string `yaml:"udmName,omitempty"`
-
-	Sbi *Sbi `yaml:"sbi,omitempty"`
-
+	UdmName         string   `yaml:"udmName,omitempty"`
+	Sbi             *Sbi     `yaml:"sbi,omitempty"`
 	ServiceNameList []string `yaml:"serviceNameList,omitempty"`
-
-	Udrclient *Udrclient `yaml:"udrclient,omitempty"`
-
-	Nrfclient *Nrfclient `yaml:"nrfclient,omitempty"`
-
-	NrfUri string `yaml:"nrfUri,omitempty"`
-
-	Keys *Keys `yaml:"keys,omitempty"`
+	NrfUri          string   `yaml:"nrfUri,omitempty"`
+	Keys            *Keys    `yaml:"keys,omitempty"`
 }
 
 type Sbi struct {
@@ -43,22 +48,8 @@ type Sbi struct {
 
 type Tls struct {
 	Log string `yaml:"log,omitempty"`
-
 	Pem string `yaml:"pem,omitempty"`
-
 	Key string `yaml:"key,omitempty"`
-}
-
-type Nrfclient struct {
-	Scheme   string `yaml:"scheme"`
-	Ipv4Addr string `yaml:"ipv4Addr,omitempty"`
-	Port     int    `yaml:"port,omitempty"`
-}
-
-type Udrclient struct {
-	Scheme   string `yaml:"scheme"`
-	Ipv4Addr string `yaml:"ipv4Addr,omitempty"`
-	Port     int    `yaml:"port,omitempty"`
 }
 
 type Keys struct {
@@ -66,4 +57,11 @@ type Keys struct {
 	UdmProfileAHNPublicKey  string `yaml:"udmProfileAHNPublicKey,omitempty"`
 	UdmProfileBHNPrivateKey string `yaml:"udmProfileBHNPrivateKey,omitempty"`
 	UdmProfileBHNPublicKey  string `yaml:"udmProfileBHNPublicKey,omitempty"`
+}
+
+func (c *Config) GetVersion() string {
+	if c.Info != nil && c.Info.Version != "" {
+		return c.Info.Version
+	}
+	return ""
 }

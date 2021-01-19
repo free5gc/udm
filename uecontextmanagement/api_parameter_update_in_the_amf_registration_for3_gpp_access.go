@@ -10,14 +10,16 @@
 package uecontextmanagement
 
 import (
-	// "fmt"
-	"free5gc/lib/http_wrapper"
-	"free5gc/lib/openapi"
-	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/logger"
-	"free5gc/src/udm/producer"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	// "fmt"
+	"github.com/free5gc/http_wrapper"
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/udm/logger"
+	"github.com/free5gc/udm/producer"
 )
 
 // UpdateAmf3gppAccess - Update a parameter in the AMF registration for 3GPP access

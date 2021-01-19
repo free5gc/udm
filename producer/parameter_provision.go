@@ -2,16 +2,18 @@ package producer
 
 import (
 	"context"
-	"free5gc/lib/http_wrapper"
-	"free5gc/lib/openapi"
-	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/logger"
 	"net/http"
+
+	"github.com/free5gc/http_wrapper"
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/udm/logger"
+	"github.com/free5gc/udm/util"
 )
 
 func HandleUpdateRequest(request *http_wrapper.Request) *http_wrapper.Response {
 	// step 1: log
-	logger.PpLop.Infoln("Handle UpdateRequest")
+	logger.PpLog.Infoln("Handle UpdateRequest")
 
 	// step 2: retrieve request
 	updateRequest := request.Body.(models.PpData)
@@ -29,7 +31,10 @@ func HandleUpdateRequest(request *http_wrapper.Request) *http_wrapper.Response {
 }
 
 func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *models.ProblemDetails) {
-	clientAPI := createUDMClientToUDR(gpsi, false)
+	clientAPI, err := createUDMClientToUDR(gpsi)
+	if err != nil {
+		return util.ProblemDetailsSystemFailure(err.Error())
+	}
 	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(context.Background(), gpsi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
@@ -39,5 +44,10 @@ func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *
 		}
 		return problemDetails
 	}
+	defer func() {
+		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
+			logger.PpLog.Errorf("ModifyPpData response body cannot close: %+v", rspCloseErr)
+		}
+	}()
 	return nil
 }

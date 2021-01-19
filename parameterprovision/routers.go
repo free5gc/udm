@@ -10,12 +10,13 @@
 package parameterprovision
 
 import (
-	"free5gc/lib/logger_util"
-	"free5gc/src/udm/logger"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/free5gc/logger_util"
+	"github.com/free5gc/udm/logger"
 )
 
 // Route is the information for every URI.

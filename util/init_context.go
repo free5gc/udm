@@ -1,15 +1,14 @@
 package util
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/google/uuid"
 
-	"free5gc/lib/openapi/models"
-	"free5gc/src/udm/context"
-	"free5gc/src/udm/factory"
-	"free5gc/src/udm/logger"
+	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/udm/context"
+	"github.com/free5gc/udm/factory"
+	"github.com/free5gc/udm/logger"
 )
 
 func InitUDMContext(udmContext *context.UDMContext) {
@@ -20,12 +19,10 @@ func InitUDMContext(udmContext *context.UDMContext) {
 	if configuration.UdmName != "" {
 		udmContext.Name = configuration.UdmName
 	}
-	nrfclient := config.Configuration.Nrfclient
-	udmContext.NrfUri = fmt.Sprintf("%s://%s:%d", nrfclient.Scheme, nrfclient.Ipv4Addr, nrfclient.Port)
 	sbi := configuration.Sbi
 	udmContext.UriScheme = ""
-	udmContext.SBIPort = 29503
-	udmContext.RegisterIPv4 = "127.0.0.1"
+	udmContext.SBIPort = factory.UDM_DEFAULT_PORT_INT
+	udmContext.RegisterIPv4 = factory.UDM_DEFAULT_IPV4
 	if sbi != nil {
 		if sbi.Scheme != "" {
 			udmContext.UriScheme = models.UriScheme(sbi.Scheme)
@@ -48,12 +45,7 @@ func InitUDMContext(udmContext *context.UDMContext) {
 			}
 		}
 	}
-	if configuration.NrfUri != "" {
-		udmContext.NrfUri = configuration.NrfUri
-	} else {
-		logger.UtilLog.Warn("NRF Uri is empty! Using localhost as NRF IPv4 address.")
-		udmContext.NrfUri = fmt.Sprintf("%s://%s:%d", udmContext.UriScheme, "127.0.0.1", 29510)
-	}
+	udmContext.NrfUri = configuration.NrfUri
 	servingNameList := configuration.ServiceNameList
 
 	udmContext.Keys = configuration.Keys
