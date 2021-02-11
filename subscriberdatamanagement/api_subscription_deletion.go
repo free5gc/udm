@@ -24,7 +24,7 @@ import (
 // Unsubscribe - unsubscribe from notifications
 func HTTPUnsubscribe(c *gin.Context) {
 	req := http_wrapper.NewRequest(c.Request, nil)
-	req.Params["ueId"] = c.Params.ByName("ueId")
+	req.Params["supi"] = c.Params.ByName("supi")
 	req.Params["subscriptionId"] = c.Params.ByName("subscriptionId")
 
 	rsp := producer.HandleUnsubscribeRequest(req)
