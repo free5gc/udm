@@ -78,7 +78,10 @@ func getAmDataProcedure(supi string, plmnID string, supportedFeatures string) (
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		udmUe.SetAMSubsriptionData(&accessAndMobilitySubscriptionDataResp)
 		return &accessAndMobilitySubscriptionDataResp, nil
 	} else {
@@ -248,7 +251,10 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 		}
 	}()
 	if res1.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		udmUe.SetAMSubsriptionData(&amData)
 		subscriptionDataSets.AmData = &amData
 	} else {
@@ -285,7 +291,10 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 		}
 	}()
 	if res2.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		udmUe.SetSmfSelectionSubsData(&smfSelData)
 		subscriptionDataSets.SmfSelData = &smfSelData
 	} else {
@@ -321,7 +330,10 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 		}
 	}()
 	if res3.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		udmUe.TraceData = &traceData
 		udmUe.TraceDataResponse.TraceData = &traceData
 		subscriptionDataSets.TraceData = &traceData
@@ -357,7 +369,10 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 		}
 	}()
 	if res4.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		smData, _, _, _ := udm_context.UDM_Self().ManageSmData(sessionManagementSubscriptionData, "", "")
 		udmUe.SetSMSubsData(smData)
 		subscriptionDataSets.SmData = sessionManagementSubscriptionData
@@ -416,7 +431,10 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	ueContextInSmfDataResp.PgwInfo = pgwInfoArray
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		udmUe.UeCtxtInSmfData = &ueContextInSmfDataResp
 	} else {
 		var problemDetails models.ProblemDetails
@@ -575,7 +593,10 @@ func getSmDataProcedure(supi string, plmnID string, Dnn string, Snssai string, s
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		smData, snssaikey, AllDnnConfigsbyDnn, AllDnns := udm_context.UDM_Self().ManageSmData(
 			sessionManagementSubscriptionDataResp, Snssai, Dnn)
 		udmUe.SetSMSubsData(smData)
@@ -677,7 +698,10 @@ func getNssaiProcedure(supi string, plmnID string, supportedFeatures string) (
 	nssaiResp = *accessAndMobilitySubscriptionDataResp.Nssai
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		udmUe.Nssai = &nssaiResp
 		return udmUe.Nssai, nil
 	} else {
@@ -753,7 +777,10 @@ func getSmfSelectDataProcedure(supi string, plmnID string, supportedFeatures str
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		udmUe.SetSmfSelectionSubsData(&smfSelectionSubscriptionDataResp)
 		return udmUe.SmfSelSubsData, nil
 	} else {
@@ -990,7 +1017,7 @@ func unsubscribeProcedure(supi string, subscriptionID string) *models.ProblemDet
 		return util.ProblemDetailsSystemFailure(err.Error())
 	}
 
-	res, err := clientAPI.SDMSubscriptionDocumentApi.RemovesdmSubscriptions(context.Background(), "====", subscriptionID)
+	res, err := clientAPI.SDMSubscriptionDocumentApi.RemovesdmSubscriptions(context.Background(), supi, subscriptionID)
 	if err != nil {
 		if res == nil {
 			logger.SdmLog.Warnln(err)
@@ -1228,7 +1255,10 @@ func getTraceDataProcedure(supi string, plmnID string) (
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		udmUe.TraceData = &traceDataRes
 		udmUe.TraceDataResponse.TraceData = &traceDataRes
 
@@ -1327,7 +1357,10 @@ func getUeContextInSmfDataProcedure(supi string, supportedFeatures string) (
 	ueContextInSmfData.PgwInfo = pgwInfoArray
 
 	if res.StatusCode == http.StatusOK {
-		udmUe := udm_context.UDM_Self().NewUdmUe(supi)
+		udmUe, ok := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+		if !ok {
+			udmUe = udm_context.UDM_Self().NewUdmUe(supi)
+		}
 		udmUe.UeCtxtInSmfData = &ueContextInSmfData
 		return udmUe.UeCtxtInSmfData, nil
 	} else {

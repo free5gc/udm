@@ -440,6 +440,12 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 
 		return problemDetails
 	}
+
+	if request.PurgeFlag {
+		udmUe, _ := udm_context.UDM_Self().UdmUeFindBySupi(ueID)
+		udmUe.Amf3GppAccessRegistration = nil
+	}
+
 	defer func() {
 		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
 			logger.UecmLog.Errorf("AmfContext3gpp response body cannot close: %+v", rspCloseErr)
