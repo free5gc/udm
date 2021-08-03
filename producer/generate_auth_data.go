@@ -159,7 +159,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 
 	response = &models.AuthenticationInfoResult{}
 	rand.Seed(time.Now().UnixNano())
-	supi, err := suci.ToSupi(supiOrSuci, udm_context.UDM_Self().GetUdmProfileAHNPrivateKey())
+	supi, err := suci.ToSupi(supiOrSuci, udm_context.UDM_Self().SuciProfiles)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,

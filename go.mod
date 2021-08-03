@@ -15,7 +15,7 @@ require (
 	github.com/free5gc/milenage v1.0.0
 	github.com/free5gc/openapi v1.0.0
 	github.com/free5gc/path_util v1.0.0
-	github.com/free5gc/util_3gpp v1.0.0
+	github.com/free5gc/util_3gpp v1.0.1
 	github.com/free5gc/version v1.0.0
 	github.com/gin-gonic/gin v1.6.3
 	github.com/google/uuid v1.1.2
