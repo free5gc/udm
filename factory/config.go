@@ -6,10 +6,11 @@ package factory
 
 import (
 	"github.com/free5gc/logger_util"
+	"github.com/free5gc/util_3gpp/suci"
 )
 
 const (
-	UDM_EXPECTED_CONFIG_VERSION = "1.0.0"
+	UDM_EXPECTED_CONFIG_VERSION = "1.0.1"
 )
 
 type Config struct {
@@ -30,11 +31,11 @@ const (
 )
 
 type Configuration struct {
-	UdmName         string   `yaml:"udmName,omitempty"`
-	Sbi             *Sbi     `yaml:"sbi,omitempty"`
-	ServiceNameList []string `yaml:"serviceNameList,omitempty"`
-	NrfUri          string   `yaml:"nrfUri,omitempty"`
-	Keys            *Keys    `yaml:"keys,omitempty"`
+	UdmName         string             `yaml:"udmName,omitempty"`
+	Sbi             *Sbi               `yaml:"sbi,omitempty"`
+	ServiceNameList []string           `yaml:"serviceNameList,omitempty"`
+	NrfUri          string             `yaml:"nrfUri,omitempty"`
+	SuciProfiles    []suci.SuciProfile `yaml:"SuciProfile,omitempty"`
 }
 
 type Sbi struct {
@@ -50,13 +51,6 @@ type Tls struct {
 	Log string `yaml:"log,omitempty"`
 	Pem string `yaml:"pem,omitempty"`
 	Key string `yaml:"key,omitempty"`
-}
-
-type Keys struct {
-	UdmProfileAHNPrivateKey string `yaml:"udmProfileAHNPrivateKey,omitempty"`
-	UdmProfileAHNPublicKey  string `yaml:"udmProfileAHNPublicKey,omitempty"`
-	UdmProfileBHNPrivateKey string `yaml:"udmProfileBHNPrivateKey,omitempty"`
-	UdmProfileBHNPublicKey  string `yaml:"udmProfileBHNPublicKey,omitempty"`
 }
 
 func (c *Config) GetVersion() string {

@@ -11,7 +11,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/udm/factory"
+	"github.com/free5gc/util_3gpp/suci"
 )
 
 var udmContext UDMContext
@@ -44,7 +44,7 @@ type UDMContext struct {
 	GpsiSupiList                   models.IdentityData
 	SharedSubsDataMap              map[string]models.SharedData // sharedDataIds as key
 	SubscriptionOfSharedDataChange sync.Map                     // subscriptionID as key
-	Keys                           *factory.Keys
+	SuciProfiles                   []suci.SuciProfile
 	EeSubscriptionIDGenerator      *idgenerator.IDGenerator
 }
 
@@ -83,22 +83,6 @@ type UdmNFContext struct {
 	SubscriptionID                   string
 	SubscribeToNotifChange           *models.SdmSubscription // SubscriptionID as key
 	SubscribeToNotifSharedDataChange *models.SdmSubscription // SubscriptionID as key
-}
-
-func (context *UDMContext) GetUdmProfileAHNPublicKey() string {
-	return context.Keys.UdmProfileAHNPublicKey
-}
-
-func (context *UDMContext) GetUdmProfileAHNPrivateKey() string {
-	return context.Keys.UdmProfileAHNPrivateKey
-}
-
-func (context *UDMContext) GetUdmProfileBHNPublicKey() string {
-	return context.Keys.UdmProfileBHNPublicKey
-}
-
-func (context *UDMContext) GetUdmProfileBHNPrivateKey() string {
-	return context.Keys.UdmProfileBHNPrivateKey
 }
 
 func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string,
