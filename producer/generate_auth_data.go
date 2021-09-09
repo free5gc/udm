@@ -526,6 +526,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 		av.XresStar = hex.EncodeToString(xresStar)
 		av.Autn = hex.EncodeToString(AUTN)
 		av.Kausf = hex.EncodeToString(kdfValForKausf)
+		av.AvType = models.AvType__5_G_HE_AKA
 	} else { // EAP-AKA'
 		response.AuthType = models.AuthType_EAP_AKA_PRIME
 
@@ -551,6 +552,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 		av.Autn = hex.EncodeToString(AUTN)
 		av.CkPrime = hex.EncodeToString(ckPrime)
 		av.IkPrime = hex.EncodeToString(ikPrime)
+		av.AvType = models.AvType_EAP_AKA_PRIME
 	}
 
 	response.AuthenticationVector = &av
