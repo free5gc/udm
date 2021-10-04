@@ -2,8 +2,10 @@ package producer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/antihax/optional"
@@ -24,7 +26,11 @@ func HandleGetAmDataRequest(request *http_wrapper.Request) *http_wrapper.Respons
 
 	// step 2: retrieve request
 	supi := request.Params["supi"]
-	plmnID := request.Query.Get("plmn-id")
+	plmnIDStruct, problemDetails := getPlmnIDStruct(request.Query)
+	if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
 	supportedFeatures := request.Query.Get("supported-features")
 
 	// step 3: handle the message
@@ -534,7 +540,11 @@ func HandleGetSmDataRequest(request *http_wrapper.Request) *http_wrapper.Respons
 
 	// step 2: retrieve request
 	supi := request.Params["supi"]
-	plmnID := request.Query.Get("plmn-id")
+	plmnIDStruct, problemDetails := getPlmnIDStruct(request.Query)
+	if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
 	Dnn := request.Query.Get("dnn")
 	Snssai := request.Query.Get("single-nssai")
 	supportedFeatures := request.Query.Get("supported-features")
@@ -641,7 +651,11 @@ func HandleGetNssaiRequest(request *http_wrapper.Request) *http_wrapper.Response
 
 	// step 2: retrieve request
 	supi := request.Params["supi"]
-	plmnID := request.Query.Get("plmn-id")
+	plmnIDStruct, problemDetails := getPlmnIDStruct(request.Query)
+	if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
 	supportedFeatures := request.Query.Get("supported-features")
 
 	// step 3: handle the message
@@ -719,7 +733,11 @@ func HandleGetSmfSelectDataRequest(request *http_wrapper.Request) *http_wrapper.
 
 	// step 2: retrieve request
 	supi := request.Params["supi"]
-	plmnID := request.Query.Get("plmn-id")
+	plmnIDStruct, problemDetails := getPlmnIDStruct(request.Query)
+	if problemDetails != nil {
+		return http_wrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
 	supportedFeatures := request.Query.Get("supported-features")
 
 	// step 3: handle the message
@@ -1367,6 +1385,25 @@ func getUeContextInSmfDataProcedure(supi string, supportedFeatures string) (
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
+		}
+		return nil, problemDetails
+	}
+}
+
+func getPlmnIDStruct(queryParameters url.Values) (plmnIDStruct *models.PlmnId, problemDetails *models.ProblemDetails) {
+	if queryParameters["plmn-id"] != nil {
+		plmnIDJson := queryParameters["plmn-id"][0]
+		plmnIDStruct := &models.PlmnId{}
+		err := json.Unmarshal([]byte(plmnIDJson), plmnIDStruct)
+		if err != nil {
+			logger.SdmLog.Warnln("Unmarshal Error in targetPlmnListtruct: ", err)
+		}
+		return plmnIDStruct, nil
+	} else {
+		problemDetails := &models.ProblemDetails{
+			Title:  "Invalid Parameter",
+			Status: http.StatusBadRequest,
+			Cause:  "No get plmn-id",
 		}
 		return nil, problemDetails
 	}
