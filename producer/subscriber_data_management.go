@@ -3,7 +3,6 @@ package producer
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -67,9 +66,9 @@ func getAmDataProcedure(supi string, plmnID string, supportedFeatures string) (
 		QueryAmData(context.Background(), supi, plmnID, &queryAmDataParamOpts)
 	if err != nil {
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Errorf(err.Error())
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Errorf("Response State: %+v", err.Error())
 		} else {
 			problemDetails = &models.ProblemDetails{
 				Status: int32(res.StatusCode),
@@ -141,9 +140,9 @@ func getIdTranslationResultProcedure(gpsi string) (response *models.IdTranslatio
 		context.Background(), gpsi, &getIdentityDataParamOpts)
 	if err != nil {
 		if res == nil {
-			fmt.Println(err.Error())
+			logger.SdmLog.Errorf(err.Error())
 		} else if err.Error() != res.Status {
-			fmt.Println(err.Error())
+			logger.SdmLog.Errorf("Response State: %+v", err.Error())
 		} else {
 			problemDetails = &models.ProblemDetails{
 				Status: int32(res.StatusCode),
@@ -260,9 +259,9 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 			context.Background(), supi, plmnID, &queryAmDataParamOpts)
 		if err != nil {
 			if res == nil {
-				fmt.Println(err.Error())
+				logger.SdmLog.Errorf(err.Error())
 			} else if err.Error() != res.Status {
-				fmt.Println(err.Error())
+				logger.SdmLog.Errorf("Response State: %+v", err.Error())
 			} else {
 				problemDetails = &models.ProblemDetails{
 					Status: int32(res.StatusCode),
@@ -350,9 +349,9 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 			context.Background(), supi, &querySmfRegListParamOpts)
 		if err != nil {
 			if res == nil {
-				fmt.Println(err.Error())
+				logger.SdmLog.Errorf(err.Error())
 			} else if err.Error() != res.Status {
-				fmt.Println(err.Error())
+				logger.SdmLog.Errorf("Response State: %+v", err.Error())
 			} else {
 				problemDetails = &models.ProblemDetails{
 					Status: int32(res.StatusCode),
@@ -398,7 +397,7 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 		} else {
 			var problemDetails models.ProblemDetails
 			problemDetails.Cause = "DATA_NOT_FOUND"
-			fmt.Printf(problemDetails.Cause)
+			logger.SdmLog.Errorf(problemDetails.Cause)
 		}
 	}
 
@@ -416,9 +415,9 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 			QuerySmData(context.Background(), supi, plmnID, &querySmDataParamOpts)
 		if err != nil {
 			if res == nil {
-				fmt.Println(err.Error())
+				logger.SdmLog.Errorf(err.Error())
 			} else if err.Error() != res.Status {
-				fmt.Println(err.Error())
+				logger.SdmLog.Errorf("Response State: %+v", err.Error())
 			} else {
 				problemDetails = &models.ProblemDetails{
 					Status: int32(res.StatusCode),
@@ -461,9 +460,9 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 			context.Background(), supi, plmnID, &queryTraceDataParamOpts)
 		if err != nil {
 			if res == nil {
-				fmt.Println(err.Error())
+				logger.SdmLog.Errorf(err.Error())
 			} else if err.Error() != res.Status {
-				fmt.Println(err.Error())
+				logger.SdmLog.Errorf("Response State: %+v", err.Error())
 			} else {
 				problemDetails = &models.ProblemDetails{
 					Status: int32(res.StatusCode),
