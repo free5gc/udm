@@ -250,9 +250,7 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	querySmfSelectDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	udm_context.UDM_Self().CreateSubsDataSetsForUe(supi, subsDataSetBody)
 
-	httpStateOK := false
 	if containDataSetName(dataSetNames, string(models.DataSetName_AM)) {
-		httpStateOK = false
 		var body models.AccessAndMobilitySubscriptionData
 		udm_context.UDM_Self().CreateAccessMobilitySubsDataForUe(supi, body)
 		amData, res, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.QueryAmData(
@@ -284,7 +282,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 			}
 			udmUe.SetAMSubsriptionData(&amData)
 			subscriptionDataSets.AmData = &amData
-			httpStateOK = true
 		} else {
 			problemDetails = &models.ProblemDetails{
 				Status: http.StatusNotFound,
@@ -296,7 +293,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	}
 
 	if containDataSetName(dataSetNames, string(models.DataSetName_SMF_SEL)) {
-		httpStateOK = false
 		var smfSelSubsbody models.SmfSelectionSubscriptionData
 		udm_context.UDM_Self().CreateSmfSelectionSubsDataforUe(supi, smfSelSubsbody)
 		smfSelData, res, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.QuerySmfSelectData(context.Background(),
@@ -328,7 +324,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 			}
 			udmUe.SetSmfSelectionSubsData(&smfSelData)
 			subscriptionDataSets.SmfSelData = &smfSelData
-			httpStateOK = true
 		} else {
 			problemDetails = &models.ProblemDetails{
 				Status: http.StatusNotFound,
@@ -340,7 +335,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	}
 
 	if containDataSetName(dataSetNames, string(models.DataSetName_UEC_SMF)) {
-		httpStateOK = false
 		var UeContextInSmfbody models.UeContextInSmfData
 		var querySmfRegListParamOpts Nudr.QuerySmfRegListParamOpts
 		querySmfRegListParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
@@ -393,7 +387,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 			}
 			udmUe.UeCtxtInSmfData = &ueContextInSmfDataResp
 			subscriptionDataSets.UecSmfData = &ueContextInSmfDataResp
-			httpStateOK = true
 		} else {
 			var problemDetails models.ProblemDetails
 			problemDetails.Cause = "DATA_NOT_FOUND"
@@ -410,7 +403,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	// }
 
 	if containDataSetName(dataSetNames, string(models.DataSetName_SM)) {
-		httpStateOK = false
 		sessionManagementSubscriptionData, res, err := clientAPI.SessionManagementSubscriptionDataApi.
 			QuerySmData(context.Background(), supi, plmnID, &querySmDataParamOpts)
 		if err != nil {
@@ -441,7 +433,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 			smData, _, _, _ := udm_context.UDM_Self().ManageSmData(sessionManagementSubscriptionData, "", "")
 			udmUe.SetSMSubsData(smData)
 			subscriptionDataSets.SmData = sessionManagementSubscriptionData
-			httpStateOK = true
 		} else {
 			problemDetails = &models.ProblemDetails{
 				Status: http.StatusNotFound,
@@ -453,7 +444,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	}
 
 	if containDataSetName(dataSetNames, string(models.DataSetName_TRACE)) {
-		httpStateOK = false
 		var TraceDatabody models.TraceData
 		udm_context.UDM_Self().CreateTraceDataforUe(supi, TraceDatabody)
 		traceData, res, err := clientAPI.TraceDataDocumentApi.QueryTraceData(
@@ -485,7 +475,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 			udmUe.TraceData = &traceData
 			udmUe.TraceDataResponse.TraceData = &traceData
 			subscriptionDataSets.TraceData = &traceData
-			httpStateOK = true
 		} else {
 			problemDetails = &models.ProblemDetails{
 				Status: http.StatusNotFound,
@@ -499,15 +488,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	// TODO: SMS Management Subscription Data
 	// if containDataSetName(dataSetNames, string(models.DataSetName_SMS_MNG)) {
 	// }
-
-	if !httpStateOK {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusNotFound,
-			Cause:  "DATA_NOT_FOUND",
-		}
-
-		return nil, problemDetails
-	}
 
 	return &subscriptionDataSets, nil
 }
