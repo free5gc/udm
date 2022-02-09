@@ -334,7 +334,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 		return nil, problemDetails
 	}
 
-	AMF, err := hex.DecodeString("8000")
+	AMF, err := hex.DecodeString(authSubs.AuthenticationManagementField)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
