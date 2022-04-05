@@ -83,12 +83,12 @@ func (udm *UDM) Initialize(c *cli.Context) error {
 		return validErr
 	}
 
-	udm.setLogLevel()
+	udm.SetLogLevel()
 
 	return nil
 }
 
-func (udm *UDM) setLogLevel() {
+func (udm *UDM) SetLogLevel() {
 	if factory.UdmConfig.Logger == nil {
 		logger.InitLog.Warnln("UDM config without log level setting!!!")
 		return
