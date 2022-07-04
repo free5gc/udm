@@ -399,8 +399,8 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 			// Check if suci
 			if suciPart := strings.Split(supiOrSuci, "-"); suciPart[0] == "suci" {
 				// Get SuciProfile index and write public key
-				keyIndex, err := strconv.Atoi(suciPart[suci.HNPublicKeyIDPlace])
-				if err != nil {
+				keyIndex, err1 := strconv.Atoi(suciPart[suci.HNPublicKeyIDPlace])
+				if err1 != nil {
 					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key HNPublicKeyIDPlace parse Error")
 				} else {
 					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key ",
