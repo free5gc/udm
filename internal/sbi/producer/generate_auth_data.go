@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -394,7 +395,18 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 			sqnStr = fmt.Sprintf("%x", bigSQN)
 			sqnStr = strictHex(sqnStr, 12)
 		} else {
-			logger.UeauLog.Errorln("Re-Sync MAC failed ", supi)
+			logger.UeauLog.Errorln("Re-Sync MAC failed ", supiOrSuci)
+			// Check if suci
+			if suciPart := strings.Split(supiOrSuci, "-"); suciPart[0] == "suci" {
+				// Get SuciProfile index and write public key
+				keyIndex, err1 := strconv.Atoi(suciPart[suci.HNPublicKeyIDPlace])
+				if err1 != nil {
+					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key HNPublicKeyIDPlace parse Error")
+				} else {
+					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key ",
+						udm_context.UDM_Self().SuciProfiles[keyIndex-1].PublicKey)
+				}
+			}
 			logger.UeauLog.Errorln("MACS ", macS)
 			logger.UeauLog.Errorln("Auts[6:] ", Auts[6:])
 			logger.UeauLog.Errorln("Sqn ", SQNms)
