@@ -50,7 +50,8 @@ func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi strin
 }
 
 func SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
-	deregistData models.DeregistrationData) *models.ProblemDetails {
+	deregistData models.DeregistrationData,
+) *models.ProblemDetails {
 	configuration := Nudm_UEContextManagement.NewConfiguration()
 	clientAPI := Nudm_UEContextManagement.NewAPIClient(configuration)
 

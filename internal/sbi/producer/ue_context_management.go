@@ -101,7 +101,8 @@ func HandleGetAmf3gppAccessRequest(request *httpwrapper.Request) *httpwrapper.Re
 }
 
 func GetAmf3gppAccessProcedure(ueID string, supportedFeatures string) (
-	response *models.Amf3GppAccessRegistration, problemDetails *models.ProblemDetails) {
+	response *models.Amf3GppAccessRegistration, problemDetails *models.ProblemDetails,
+) {
 	var queryAmfContext3gppParamOpts Nudr_DataRepository.QueryAmfContext3gppParamOpts
 	queryAmfContext3gppParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 
@@ -158,7 +159,8 @@ func HandleGetAmfNon3gppAccessRequest(request *httpwrapper.Request) *httpwrapper
 
 func GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts Nudr_DataRepository.
 	QueryAmfContextNon3gppParamOpts, ueID string) (response *models.AmfNon3GppAccessRegistration,
-	problemDetails *models.ProblemDetails) {
+	problemDetails *models.ProblemDetails,
+) {
 	clientAPI, err := createUDMClientToUDR(ueID)
 	if err != nil {
 		return nil, util.ProblemDetailsSystemFailure(err.Error())
@@ -208,7 +210,8 @@ func HandleRegistrationAmf3gppAccessRequest(request *httpwrapper.Request) *httpw
 
 // TS 29.503 5.3.2.2.2
 func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegistration, ueID string) (
-	header http.Header, response *models.Amf3GppAccessRegistration, problemDetails *models.ProblemDetails) {
+	header http.Header, response *models.Amf3GppAccessRegistration, problemDetails *models.ProblemDetails,
+) {
 	// TODO: EPS interworking with N26 is not supported yet in this stage
 	var oldAmf3GppAccessRegContext *models.Amf3GppAccessRegistration
 	if udm_context.UDM_Self().UdmAmf3gppRegContextExists(ueID) {
@@ -286,7 +289,8 @@ func HandleRegisterAmfNon3gppAccessRequest(request *httpwrapper.Request) *httpwr
 }
 
 func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRegistration, ueID string) (
-	header http.Header, response *models.AmfNon3GppAccessRegistration, problemDetails *models.ProblemDetails) {
+	header http.Header, response *models.AmfNon3GppAccessRegistration, problemDetails *models.ProblemDetails,
+) {
 	var oldAmfNon3GppAccessRegContext *models.AmfNon3GppAccessRegistration
 	if udm_context.UDM_Self().UdmAmfNon3gppRegContextExists(ueID) {
 		ue, _ := udm_context.UDM_Self().UdmUeFindBySupi(ueID)
@@ -359,7 +363,8 @@ func HandleUpdateAmf3gppAccessRequest(request *httpwrapper.Request) *httpwrapper
 }
 
 func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModification, ueID string) (
-	problemDetails *models.ProblemDetails) {
+	problemDetails *models.ProblemDetails,
+) {
 	var patchItemReqArray []models.PatchItem
 	currentContext := udm_context.UDM_Self().GetAmf3gppRegContext(ueID)
 	if currentContext == nil {
@@ -476,7 +481,8 @@ func HandleUpdateAmfNon3gppAccessRequest(request *httpwrapper.Request) *httpwrap
 }
 
 func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistrationModification, ueID string) (
-	problemDetails *models.ProblemDetails) {
+	problemDetails *models.ProblemDetails,
+) {
 	var patchItemReqArray []models.PatchItem
 	currentContext := udm_context.UDM_Self().GetAmfNon3gppRegContext(ueID)
 	if currentContext == nil {
@@ -634,7 +640,8 @@ func HandleRegistrationSmfRegistrationsRequest(request *httpwrapper.Request) *ht
 
 // SmfRegistrationsProcedure
 func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID string, pduSessionID string) (
-	header http.Header, response *models.SmfRegistration, problemDetails *models.ProblemDetails) {
+	header http.Header, response *models.SmfRegistration, problemDetails *models.ProblemDetails,
+) {
 	contextExisted := false
 	udm_context.UDM_Self().CreateSmfRegContext(ueID, pduSessionID)
 	if !udm_context.UDM_Self().UdmSmfRegContextNotExists(ueID) {

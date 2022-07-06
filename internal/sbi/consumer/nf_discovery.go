@@ -20,7 +20,8 @@ const (
 )
 
 func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
-	param Nnrf_NFDiscovery.SearchNFInstancesParamOpts) (result models.SearchResult, err error) {
+	param Nnrf_NFDiscovery.SearchNFInstancesParamOpts,
+) (result models.SearchResult, err error) {
 	configuration := Nnrf_NFDiscovery.NewConfiguration()
 	configuration.SetBasePath(nrfUri) // addr
 	clientNRF := Nnrf_NFDiscovery.NewAPIClient(configuration)

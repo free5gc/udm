@@ -53,7 +53,8 @@ func HandleGetAmDataRequest(request *httpwrapper.Request) *httpwrapper.Response 
 // TS 29.503 5.2.2.2.3
 // Access and Mobility Subscription Data Retrieval
 func getAmDataProcedure(supi string, plmnID string, supportedFeatures string) (
-	response *models.AccessAndMobilitySubscriptionData, problemDetails *models.ProblemDetails) {
+	response *models.AccessAndMobilitySubscriptionData, problemDetails *models.ProblemDetails,
+) {
 	var queryAmDataParamOpts Nudr.QueryAmDataParamOpts
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 
@@ -127,7 +128,8 @@ func HandleGetIdTranslationResultRequest(request *httpwrapper.Request) *httpwrap
 // TS 29.503 5.2.2.2.10
 // Identifier Translation
 func getIdTranslationResultProcedure(gpsi string) (response *models.IdTranslationResult,
-	problemDetails *models.ProblemDetails) {
+	problemDetails *models.ProblemDetails,
+) {
 	var idTranslationResult models.IdTranslationResult
 	var getIdentityDataParamOpts Nudr.GetIdentityDataParamOpts
 
@@ -218,7 +220,8 @@ func HandleGetSupiRequest(request *httpwrapper.Request) *httpwrapper.Response {
 // TS 29.503 5.2.2.2.9
 // Retrieval Of Multiple Data Set
 func getSupiProcedure(supi string, plmnID string, dataSetNames []string, supportedFeatures string) (
-	response *models.SubscriptionDataSets, problemDetails *models.ProblemDetails) {
+	response *models.SubscriptionDataSets, problemDetails *models.ProblemDetails,
+) {
 	if len(dataSetNames) < 2 {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusBadRequest,
@@ -517,7 +520,8 @@ func HandleGetSharedDataRequest(request *httpwrapper.Request) *httpwrapper.Respo
 // TS 29.503 5.2.2.2.11
 // Shared Subscription Data Retrieval
 func getSharedDataProcedure(sharedDataIds []string, supportedFeatures string) (
-	response []models.SharedData, problemDetails *models.ProblemDetails) {
+	response []models.SharedData, problemDetails *models.ProblemDetails,
+) {
 	clientAPI, err := createUDMClientToUDR("")
 	if err != nil {
 		return nil, util.ProblemDetailsSystemFailure(err.Error())
@@ -598,7 +602,8 @@ func HandleGetSmDataRequest(request *httpwrapper.Request) *httpwrapper.Response 
 // TS 29.503 5.2.2.2.5
 // Session Management Subscription Data Retrieval
 func getSmDataProcedure(supi string, plmnID string, Dnn string, Snssai string, supportedFeatures string) (
-	response interface{}, problemDetails *models.ProblemDetails) {
+	response interface{}, problemDetails *models.ProblemDetails,
+) {
 	logger.SdmLog.Infof("getSmDataProcedure: SUPI[%s] PLMNID[%s] DNN[%s] SNssai[%s]", supi, plmnID, Dnn, Snssai)
 
 	clientAPI, err := createUDMClientToUDR(supi)
@@ -709,7 +714,8 @@ func HandleGetNssaiRequest(request *httpwrapper.Request) *httpwrapper.Response {
 // TS 29.503 5.2.2.2.2
 // Slice Selection Subscription Data Retrieval
 func getNssaiProcedure(supi string, plmnID string, supportedFeatures string) (
-	*models.Nssai, *models.ProblemDetails) {
+	*models.Nssai, *models.ProblemDetails,
+) {
 	var queryAmDataParamOpts Nudr.QueryAmDataParamOpts
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	var nssaiResp models.Nssai
@@ -793,7 +799,8 @@ func HandleGetSmfSelectDataRequest(request *httpwrapper.Request) *httpwrapper.Re
 // TS 29.503 5.2.2.2.4
 // SMF Selection Subscription Data Retrieval
 func getSmfSelectDataProcedure(supi string, plmnID string, supportedFeatures string) (
-	response *models.SmfSelectionSubscriptionData, problemDetails *models.ProblemDetails) {
+	response *models.SmfSelectionSubscriptionData, problemDetails *models.ProblemDetails,
+) {
 	var querySmfSelectDataParamOpts Nudr.QuerySmfSelectDataParamOpts
 	querySmfSelectDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	var body models.SmfSelectionSubscriptionData
@@ -869,7 +876,8 @@ func HandleSubscribeToSharedDataRequest(request *httpwrapper.Request) *httpwrapp
 // TS 29.503 5.2.2.3.3
 // Subscription to notifications of shared data change
 func subscribeToSharedDataProcedure(sdmSubscription *models.SdmSubscription) (
-	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
+	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails,
+) {
 	cfg := Nudm_SubscriberDataManagement.NewConfiguration()
 	udmClientAPI := Nudm_SubscriberDataManagement.NewAPIClient(cfg)
 
@@ -943,7 +951,8 @@ func HandleSubscribeRequest(request *httpwrapper.Request) *httpwrapper.Response 
 // TS 29.503 5.2.2.3.2
 // Subscription to notifications of data change
 func subscribeProcedure(sdmSubscription *models.SdmSubscription, supi string) (
-	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
+	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails,
+) {
 	clientAPI, err := createUDMClientToUDR(supi)
 	if err != nil {
 		return nil, nil, util.ProblemDetailsSystemFailure(err.Error())
@@ -1140,7 +1149,8 @@ func HandleModifyRequest(request *httpwrapper.Request) *httpwrapper.Response {
 // TS 29.503 5.2.2.7.2
 // Modification of a subscription to notifications of data change
 func modifyProcedure(sdmSubsModification *models.SdmSubsModification, supi string, subscriptionID string) (
-	response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
+	response *models.SdmSubscription, problemDetails *models.ProblemDetails,
+) {
 	clientAPI, err := createUDMClientToUDR(supi)
 	if err != nil {
 		return nil, util.ProblemDetailsSystemFailure(err.Error())
@@ -1213,7 +1223,8 @@ func HandleModifyForSharedDataRequest(request *httpwrapper.Request) *httpwrapper
 // TS 29.503 5.2.2.7.3
 // Modification of a subscription to notifications of shared data change
 func modifyForSharedDataProcedure(sdmSubsModification *models.SdmSubsModification, supi string,
-	subscriptionID string) (response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
+	subscriptionID string,
+) (response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
 	clientAPI, err := createUDMClientToUDR(supi)
 	if err != nil {
 		return nil, util.ProblemDetailsSystemFailure(err.Error())
@@ -1285,7 +1296,8 @@ func HandleGetTraceDataRequest(request *httpwrapper.Request) *httpwrapper.Respon
 }
 
 func getTraceDataProcedure(supi string, plmnID string) (
-	response *models.TraceData, problemDetails *models.ProblemDetails) {
+	response *models.TraceData, problemDetails *models.ProblemDetails,
+) {
 	var body models.TraceData
 	var queryTraceDataParamOpts Nudr.QueryTraceDataParamOpts
 
@@ -1364,7 +1376,8 @@ func HandleGetUeContextInSmfDataRequest(request *httpwrapper.Request) *httpwrapp
 }
 
 func getUeContextInSmfDataProcedure(supi string, supportedFeatures string) (
-	response *models.UeContextInSmfData, problemDetails *models.ProblemDetails) {
+	response *models.UeContextInSmfData, problemDetails *models.ProblemDetails,
+) {
 	var body models.UeContextInSmfData
 	var ueContextInSmfData models.UeContextInSmfData
 	var pgwInfoArray []models.PgwInfo
