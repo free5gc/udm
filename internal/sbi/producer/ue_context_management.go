@@ -391,7 +391,7 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 		}
 
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "Guami"
+		patchItemTmp.Path = "/" + "guami"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = *request.Guami
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
@@ -399,7 +399,7 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 
 	if request.PurgeFlag {
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "PurgeFlag"
+		patchItemTmp.Path = "/" + "purgeFlag"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = request.PurgeFlag
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
@@ -407,7 +407,7 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 
 	if request.Pei != "" {
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "Pei"
+		patchItemTmp.Path = "/" + "pei"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = request.Pei
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
@@ -415,7 +415,7 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 
 	if request.ImsVoPs != "" {
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "ImsVoPs"
+		patchItemTmp.Path = "/" + "imsVoPs"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = request.ImsVoPs
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
@@ -423,7 +423,7 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 
 	if request.BackupAmfInfo != nil {
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "BackupAmfInfo"
+		patchItemTmp.Path = "/" + "backupAmfInfo"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = request.BackupAmfInfo
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
@@ -508,7 +508,7 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 		}
 
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "Guami"
+		patchItemTmp.Path = "/" + "guami"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = *request.Guami
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
@@ -516,7 +516,7 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 
 	if request.PurgeFlag {
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "PurgeFlag"
+		patchItemTmp.Path = "/" + "purgeFlag"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = request.PurgeFlag
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
@@ -524,7 +524,7 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 
 	if request.Pei != "" {
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "Pei"
+		patchItemTmp.Path = "/" + "pei"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = request.Pei
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
@@ -532,7 +532,7 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 
 	if request.ImsVoPs != "" {
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "ImsVoPs"
+		patchItemTmp.Path = "/" + "imsVoPs"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = request.ImsVoPs
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
@@ -540,7 +540,7 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 
 	if request.BackupAmfInfo != nil {
 		var patchItemTmp models.PatchItem
-		patchItemTmp.Path = "/" + "BackupAmfInfo"
+		patchItemTmp.Path = "/" + "backupAmfInfo"
 		patchItemTmp.Op = models.PatchOperation_REPLACE
 		patchItemTmp.Value = request.BackupAmfInfo
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
