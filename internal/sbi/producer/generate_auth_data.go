@@ -183,7 +183,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 		}
 
 		switch res.StatusCode {
-		case 404:
+		case http.StatusNotFound:
 			logger.UeauLog.Warnf("Return from UDR QueryAuthSubsData error")
 		default:
 			logger.UeauLog.Errorln("Return from UDR QueryAuthSubsData error")
