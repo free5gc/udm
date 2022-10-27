@@ -182,7 +182,12 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 			Detail: err.Error(),
 		}
 
-		logger.UeauLog.Errorln("Return from UDR QueryAuthSubsData error")
+		switch res.StatusCode {
+		case http.StatusNotFound:
+			logger.UeauLog.Warnf("Return from UDR QueryAuthSubsData error")
+		default:
+			logger.UeauLog.Errorln("Return from UDR QueryAuthSubsData error")
+		}
 		return nil, problemDetails
 	}
 	defer func() {
