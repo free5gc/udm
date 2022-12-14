@@ -235,7 +235,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 	}
 
 	if authSubs.Milenage != nil {
-		if authSubs.Milenage.Op != nil {
+		if authSubs.Milenage.Op != nil && authSubs.Milenage.Op.OpValue != "" {
 			opStr = authSubs.Milenage.Op.OpValue
 			if len(opStr) == opStrLen {
 				op, err = hex.DecodeString(opStr)
