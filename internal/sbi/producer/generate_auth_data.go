@@ -398,11 +398,17 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 		} else {
 			logger.UeauLog.Errorln("Re-Sync MAC failed ", supiOrSuci)
 			// Check if suci
-			if suciPart := strings.Split(supiOrSuci, "-"); suciPart[0] == "suci" {
+			suciPart := strings.Split(supiOrSuci, "-")
+			if suciPart[suci.PrefixPlace] == suci.PrefixSUCI &&
+				suciPart[suci.SupiTypePlace] == suci.SupiTypeIMSI &&
+				suciPart[suci.SchemePlace] != suci.NullScheme {
 				// Get SuciProfile index and write public key
 				keyIndex, err1 := strconv.Atoi(suciPart[suci.HNPublicKeyIDPlace])
 				if err1 != nil {
 					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key HNPublicKeyIDPlace parse Error")
+				} else if keyIndex < 1 {
+					logger.UeauLog.Errorf("Re-Sync Failed UDM Public Key HNPublicKeyIDPlace keyIndex[%d] < 1",
+						keyIndex)
 				} else {
 					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key ",
 						udm_context.UDM_Self().SuciProfiles[keyIndex-1].PublicKey)

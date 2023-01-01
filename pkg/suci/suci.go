@@ -150,7 +150,7 @@ func swapNibbles(input []byte) []byte {
 
 func calcSchemeResult(decryptPlainText []byte, supiType string) string {
 	var schemeResult string
-	if supiType == typeIMSI {
+	if supiType == SupiTypeIMSI {
 		schemeResult = hex.EncodeToString(swapNibbles(decryptPlainText))
 		if schemeResult[len(schemeResult)-1] == 'f' {
 			schemeResult = schemeResult[:len(schemeResult)-1]
@@ -302,21 +302,28 @@ func profileB(input, supiType, privateKey string) (string, error) {
 	return calcSchemeResult(decryptPlainText, supiType), nil
 }
 
-// suci-0(SUPI type)-mcc-mnc-routingIndentifier-protectionScheme-homeNetworkPublicKeyIdentifier-schemeOutput.
+// suci-0(SUPI type: IMSI)-mcc-mnc-routingIndicator-protectionScheme-homeNetworkPublicKeyID-schemeOutput.
+// TODO:
+// suci-1(SUPI type: NAI)-homeNetworkID-routingIndicator-protectionScheme-homeNetworkPublicKeyID-schemeOutput.
 const (
-	supiTypePlace      = 1
-	mccPlace           = 2
-	mncPlace           = 3
-	schemePlace        = 5
-	HNPublicKeyIDPlace = 6
+	PrefixPlace = iota
+	SupiTypePlace
+	MccPlace
+	MncPlace
+	RoutingIndicatorPlace
+	SchemePlace
+	HNPublicKeyIDPlace
+	SchemeOuputPlace
+	MaxPlace
 )
 
 const (
-	typeIMSI       = "0"
-	imsiPrefix     = "imsi-"
-	nullScheme     = "0"
-	profileAScheme = "1"
-	profileBScheme = "2"
+	PrefixIMSI     = "imsi-"
+	PrefixSUCI     = "suci"
+	SupiTypeIMSI   = "0"
+	NullScheme     = "0"
+	ProfileAScheme = "1"
+	ProfileBScheme = "2"
 )
 
 func ToSupi(suci string, suciProfiles []SuciProfile) (string, error) {
@@ -327,7 +334,7 @@ func ToSupi(suci string, suciProfiles []SuciProfile) (string, error) {
 	if suciPrefix == "imsi" || suciPrefix == "nai" {
 		logger.SuciLog.Infof("Got supi\n")
 		return suci, nil
-	} else if suciPrefix == "suci" {
+	} else if suciPrefix == PrefixSUCI {
 		if len(suciPart) < 6 {
 			return "", fmt.Errorf("Suci with wrong format\n")
 		}
@@ -335,17 +342,16 @@ func ToSupi(suci string, suciProfiles []SuciProfile) (string, error) {
 		return "", fmt.Errorf("Unknown suciPrefix [%s]", suciPrefix)
 	}
 
-	logger.SuciLog.Infof("scheme %s\n", suciPart[schemePlace])
-	scheme := suciPart[schemePlace]
-	mccMnc := suciPart[mccPlace] + suciPart[mncPlace]
+	logger.SuciLog.Infof("scheme %s\n", suciPart[SchemePlace])
+	scheme := suciPart[SchemePlace]
+	mccMnc := suciPart[MccPlace] + suciPart[MncPlace]
 
-	supiPrefix := imsiPrefix
-	if suciPrefix == "suci" && suciPart[supiTypePlace] == typeIMSI {
-		supiPrefix = imsiPrefix
+	supiPrefix := PrefixIMSI
+	if suciPrefix == PrefixSUCI && suciPart[SupiTypePlace] == SupiTypeIMSI {
 		logger.SuciLog.Infof("SUPI type is IMSI\n")
 	}
 
-	if scheme == nullScheme { // NULL scheme
+	if scheme == NullScheme { // NULL scheme
 		return supiPrefix + mccMnc + suciPart[len(suciPart)-1], nil
 	}
 
@@ -365,14 +371,14 @@ func ToSupi(suci string, suciProfiles []SuciProfile) (string, error) {
 		return "", fmt.Errorf("Protect Scheme mismatch [%s:%s]", scheme, protectScheme)
 	}
 
-	if scheme == profileAScheme {
-		if profileAResult, err := profileA(suciPart[len(suciPart)-1], suciPart[supiTypePlace], privateKey); err != nil {
+	if scheme == ProfileAScheme {
+		if profileAResult, err := profileA(suciPart[len(suciPart)-1], suciPart[SupiTypePlace], privateKey); err != nil {
 			return "", err
 		} else {
 			return supiPrefix + mccMnc + profileAResult, nil
 		}
-	} else if scheme == profileBScheme {
-		if profileBResult, err := profileB(suciPart[len(suciPart)-1], suciPart[supiTypePlace], privateKey); err != nil {
+	} else if scheme == ProfileBScheme {
+		if profileBResult, err := profileB(suciPart[len(suciPart)-1], suciPart[SupiTypePlace], privateKey); err != nil {
 			return "", err
 		} else {
 			return supiPrefix + mccMnc + profileBResult, nil
