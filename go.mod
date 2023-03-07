@@ -12,6 +12,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli v1.22.5
-	golang.org/x/crypto v0.0.0-20201216223049-8b5274cf687f
+	golang.org/x/crypto v0.1.0
 	gopkg.in/yaml.v2 v2.4.0
 )
