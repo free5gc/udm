@@ -73,7 +73,7 @@ func aucSQN(opc, k, auts, rand []byte) ([]byte, []byte) {
 func strictHex(s string, n int) string {
 	l := len(s)
 	if l < n {
-		return fmt.Sprintf(strings.Repeat("0", n-l) + s)
+		return strings.Repeat("0", n-l) + s
 	} else {
 		return s[l-n : l]
 	}
@@ -331,7 +331,9 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 		return nil, problemDetails
 	}
 
-	AMF, err := hex.DecodeString(authSubs.AuthenticationManagementField)
+	amfStr := strictHex(authSubs.AuthenticationManagementField, 4)
+	logger.UeauLog.Traceln("amfStr", amfStr)
+	AMF, err := hex.DecodeString(amfStr)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
