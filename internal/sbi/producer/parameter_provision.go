@@ -7,7 +7,6 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/util/httpwrapper"
 )
 
@@ -33,7 +32,7 @@ func HandleUpdateRequest(request *httpwrapper.Request) *httpwrapper.Response {
 func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *models.ProblemDetails) {
 	clientAPI, err := createUDMClientToUDR(gpsi)
 	if err != nil {
-		return util.ProblemDetailsSystemFailure(err.Error())
+		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
 	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(context.Background(), gpsi, nil)
 	if err != nil {

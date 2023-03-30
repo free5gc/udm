@@ -34,7 +34,7 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 	}
 	defer func() {
 		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
-			logger.Handlelog.Errorf("SearchNFInstances response body cannot close: %+v", rspCloseErr)
+			logger.ConsumerLog.Errorf("SearchNFInstances response body cannot close: %+v", rspCloseErr)
 		}
 	}()
 
@@ -45,7 +45,7 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 }
 
 func SendNFIntancesUDR(id string, types int) string {
-	self := udm_context.UDM_Self()
+	self := udm_context.Getself()
 	targetNfType := models.NfType_UDR
 	requestNfType := models.NfType_UDM
 	localVarOptionals := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{
@@ -62,7 +62,7 @@ func SendNFIntancesUDR(id string, types int) string {
 	fmt.Println(self.NrfUri)
 	result, err := SendNFIntances(self.NrfUri, targetNfType, requestNfType, localVarOptionals)
 	if err != nil {
-		logger.Handlelog.Error(err.Error())
+		logger.ConsumerLog.Error(err.Error())
 		return ""
 	}
 	for _, profile := range result.NfInstances {

@@ -12,7 +12,7 @@ import (
 )
 
 func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi string) *models.ProblemDetails {
-	ue, _ := udm_context.UDM_Self().UdmUeFindBySupi(supi)
+	ue, _ := udm_context.Getself().UdmUeFindBySupi(supi)
 	configuration := Nudm_SubscriberDataManagement.NewConfiguration()
 	clientAPI := Nudm_SubscriberDataManagement.NewAPIClient(configuration)
 

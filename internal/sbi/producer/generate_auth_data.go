@@ -20,7 +20,6 @@ import (
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/httpwrapper"
 	"github.com/free5gc/util/milenage"
@@ -126,7 +125,7 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 
 	client, err := createUDMClientToUDR(supi)
 	if err != nil {
-		return util.ProblemDetailsSystemFailure(err.Error())
+		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
 	resp, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
 		context.Background(), supi, &createAuthParam)
@@ -156,7 +155,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 
 	response = &models.AuthenticationInfoResult{}
 	rand.Seed(time.Now().UnixNano())
-	supi, err := suci.ToSupi(supiOrSuci, udm_context.UDM_Self().SuciProfiles)
+	supi, err := suci.ToSupi(supiOrSuci, udm_context.Getself().SuciProfiles)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
@@ -172,7 +171,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 
 	client, err := createUDMClientToUDR(supi)
 	if err != nil {
-		return nil, util.ProblemDetailsSystemFailure(err.Error())
+		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
 	}
 	authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(context.Background(), supi, nil)
 	if err != nil {
@@ -418,7 +417,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 						keyIndex)
 				} else {
 					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key ",
-						udm_context.UDM_Self().SuciProfiles[keyIndex-1].PublicKey)
+						udm_context.Getself().SuciProfiles[keyIndex-1].PublicKey)
 				}
 			}
 			logger.UeauLog.Errorln("MACS ", macS)
