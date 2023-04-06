@@ -3,13 +3,18 @@ package context
 import (
 	"fmt"
 	"math"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/google/uuid"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/idgenerator"
 )
@@ -24,9 +29,9 @@ const (
 	LocationUriSharedDataSubscription
 )
 
-func init() {
-	UDM_Self().NfService = make(map[models.ServiceName]models.NfService)
-	UDM_Self().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
+func Init() {
+	Getself().NfService = make(map[models.ServiceName]models.NfService)
+	Getself().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
 }
 
 type UDMContext struct {
@@ -72,7 +77,7 @@ type UdmUeContext struct {
 	SmSubsDataLock                    sync.RWMutex
 }
 
-func (ue *UdmUeContext) init() {
+func (ue *UdmUeContext) Init() {
 	ue.UdmSubsToNotify = make(map[string]*models.SubscriptionDataSubscriptions)
 	ue.EeSubscriptions = make(map[string]*models.EeSubscription)
 	ue.SubscribeToNotifChange = make(map[string]*models.SdmSubscription)
@@ -82,6 +87,45 @@ type UdmNFContext struct {
 	SubscriptionID                   string
 	SubscribeToNotifChange           *models.SdmSubscription // SubscriptionID as key
 	SubscribeToNotifSharedDataChange *models.SdmSubscription // SubscriptionID as key
+}
+
+func InitUdmContext(context *UDMContext) {
+	config := factory.UdmConfig
+	logger.UtilLog.Info("udmconfig Info: Version[", config.Info.Version, "] Description[", config.Info.Description, "]")
+	configuration := config.Configuration
+	udmContext.NfId = uuid.New().String()
+	sbi := configuration.Sbi
+	udmContext.UriScheme = ""
+	udmContext.SBIPort = factory.UdmSbiDefaultPort
+	udmContext.RegisterIPv4 = factory.UdmSbiDefaultIPv4
+	if sbi != nil {
+		if sbi.Scheme != "" {
+			udmContext.UriScheme = models.UriScheme(sbi.Scheme)
+		}
+		if sbi.RegisterIPv4 != "" {
+			udmContext.RegisterIPv4 = sbi.RegisterIPv4
+		}
+		if sbi.Port != 0 {
+			udmContext.SBIPort = sbi.Port
+		}
+
+		udmContext.BindingIPv4 = os.Getenv(sbi.BindingIPv4)
+		if udmContext.BindingIPv4 != "" {
+			logger.UtilLog.Info("Parsing ServerIPv4 address from ENV Variable.")
+		} else {
+			udmContext.BindingIPv4 = sbi.BindingIPv4
+			if udmContext.BindingIPv4 == "" {
+				logger.UtilLog.Warn("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
+				udmContext.BindingIPv4 = "0.0.0.0"
+			}
+		}
+	}
+	udmContext.NrfUri = configuration.NrfUri
+	servingNameList := configuration.ServiceNameList
+
+	udmContext.SuciProfiles = configuration.SuciProfiles
+
+	udmContext.InitNFService(servingNameList, config.Info.Version)
 }
 
 func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string,
@@ -226,7 +270,7 @@ func (udmUeContext *UdmUeContext) SetSMSubsData(smSubsData map[string]models.Ses
 
 func (context *UDMContext) NewUdmUe(supi string) *UdmUeContext {
 	ue := new(UdmUeContext)
-	ue.init()
+	ue.Init()
 	ue.Supi = supi
 	context.UdmUePool.Store(supi, ue)
 	return ue
@@ -342,11 +386,13 @@ func (context *UDMContext) GetAmfNon3gppRegContext(supi string) *models.AmfNon3G
 func (ue *UdmUeContext) GetLocationURI(types int) string {
 	switch types {
 	case LocationUriAmf3GppAccessRegistration:
-		return UDM_Self().GetIPv4Uri() + "/nudm-uecm/v1/" + ue.Supi + "/registrations/amf-3gpp-access"
+		return Getself().GetIPv4Uri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-3gpp-access"
 	case LocationUriAmfNon3GppAccessRegistration:
-		return UDM_Self().GetIPv4Uri() + "/nudm-uecm/v1/" + ue.Supi + "/registrations/amf-non-3gpp-access"
+		return Getself().GetIPv4Uri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-non-3gpp-access"
 	case LocationUriSmfRegistration:
-		return UDM_Self().GetIPv4Uri() + "/nudm-uecm/v1/" + ue.Supi + "/registrations/smf-registrations/" + ue.PduSessionID
+
+		return Getself().GetIPv4Uri() +
+			factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/smf-registrations/" + ue.PduSessionID
 	}
 	return ""
 }
@@ -354,9 +400,9 @@ func (ue *UdmUeContext) GetLocationURI(types int) string {
 func (ue *UdmUeContext) GetLocationURI2(types int, supi string) string {
 	switch types {
 	case LocationUriSharedDataSubscription:
-		// return UDM_Self().GetIPv4Uri() + "/nudm-sdm/v1/shared-data-subscriptions/" + nf.SubscriptionID
+		// return Getself().GetIPv4Uri() + UdmSdmResUriPrefix +"/shared-data-subscriptions/" + nf.SubscriptionID
 	case LocationUriSdmSubscription:
-		return UDM_Self().GetIPv4Uri() + "/nudm-sdm/v1/" + supi + "/sdm-subscriptions/"
+		return Getself().GetIPv4Uri() + factory.UdmSdmResUriPrefix + "/" + supi + "/sdm-subscriptions/"
 	}
 	return ""
 }
@@ -401,7 +447,7 @@ func (context *UDMContext) GetIPv4Uri() string {
 
 // GetSDMUri ... get subscriber data management service uri
 func (context *UDMContext) GetSDMUri() string {
-	return context.GetIPv4Uri() + "/nudm-sdm/v1"
+	return context.GetIPv4Uri() + factory.UdmSdmResUriPrefix
 }
 
 func (context *UDMContext) InitNFService(serviceName []string, version string) {
@@ -432,6 +478,6 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	}
 }
 
-func UDM_Self() *UDMContext {
+func Getself() *UDMContext {
 	return &udmContext
 }
