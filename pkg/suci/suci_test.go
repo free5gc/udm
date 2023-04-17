@@ -17,41 +17,42 @@ func TestToSupi(t *testing.T) {
 		},
 	}
 	testCases := []struct {
-		suci     string
-		expected string
+		suci         string
+		expectedSupi string
+		expectedErr  string
 	}{
 		{
-			suci:     "suci-0-208-93-0-0-0-00007487",
-			expected: "imsi-2089300007487",
+			suci:         "suci-0-208-93-0-0-0-00007487",
+			expectedSupi: "imsi-2089300007487",
+			expectedErr:  "",
 		},
 		{
 			suci: "suci-0-208-93-0-1-1-b2e92f836055a255837debf850b528997ce0201cb82a" +
 				"dfe4be1f587d07d8457dcb02352410cddd9e730ef3fa87",
-			expected: "imsi-20893001002086",
+			expectedSupi: "imsi-20893001002086",
+			expectedErr:  "",
 		},
 		{
 			suci: "suci-0-208-93-0-2-2-039aab8376597021e855679a9778ea0b67396e68c66d" +
 				"f32c0f41e9acca2da9b9d146a33fc2716ac7dae96aa30a4d",
-			expected: "imsi-20893001002086",
+			expectedSupi: "imsi-20893001002086",
+			expectedErr:  "",
 		},
 		{
 			suci: "suci-0-208-93-0-2-2-0434a66778799d52fedd9326db4b690d092e05c9ba0ace5b413da" +
 				"fc0a40aa28ee00a79f790fa4da6a2ece892423adb130dc1b30e270b7d0088bdd716b93894891d5221a74c810d6b9350cc067c76",
-			expected: "crypto/elliptic: attempted operation on invalid point",
+			expectedSupi: "",
+			expectedErr:  "crypto/elliptic: attempted operation on invalid point",
 		},
 	}
 	for i, tc := range testCases {
 		supi, err := ToSupi(tc.suci, suciProfiles)
 		if err != nil {
-			if i == 3 {
-				if err.Error() != tc.expected {
-					t.Errorf("TC%d fail: Do not detect invalid point, vulnerable to invalid curve attack, expected [%s]\n", i, tc.expected)
-				}
-			} else {
-				t.Errorf("TC%d err: %+v\n", i, err)
+			if err.Error() != tc.expectedErr {
+				t.Errorf("TC%d fail: err[%s], expected[%s]\n", i, err, tc.expectedErr)
 			}
-		} else if supi != tc.expected {
-			t.Errorf("TC%d fail: supi[%s], expected[%s]\n", i, supi, tc.expected)
+		} else if supi != tc.expectedSupi {
+			t.Errorf("TC%d fail: supi[%s], expected[%s]\n", i, supi, tc.expectedSupi)
 		}
 	}
 }
