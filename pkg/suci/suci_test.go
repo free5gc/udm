@@ -34,11 +34,22 @@ func TestToSupi(t *testing.T) {
 				"f32c0f41e9acca2da9b9d146a33fc2716ac7dae96aa30a4d",
 			expected: "imsi-20893001002086",
 		},
+		{
+			suci: "suci-0-208-93-0-2-2-0434a66778799d52fedd9326db4b690d092e05c9ba0ace5b413da" +
+				"fc0a40aa28ee00a79f790fa4da6a2ece892423adb130dc1b30e270b7d0088bdd716b93894891d5221a74c810d6b9350cc067c76",
+			expected: "crypto/elliptic: attempted operation on invalid point",
+		},
 	}
 	for i, tc := range testCases {
 		supi, err := ToSupi(tc.suci, suciProfiles)
 		if err != nil {
-			t.Errorf("TC%d err: %+v\n", i, err)
+			if i == 3 {
+				if err.Error() != tc.expected {
+					t.Errorf("TC%d fail: Do not detect invalid point, vulnerable to invalid curve attack, expected [%s]\n", i, tc.expected)
+				}
+			} else {
+				t.Errorf("TC%d err: %+v\n", i, err)
+			}
 		} else if supi != tc.expected {
 			t.Errorf("TC%d fail: supi[%s], expected[%s]\n", i, supi, tc.expected)
 		}
