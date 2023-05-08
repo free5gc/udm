@@ -218,6 +218,20 @@ func profileA(input, supiType, privateKey string) (string, error) {
 	return calcSchemeResult(decryptPlainText, supiType), nil
 }
 
+func checkOnCurve(curve elliptic.Curve, x, y *big.Int) error {
+	// (0, 0) is the point at infinity by convention. It's ok to operate on it,
+	// although IsOnCurve is documented to return false for it. See Issue 37294.
+	if x.Sign() == 0 && y.Sign() == 0 {
+		return nil
+	}
+
+	if !curve.IsOnCurve(x, y) {
+		return fmt.Errorf("crypto/elliptic: attempted operation on invalid point")
+	}
+
+	return nil
+}
+
 func profileB(input, supiType, privateKey string) (string, error) {
 	logger.SuciLog.Infoln("SuciToSupi Profile B")
 	s, hexDecodeErr := hex.DecodeString(input)
@@ -270,6 +284,10 @@ func profileB(input, supiType, privateKey string) (string, error) {
 		}
 	}
 	// fmt.Printf("xUncom: %x\nyUncom: %x\n", xUncompressed, yUncompressed)
+
+	if err := checkOnCurve(elliptic.P256(), xUncompressed, yUncompressed); err != nil {
+		return "", err
+	}
 
 	// x-coordinate is the shared key
 	decryptSharedKey, _ := elliptic.P256().ScalarMult(xUncompressed, yUncompressed, bHNPriv)
