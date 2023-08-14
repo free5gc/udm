@@ -217,6 +217,22 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 		ue, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
 		oldAmf3GppAccessRegContext = ue.Amf3GppAccessRegistration
 	}
+	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
+	// corresponding to the same (e.g. 3GPP) access, if one exists
+	if oldAmf3GppAccessRegContext != nil {
+		deregistData := models.DeregistrationData{
+			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
+			AccessType:  models.AccessType__3_GPP_ACCESS,
+		}
+		// Deregistration Notify Triggered
+		problemDetails := callback.SendOnDeregistrationNotification(ueID,
+			oldAmf3GppAccessRegContext.DeregCallbackUri,
+			deregistData,
+		)
+		if problemDetails != nil {
+			return nil, nil, problemDetails
+		}
+	}
 
 	udm_context.Getself().CreateAmf3gppRegContext(ueID, registerRequest)
 
@@ -245,23 +261,13 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 		}
 	}()
 
-	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
-	// corresponding to the same (e.g. 3GPP) access, if one exists
-	if oldAmf3GppAccessRegContext != nil {
-		deregistData := models.DeregistrationData{
-			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
-			AccessType:  models.AccessType__3_GPP_ACCESS,
-		}
-		callback.SendOnDeregistrationNotification(ueID, oldAmf3GppAccessRegContext.DeregCallbackUri,
-			deregistData) // Deregistration Notify Triggered
-
-		return nil, nil, nil
-	} else {
+	if oldAmf3GppAccessRegContext == nil {
 		header = make(http.Header)
 		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
 		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriAmf3GppAccessRegistration))
 		return header, &registerRequest, nil
 	}
+	return nil, nil, nil
 }
 
 // TS 29.503 5.3.2.2.3
