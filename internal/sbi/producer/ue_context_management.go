@@ -225,12 +225,12 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 			AccessType:  models.AccessType__3_GPP_ACCESS,
 		}
 		// Deregistration Notify Triggered
-		problemDetails := callback.SendOnDeregistrationNotification(ueID,
+		pd := callback.SendOnDeregistrationNotification(ueID,
 			oldAmf3GppAccessRegContext.DeregCallbackUri,
 			deregistData,
 		)
-		if problemDetails != nil {
-			return nil, nil, problemDetails
+		if pd != nil {
+			return nil, nil, pd
 		}
 	}
 
