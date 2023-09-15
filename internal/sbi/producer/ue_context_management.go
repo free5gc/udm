@@ -213,25 +213,11 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 ) {
 	// TODO: EPS interworking with N26 is not supported yet in this stage
 	var oldAmf3GppAccessRegContext *models.Amf3GppAccessRegistration
+	var ue *udm_context.UdmUeContext
+
 	if udm_context.Getself().UdmAmf3gppRegContextExists(ueID) {
-		ue, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
+		ue, _ = udm_context.Getself().UdmUeFindBySupi(ueID)
 		oldAmf3GppAccessRegContext = ue.Amf3GppAccessRegistration
-	}
-	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
-	// corresponding to the same (e.g. 3GPP) access, if one exists
-	if oldAmf3GppAccessRegContext != nil {
-		deregistData := models.DeregistrationData{
-			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
-			AccessType:  models.AccessType__3_GPP_ACCESS,
-		}
-		// Deregistration Notify Triggered
-		pd := callback.SendOnDeregistrationNotification(ueID,
-			oldAmf3GppAccessRegContext.DeregCallbackUri,
-			deregistData,
-		)
-		if pd != nil {
-			return nil, nil, pd
-		}
 	}
 
 	udm_context.Getself().CreateAmf3gppRegContext(ueID, registerRequest)
@@ -261,13 +247,32 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 		}
 	}()
 
-	if oldAmf3GppAccessRegContext == nil {
+	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
+	// corresponding to the same (e.g. 3GPP) access, if one exists
+	if oldAmf3GppAccessRegContext != nil {
+		if !ue.SameAsStoredGUAMI3gpp(*oldAmf3GppAccessRegContext.Guami) {
+			deregistData := models.DeregistrationData{
+				DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
+				AccessType:  models.AccessType__3_GPP_ACCESS,
+			}
+
+			logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
+			go func() {
+				pd := callback.SendOnDeregistrationNotification(ueID,
+					oldAmf3GppAccessRegContext.DeregCallbackUri,
+					deregistData) // Deregistration Notify Triggered
+				if pd != nil {
+					logger.UecmLog.Errorf("RegistrationAmf3gppAccess: send DeregNotify fail %v", pd)
+				}
+			}()
+		}
+		return nil, nil, nil
+	} else {
 		header = make(http.Header)
 		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
 		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriAmf3GppAccessRegistration))
 		return header, &registerRequest, nil
 	}
-	return nil, nil, nil
 }
 
 // TS 29.503 5.3.2.2.3
