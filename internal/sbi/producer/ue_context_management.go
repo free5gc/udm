@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -198,8 +199,11 @@ func HandleRegistrationAmf3gppAccessRequest(request *httpwrapper.Request) *httpw
 
 	// step 4: process the return value from step 3
 	if response != nil {
-		// status code is based on SPEC, and option headers
-		return httpwrapper.NewResponse(http.StatusCreated, header, response)
+		if header != nil {
+			// status code is based on SPEC, and option headers
+			return httpwrapper.NewResponse(http.StatusCreated, header, response)
+		}
+		return httpwrapper.NewResponse(http.StatusOK, nil, response)
 	} else if problemDetails != nil {
 		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
 	} else {
@@ -258,15 +262,17 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 
 			logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
 			go func() {
+				queryParams := url.Values{"type": []string{"implicit"}}
 				pd := callback.SendOnDeregistrationNotification(ueID,
 					oldAmf3GppAccessRegContext.DeregCallbackUri,
-					deregistData) // Deregistration Notify Triggered
+					deregistData,
+					queryParams) // Deregistration Notify Triggered
 				if pd != nil {
 					logger.UecmLog.Errorf("RegistrationAmf3gppAccess: send DeregNotify fail %v", pd)
 				}
 			}()
 		}
-		return nil, nil, nil
+		return nil, &registerRequest, nil
 	} else {
 		header = make(http.Header)
 		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
@@ -340,8 +346,9 @@ func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRe
 			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
 			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
 		}
+		queryParams := url.Values{"type": []string{"implicit"}}
 		callback.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
-			deregistData) // Deregistration Notify Triggered
+			deregistData, queryParams) // Deregistration Notify Triggered
 
 		return nil, nil, nil
 	} else {
