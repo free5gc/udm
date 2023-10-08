@@ -3,7 +3,6 @@ package callback
 import (
 	"context"
 	"net/http"
-	"net/url"
 
 	"github.com/free5gc/openapi/Nudm_SubscriberDataManagement"
 	"github.com/free5gc/openapi/Nudm_UEContextManagement"
@@ -51,13 +50,13 @@ func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi strin
 }
 
 func SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
-	deregistData models.DeregistrationData, queryParams url.Values,
+	deregistData models.DeregistrationData,
 ) *models.ProblemDetails {
 	configuration := Nudm_UEContextManagement.NewConfiguration()
 	clientAPI := Nudm_UEContextManagement.NewAPIClient(configuration)
 
 	httpResponse, err := clientAPI.DeregistrationNotificationCallbackApi.DeregistrationNotify(
-		context.TODO(), onDeregistrationNotificationUrl, deregistData, queryParams)
+		context.TODO(), onDeregistrationNotificationUrl, deregistData)
 	if err != nil {
 		if httpResponse == nil {
 			logger.HttpLog.Error(err.Error())

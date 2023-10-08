@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -256,17 +255,15 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 	if oldAmf3GppAccessRegContext != nil {
 		if !ue.SameAsStoredGUAMI3gpp(*oldAmf3GppAccessRegContext.Guami) {
 			deregistData := models.DeregistrationData{
-				DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
+				DeregReason: models.DeregistrationReason_UE_INITIAL_REGISTRATION,
 				AccessType:  models.AccessType__3_GPP_ACCESS,
 			}
 
 			logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
 			go func() {
-				queryParams := url.Values{"type": []string{"implicit"}}
 				pd := callback.SendOnDeregistrationNotification(ueID,
 					oldAmf3GppAccessRegContext.DeregCallbackUri,
-					deregistData,
-					queryParams) // Deregistration Notify Triggered
+					deregistData) // Deregistration Notify Triggered
 				if pd != nil {
 					logger.UecmLog.Errorf("RegistrationAmf3gppAccess: send DeregNotify fail %v", pd)
 				}
@@ -343,12 +340,11 @@ func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRe
 	// corresponding to the same (e.g. 3GPP) access, if one exists
 	if oldAmfNon3GppAccessRegContext != nil {
 		deregistData := models.DeregistrationData{
-			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
+			DeregReason: models.DeregistrationReason_UE_INITIAL_REGISTRATION,
 			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
 		}
-		queryParams := url.Values{"type": []string{"implicit"}}
 		callback.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
-			deregistData, queryParams) // Deregistration Notify Triggered
+			deregistData) // Deregistration Notify Triggered
 
 		return nil, nil, nil
 	} else {
