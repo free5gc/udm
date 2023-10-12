@@ -254,13 +254,20 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 	// corresponding to the same (e.g. 3GPP) access, if one exists
 	if oldAmf3GppAccessRegContext != nil {
 		if !ue.SameAsStoredGUAMI3gpp(*oldAmf3GppAccessRegContext.Guami) {
+			// Based on TS 23.502 4.2.2.2.2, If the serving NF removal reason indicated by the UDM is Initial Registration,
+			// the old AMF invokes the Nsmf_PDUSession_ReleaseSMContext (SM Context ID). Thus we give different
+			// dereg cause based on registration parameter from serving AMF
+			deregReason := models.DeregistrationReason_UE_REGISTRATION_AREA_CHANGE
+			if registerRequest.InitialRegistrationInd {
+				deregReason = models.DeregistrationReason_UE_INITIAL_REGISTRATION
+			}
 			deregistData := models.DeregistrationData{
-				DeregReason: models.DeregistrationReason_UE_INITIAL_REGISTRATION,
+				DeregReason: deregReason,
 				AccessType:  models.AccessType__3_GPP_ACCESS,
 			}
 
-			logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
 			go func() {
+				logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
 				pd := callback.SendOnDeregistrationNotification(ueID,
 					oldAmf3GppAccessRegContext.DeregCallbackUri,
 					deregistData) // Deregistration Notify Triggered
