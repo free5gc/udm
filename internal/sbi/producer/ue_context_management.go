@@ -198,8 +198,11 @@ func HandleRegistrationAmf3gppAccessRequest(request *httpwrapper.Request) *httpw
 
 	// step 4: process the return value from step 3
 	if response != nil {
-		// status code is based on SPEC, and option headers
-		return httpwrapper.NewResponse(http.StatusCreated, header, response)
+		if header != nil {
+			// status code is based on SPEC, and option headers
+			return httpwrapper.NewResponse(http.StatusCreated, header, response)
+		}
+		return httpwrapper.NewResponse(http.StatusOK, nil, response)
 	} else if problemDetails != nil {
 		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
 	} else {
@@ -213,8 +216,10 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 ) {
 	// TODO: EPS interworking with N26 is not supported yet in this stage
 	var oldAmf3GppAccessRegContext *models.Amf3GppAccessRegistration
+	var ue *udm_context.UdmUeContext
+
 	if udm_context.Getself().UdmAmf3gppRegContextExists(ueID) {
-		ue, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
+		ue, _ = udm_context.Getself().UdmUeFindBySupi(ueID)
 		oldAmf3GppAccessRegContext = ue.Amf3GppAccessRegistration
 	}
 
@@ -248,14 +253,30 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
 	// corresponding to the same (e.g. 3GPP) access, if one exists
 	if oldAmf3GppAccessRegContext != nil {
-		deregistData := models.DeregistrationData{
-			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
-			AccessType:  models.AccessType__3_GPP_ACCESS,
-		}
-		callback.SendOnDeregistrationNotification(ueID, oldAmf3GppAccessRegContext.DeregCallbackUri,
-			deregistData) // Deregistration Notify Triggered
+		if !ue.SameAsStoredGUAMI3gpp(*oldAmf3GppAccessRegContext.Guami) {
+			// Based on TS 23.502 4.2.2.2.2, If the serving NF removal reason indicated by the UDM is Initial Registration,
+			// the old AMF invokes the Nsmf_PDUSession_ReleaseSMContext (SM Context ID). Thus we give different
+			// dereg cause based on registration parameter from serving AMF
+			deregReason := models.DeregistrationReason_UE_REGISTRATION_AREA_CHANGE
+			if registerRequest.InitialRegistrationInd {
+				deregReason = models.DeregistrationReason_UE_INITIAL_REGISTRATION
+			}
+			deregistData := models.DeregistrationData{
+				DeregReason: deregReason,
+				AccessType:  models.AccessType__3_GPP_ACCESS,
+			}
 
-		return nil, nil, nil
+			go func() {
+				logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
+				pd := callback.SendOnDeregistrationNotification(ueID,
+					oldAmf3GppAccessRegContext.DeregCallbackUri,
+					deregistData) // Deregistration Notify Triggered
+				if pd != nil {
+					logger.UecmLog.Errorf("RegistrationAmf3gppAccess: send DeregNotify fail %v", pd)
+				}
+			}()
+		}
+		return nil, &registerRequest, nil
 	} else {
 		header = make(http.Header)
 		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
@@ -326,7 +347,7 @@ func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRe
 	// corresponding to the same (e.g. 3GPP) access, if one exists
 	if oldAmfNon3GppAccessRegContext != nil {
 		deregistData := models.DeregistrationData{
-			DeregReason: models.DeregistrationReason_SUBSCRIPTION_WITHDRAWN,
+			DeregReason: models.DeregistrationReason_UE_INITIAL_REGISTRATION,
 			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
 		}
 		callback.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
