@@ -33,20 +33,20 @@ func createUDMClientToUDR(id string) (*Nudr_DataRepository.APIClient, error) {
 
 func getUdrURI(id string) string {
 	if strings.Contains(id, "imsi") || strings.Contains(id, "nai") { // supi
-		ue, ok := udm_context.Getself().UdmUeFindBySupi(id)
+		ue, ok := udm_context.GetSelf().UdmUeFindBySupi(id)
 		if ok {
 			if ue.UdrUri == "" {
 				ue.UdrUri = consumer.SendNFIntancesUDR(id, consumer.NFDiscoveryToUDRParamSupi)
 			}
 			return ue.UdrUri
 		} else {
-			ue = udm_context.Getself().NewUdmUe(id)
+			ue = udm_context.GetSelf().NewUdmUe(id)
 			ue.UdrUri = consumer.SendNFIntancesUDR(id, consumer.NFDiscoveryToUDRParamSupi)
 			return ue.UdrUri
 		}
 	} else if strings.Contains(id, "pei") {
 		var udrURI string
-		udm_context.Getself().UdmUePool.Range(func(key, value interface{}) bool {
+		udm_context.GetSelf().UdmUePool.Range(func(key, value interface{}) bool {
 			ue := value.(*udm_context.UdmUeContext)
 			if ue.Amf3GppAccessRegistration != nil && ue.Amf3GppAccessRegistration.Pei == id {
 				if ue.UdrUri == "" {
@@ -218,12 +218,12 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 	var oldAmf3GppAccessRegContext *models.Amf3GppAccessRegistration
 	var ue *udm_context.UdmUeContext
 
-	if udm_context.Getself().UdmAmf3gppRegContextExists(ueID) {
-		ue, _ = udm_context.Getself().UdmUeFindBySupi(ueID)
+	if udm_context.GetSelf().UdmAmf3gppRegContextExists(ueID) {
+		ue, _ = udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		oldAmf3GppAccessRegContext = ue.Amf3GppAccessRegistration
 	}
 
-	udm_context.Getself().CreateAmf3gppRegContext(ueID, registerRequest)
+	udm_context.GetSelf().CreateAmf3gppRegContext(ueID, registerRequest)
 
 	clientAPI, err := createUDMClientToUDR(ueID)
 	if err != nil {
@@ -279,7 +279,7 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 		return nil, &registerRequest, nil
 	} else {
 		header = make(http.Header)
-		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
+		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriAmf3GppAccessRegistration))
 		return header, &registerRequest, nil
 	}
@@ -312,12 +312,12 @@ func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRe
 	header http.Header, response *models.AmfNon3GppAccessRegistration, problemDetails *models.ProblemDetails,
 ) {
 	var oldAmfNon3GppAccessRegContext *models.AmfNon3GppAccessRegistration
-	if udm_context.Getself().UdmAmfNon3gppRegContextExists(ueID) {
-		ue, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
+	if udm_context.GetSelf().UdmAmfNon3gppRegContextExists(ueID) {
+		ue, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		oldAmfNon3GppAccessRegContext = ue.AmfNon3GppAccessRegistration
 	}
 
-	udm_context.Getself().CreateAmfNon3gppRegContext(ueID, registerRequest)
+	udm_context.GetSelf().CreateAmfNon3gppRegContext(ueID, registerRequest)
 
 	clientAPI, err := createUDMClientToUDR(ueID)
 	if err != nil {
@@ -356,7 +356,7 @@ func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRe
 		return nil, nil, nil
 	} else {
 		header = make(http.Header)
-		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
+		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriAmfNon3GppAccessRegistration))
 		return header, &registerRequest, nil
 	}
@@ -386,7 +386,7 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 	problemDetails *models.ProblemDetails,
 ) {
 	var patchItemReqArray []models.PatchItem
-	currentContext := udm_context.Getself().GetAmf3gppRegContext(ueID)
+	currentContext := udm_context.GetSelf().GetAmf3gppRegContext(ueID)
 	if currentContext == nil {
 		logger.UecmLog.Errorln("[UpdateAmf3gppAccess] Empty Amf3gppRegContext")
 		problemDetails = &models.ProblemDetails{
@@ -397,7 +397,7 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 	}
 
 	if request.Guami != nil {
-		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
+		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		if udmUe.SameAsStoredGUAMI3gpp(*request.Guami) { // deregistration
 			logger.UecmLog.Infoln("UpdateAmf3gppAccess - deregistration")
 			request.PurgeFlag = true
@@ -467,7 +467,7 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 	}
 
 	if request.PurgeFlag {
-		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
+		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		udmUe.Amf3GppAccessRegistration = nil
 	}
 
@@ -504,7 +504,7 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 	problemDetails *models.ProblemDetails,
 ) {
 	var patchItemReqArray []models.PatchItem
-	currentContext := udm_context.Getself().GetAmfNon3gppRegContext(ueID)
+	currentContext := udm_context.GetSelf().GetAmfNon3gppRegContext(ueID)
 	if currentContext == nil {
 		logger.UecmLog.Errorln("[UpdateAmfNon3gppAccess] Empty AmfNon3gppRegContext")
 		problemDetails = &models.ProblemDetails{
@@ -515,7 +515,7 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 	}
 
 	if request.Guami != nil {
-		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
+		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		if udmUe.SameAsStoredGUAMINon3gpp(*request.Guami) { // deregistration
 			logger.UecmLog.Infoln("UpdateAmfNon3gppAccess - deregistration")
 			request.PurgeFlag = true
@@ -663,8 +663,8 @@ func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID
 	header http.Header, response *models.SmfRegistration, problemDetails *models.ProblemDetails,
 ) {
 	contextExisted := false
-	udm_context.Getself().CreateSmfRegContext(ueID, pduSessionID)
-	if !udm_context.Getself().UdmSmfRegContextNotExists(ueID) {
+	udm_context.GetSelf().CreateSmfRegContext(ueID, pduSessionID)
+	if !udm_context.GetSelf().UdmSmfRegContextNotExists(ueID) {
 		contextExisted = true
 	}
 
@@ -704,7 +704,7 @@ func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID
 		return nil, nil, nil
 	} else {
 		header = make(http.Header)
-		udmUe, _ := udm_context.Getself().UdmUeFindBySupi(ueID)
+		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriSmfRegistration))
 		return header, request, nil
 	}

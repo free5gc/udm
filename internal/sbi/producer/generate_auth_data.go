@@ -155,7 +155,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 
 	response = &models.AuthenticationInfoResult{}
 	rand.Seed(time.Now().UnixNano())
-	supi, err := suci.ToSupi(supiOrSuci, udm_context.Getself().SuciProfiles)
+	supi, err := suci.ToSupi(supiOrSuci, udm_context.GetSelf().SuciProfiles)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
@@ -417,7 +417,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 						keyIndex)
 				} else {
 					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key ",
-						udm_context.Getself().SuciProfiles[keyIndex-1].PublicKey)
+						udm_context.GetSelf().SuciProfiles[keyIndex-1].PublicKey)
 				}
 			}
 			logger.UeauLog.Errorln("MACS ", macS)

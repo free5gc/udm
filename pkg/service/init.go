@@ -35,7 +35,7 @@ func NewApp(cfg *factory.Config) (*UdmApp, error) {
 	udm.SetLogLevel(cfg.GetLogLevel())
 	udm.SetReportCaller(cfg.GetLogReportCaller())
 	udm_context.Init()
-	udm.udmCtx = udm_context.Getself()
+	udm.udmCtx = udm_context.GetSelf()
 	return udm, nil
 }
 
