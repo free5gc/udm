@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/factory"
 	logger_util "github.com/free5gc/util/logger"
 )
@@ -43,6 +44,11 @@ func NewRouter() *gin.Engine {
 }
 
 func oneLayerPathHandlerFunc(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	supi := c.Param("supi")
 	for _, route := range oneLayerPathRouter {
 		if strings.Contains(route.Pattern, supi) && route.Method == c.Request.Method {
@@ -61,6 +67,11 @@ func oneLayerPathHandlerFunc(c *gin.Context) {
 }
 
 func twoLayerPathHandlerFunc(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	supi := c.Param("supi")
 	op := c.Param("subscriptionId")
 
@@ -94,6 +105,11 @@ func twoLayerPathHandlerFunc(c *gin.Context) {
 }
 
 func threeLayerPathHandlerFunc(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	op := c.Param("subscriptionId")
 
 	// for "/:supi/sdm-subscriptions/:subscriptionId"
@@ -123,6 +139,10 @@ func threeLayerPathHandlerFunc(c *gin.Context) {
 	}
 
 	c.String(http.StatusNotFound, "404 page not found")
+}
+
+func authorizationCheck(c *gin.Context) error {
+	return util.AuthorizationCheck(c, "nudm-sdm")
 }
 
 func AddService(engine *gin.Engine) *gin.RouterGroup {

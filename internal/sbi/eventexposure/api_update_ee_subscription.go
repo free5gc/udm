@@ -23,6 +23,11 @@ import (
 
 // UpdateEeSubscription - Patch
 func HTTPUpdateEeSubscription(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	var patchList []models.PatchItem
 
 	requestBody, err := c.GetRawData()

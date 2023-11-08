@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	logger_util "github.com/free5gc/util/logger"
 )
 
@@ -37,6 +38,10 @@ func NewRouter() *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	AddService(router)
 	return router
+}
+
+func authorizationCheck(c *gin.Context) error {
+	return util.AuthorizationCheck(c, "nudm-sdm")
 }
 
 func AddService(engine *gin.Engine) *gin.RouterGroup {

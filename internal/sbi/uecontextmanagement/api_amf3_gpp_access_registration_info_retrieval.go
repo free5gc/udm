@@ -23,6 +23,11 @@ import (
 
 // GetAmf3gppAccess - retrieve the AMF registration for 3GPP access information
 func HTTPGetAmf3gppAccess(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Params["ueId"] = c.Param("ueId")
 	req.Query.Add("supported-features", c.Query("supported-features"))

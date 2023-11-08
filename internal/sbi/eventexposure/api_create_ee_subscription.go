@@ -23,6 +23,11 @@ import (
 
 // HTTPCreateEeSubscription - Subscribe
 func HTTPCreateEeSubscription(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	var eeSubscriptionReq models.EeSubscription
 
 	requestBody, err := c.GetRawData()

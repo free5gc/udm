@@ -23,6 +23,10 @@ import (
 
 // Update - provision parameters
 func HTTPUpdate(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
 	var ppDataReq models.PpData
 
 	// step 1: retrieve http request body

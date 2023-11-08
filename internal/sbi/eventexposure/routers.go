@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/factory"
 	logger_util "github.com/free5gc/util/logger"
 )
@@ -40,6 +41,10 @@ func NewRouter() *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	AddService(router)
 	return router
+}
+
+func authorizationCheck(c *gin.Context) error {
+	return util.AuthorizationCheck(c, "nudm-ee")
 }
 
 func AddService(engine *gin.Engine) *gin.RouterGroup {

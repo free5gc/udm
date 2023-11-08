@@ -23,6 +23,11 @@ import (
 
 // Register - register as AMF for non-3GPP access
 func HTTPRegistrationAmfNon3gppAccess(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	var amfNon3GppAccessRegistration models.AmfNon3GppAccessRegistration
 
 	// step 1: retrieve http request body

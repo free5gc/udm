@@ -13,6 +13,10 @@ import (
 )
 
 func HTTPDataChangeNotificationToNF(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
 	var dataChangeNotify models.DataChangeNotify
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()

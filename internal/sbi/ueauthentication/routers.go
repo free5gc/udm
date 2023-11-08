@@ -17,6 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/factory"
 	logger_util "github.com/free5gc/util/logger"
 )
@@ -50,6 +51,11 @@ func NewRouter() *gin.Engine {
 }
 
 func genAuthDataHandlerFunc(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	c.Params = append(c.Params, gin.Param{Key: "supiOrSuci", Value: c.Param("supi")})
 	if strings.ToUpper("Post") == c.Request.Method {
 		HttpGenerateAuthData(c)
@@ -57,6 +63,10 @@ func genAuthDataHandlerFunc(c *gin.Context) {
 	}
 
 	c.String(http.StatusNotFound, "404 page not found")
+}
+
+func authorizationCheck(c *gin.Context) error {
+	return util.AuthorizationCheck(c, "nudm-ueau")
 }
 
 func AddService(engine *gin.Engine) *gin.RouterGroup {

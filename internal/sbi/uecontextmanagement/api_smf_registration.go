@@ -23,6 +23,11 @@ import (
 
 // RegistrationSmfRegistrations - register as SMF
 func HTTPRegistrationSmfRegistrations(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	var smfRegistration models.SmfRegistration
 
 	// step 1: retrieve http request body

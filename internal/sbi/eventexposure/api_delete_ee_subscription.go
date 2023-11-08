@@ -18,6 +18,11 @@ import (
 
 // DeleteEeSubscription - Unsubscribe
 func HTTPDeleteEeSubscription(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	req := httpwrapper.NewRequest(c.Request, nil)
 	req.Params["ueIdentity"] = c.Params.ByName("ueIdentity")
 	req.Params["subscriptionID"] = c.Params.ByName("subscriptionId")

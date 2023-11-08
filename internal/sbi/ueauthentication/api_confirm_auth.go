@@ -23,6 +23,11 @@ import (
 
 // ConfirmAuth - Create a new confirmation event
 func HTTPConfirmAuth(c *gin.Context) {
+	auth_err := authorizationCheck(c)
+	if auth_err != nil {
+		return
+	}
+
 	var authEvent models.AuthEvent
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
