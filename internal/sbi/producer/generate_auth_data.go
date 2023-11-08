@@ -127,6 +127,7 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 	if err != nil {
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
+	// TODO: [OAUTH2] should call GetTokenCtx("nudr-dr", "UDR")
 	resp, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
 		context.Background(), supi, &createAuthParam)
 	if err != nil {
@@ -173,6 +174,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 	if err != nil {
 		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
 	}
+	// TODO: [OAUTH2] should call GetTokenCtx("nudr-dr", "UDR")
 	authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(context.Background(), supi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
@@ -461,6 +463,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 	}
 
 	var rsp *http.Response
+	// TODO: [OAUTH2] should call GetTokenCtx("nudr-dr", "UDR")
 	rsp, err = client.AuthenticationDataDocumentApi.ModifyAuthentication(
 		context.Background(), supi, patchItemArray)
 	if err != nil {

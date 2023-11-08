@@ -34,6 +34,7 @@ func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *
 	if err != nil {
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
+	// TODO: [OAUTH2] should call GetTokenCtx("nudr-dr", "UDR")
 	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(context.Background(), gpsi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
