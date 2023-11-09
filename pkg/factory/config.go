@@ -129,31 +129,6 @@ func (c *Configuration) validate() (bool, error) {
 	return result, err
 }
 
-func (c *Config) VerifyServiceAllowType(nfTypeName string, serviceName string) error {
-	c.RLock()
-	defer c.RUnlock()
-
-	serviceFound := false
-	for _, service := range c.Configuration.ServiceList {
-		if service.ServiceName == serviceName {
-			serviceFound = true
-			for _, allowNf := range service.AllowedNfTypes {
-				if nfTypeName == "All" {
-					return nil
-				}
-				if nfTypeName == allowNf {
-					return nil
-				}
-			}
-			break
-		}
-	}
-	if serviceFound {
-		return fmt.Errorf("Not allow NF Type: %+v", nfTypeName)
-	}
-	return fmt.Errorf("ServiceName not found: %+v", serviceName)
-}
-
 func (c *Config) GetNrfCertPemPath() string {
 	c.RLock()
 	defer c.RUnlock()

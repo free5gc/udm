@@ -1,12 +1,12 @@
 package producer
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
+	udm_consumer "github.com/free5gc/udm/internal/sbi/consumer"
 	"github.com/free5gc/util/httpwrapper"
 )
 
@@ -34,8 +34,11 @@ func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *
 	if err != nil {
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
-	// TODO: [OAUTH2] should call GetTokenCtx("nudr-dr", "UDR")
-	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(context.Background(), gpsi, nil)
+	ctx, pd, err := udm_consumer.GetTokenCtx("nudr-dr", "UDR")
+	if err != nil {
+		return pd
+	}
+	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(ctx, gpsi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: int32(res.StatusCode),

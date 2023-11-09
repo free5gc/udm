@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"context"
 	cryptoRand "crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -20,6 +19,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	udm_consumer "github.com/free5gc/udm/internal/sbi/consumer"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/httpwrapper"
 	"github.com/free5gc/util/milenage"
@@ -127,9 +127,12 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 	if err != nil {
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
-	// TODO: [OAUTH2] should call GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_consumer.GetTokenCtx("nudr-dr", "UDR")
+	if err != nil {
+		return pd
+	}
 	resp, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
-		context.Background(), supi, &createAuthParam)
+		ctx, supi, &createAuthParam)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
@@ -174,8 +177,11 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 	if err != nil {
 		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
 	}
-	// TODO: [OAUTH2] should call GetTokenCtx("nudr-dr", "UDR")
-	authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(context.Background(), supi, nil)
+	ctx, pd, err := udm_consumer.GetTokenCtx("nudr-dr", "UDR")
+	if err != nil {
+		return nil, pd
+	}
+	authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(ctx, supi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
@@ -463,9 +469,12 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 	}
 
 	var rsp *http.Response
-	// TODO: [OAUTH2] should call GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err = udm_consumer.GetTokenCtx("nudr-dr", "UDR")
+	if err != nil {
+		return nil, pd
+	}
 	rsp, err = client.AuthenticationDataDocumentApi.ModifyAuthentication(
-		context.Background(), supi, patchItemArray)
+		ctx, supi, patchItemArray)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
