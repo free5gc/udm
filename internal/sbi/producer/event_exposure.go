@@ -35,7 +35,7 @@ func HandleCreateEeSubscription(request *httpwrapper.Request) *httpwrapper.Respo
 func CreateEeSubscriptionProcedure(ueIdentity string,
 	eesubscription models.EeSubscription,
 ) (*models.CreatedEeSubscription, *models.ProblemDetails) {
-	udmSelf := udm_context.Getself()
+	udmSelf := udm_context.GetSelf()
 
 	logger.EeLog.Debugf("udIdentity: %s", ueIdentity)
 	switch {
@@ -135,7 +135,7 @@ func HandleDeleteEeSubscription(request *httpwrapper.Request) *httpwrapper.Respo
 
 // TODO: complete this procedure based on TS 29503 5.5
 func DeleteEeSubscriptionProcedure(ueIdentity string, subscriptionID string) {
-	udmSelf := udm_context.Getself()
+	udmSelf := udm_context.GetSelf()
 
 	switch {
 	case strings.HasPrefix(ueIdentity, "msisdn-"):
@@ -186,7 +186,7 @@ func HandleUpdateEeSubscription(request *httpwrapper.Request) *httpwrapper.Respo
 func UpdateEeSubscriptionProcedure(ueIdentity string, subscriptionID string,
 	patchList []models.PatchItem,
 ) *models.ProblemDetails {
-	udmSelf := udm_context.Getself()
+	udmSelf := udm_context.GetSelf()
 
 	switch {
 	case strings.HasPrefix(ueIdentity, "msisdn-"):

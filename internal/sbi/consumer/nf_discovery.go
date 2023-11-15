@@ -45,7 +45,7 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 }
 
 func SendNFIntancesUDR(id string, types int) string {
-	self := udm_context.Getself()
+	self := udm_context.GetSelf()
 	targetNfType := models.NfType_UDR
 	requestNfType := models.NfType_UDM
 	localVarOptionals := Nnrf_NFDiscovery.SearchNFInstancesParamOpts{

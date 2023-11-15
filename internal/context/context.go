@@ -30,8 +30,8 @@ const (
 )
 
 func Init() {
-	Getself().NfService = make(map[models.ServiceName]models.NfService)
-	Getself().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
+	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
+	GetSelf().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
 }
 
 type UDMContext struct {
@@ -386,12 +386,12 @@ func (context *UDMContext) GetAmfNon3gppRegContext(supi string) *models.AmfNon3G
 func (ue *UdmUeContext) GetLocationURI(types int) string {
 	switch types {
 	case LocationUriAmf3GppAccessRegistration:
-		return Getself().GetIPv4Uri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-3gpp-access"
+		return GetSelf().GetIPv4Uri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-3gpp-access"
 	case LocationUriAmfNon3GppAccessRegistration:
-		return Getself().GetIPv4Uri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-non-3gpp-access"
+		return GetSelf().GetIPv4Uri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-non-3gpp-access"
 	case LocationUriSmfRegistration:
 
-		return Getself().GetIPv4Uri() +
+		return GetSelf().GetIPv4Uri() +
 			factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/smf-registrations/" + ue.PduSessionID
 	}
 	return ""
@@ -400,9 +400,9 @@ func (ue *UdmUeContext) GetLocationURI(types int) string {
 func (ue *UdmUeContext) GetLocationURI2(types int, supi string) string {
 	switch types {
 	case LocationUriSharedDataSubscription:
-		// return Getself().GetIPv4Uri() + UdmSdmResUriPrefix +"/shared-data-subscriptions/" + nf.SubscriptionID
+		// return GetSelf().GetIPv4Uri() + UdmSdmResUriPrefix +"/shared-data-subscriptions/" + nf.SubscriptionID
 	case LocationUriSdmSubscription:
-		return Getself().GetIPv4Uri() + factory.UdmSdmResUriPrefix + "/" + supi + "/sdm-subscriptions/"
+		return GetSelf().GetIPv4Uri() + factory.UdmSdmResUriPrefix + "/" + supi + "/sdm-subscriptions/"
 	}
 	return ""
 }
@@ -478,6 +478,6 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	}
 }
 
-func Getself() *UDMContext {
+func GetSelf() *UDMContext {
 	return &udmContext
 }
