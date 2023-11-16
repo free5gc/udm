@@ -587,7 +587,7 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 		}
 	}()
 
-	return nil
+	return problemDetails
 }
 
 func HandleDeregistrationSmfRegistrations(request *httpwrapper.Request) *httpwrapper.Response {

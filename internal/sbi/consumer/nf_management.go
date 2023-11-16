@@ -104,7 +104,7 @@ func SendDeregisterNFInstance() (problemDetails *models.ProblemDetails, err erro
 
 	res, err = client.NFInstanceIDDocumentApi.DeregisterNFInstance(ctx, udmSelf.NfId)
 	if err == nil {
-		return
+		return nil, err
 	} else if res != nil {
 		defer func() {
 			if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
@@ -113,12 +113,12 @@ func SendDeregisterNFInstance() (problemDetails *models.ProblemDetails, err erro
 		}()
 
 		if res.Status != err.Error() {
-			return
+			return nil, err
 		}
 		problem := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		problemDetails = &problem
 	} else {
 		err = openapi.ReportError("server no response")
 	}
-	return
+	return problemDetails, err
 }
