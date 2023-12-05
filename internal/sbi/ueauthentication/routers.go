@@ -66,7 +66,11 @@ func genAuthDataHandlerFunc(c *gin.Context) {
 }
 
 func authorizationCheck(c *gin.Context) error {
-	return util.AuthorizationCheck(c, "nudm-ueau")
+	err := util.AuthorizationCheck(c, "nudm-ueau")
+	if err != nil {
+		logger.ConsumerLog.Warningf("Auth Error: %+v", err)
+	}
+	return err
 }
 
 func AddService(engine *gin.Engine) *gin.RouterGroup {

@@ -60,7 +60,7 @@ type Info struct {
 
 type ServiceList struct {
 	ServiceName    string   `yaml:"serviceName" valid:"required"`
-	AllowedNfTypes []string `yaml:"allowedNfTypes,omitempty" valid:"required"`
+	AllowedNfTypes []string `yaml:"allowedNfTypes,omitempty" valid:"optional"`
 }
 
 type Configuration struct {
@@ -129,10 +129,10 @@ func (c *Configuration) validate() (bool, error) {
 	return result, err
 }
 
-func (c *Config) GetNrfCertPemPath() string {
+func (c *Config) GetNrfCerPem() string {
 	c.RLock()
 	defer c.RUnlock()
-	return c.Configuration.NrfCertPemPath
+	return c.Configuration.NrfCerPem
 }
 
 type Sbi struct {

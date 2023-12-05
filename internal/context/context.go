@@ -126,8 +126,8 @@ func InitUdmContext(context *UDMContext) {
 	if configuration.NrfCertPem != "" {
 		context.NrfCertPem = configuration.NrfCertPem
 	}
-	servingNameList := configuration.ServiceNameList
 
+	serviceList := configuration.ServiceList
 	udmContext.SuciProfiles = configuration.SuciProfiles
 
 	udmContext.InitNFService(serviceList, config.Info.Version)

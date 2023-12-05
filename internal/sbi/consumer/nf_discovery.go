@@ -26,14 +26,14 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 
 	ctx, _, err := GetTokenCtx("nnrf-disc", "NRF")
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	result, res, err1 := clientNRF.NFInstancesStoreApi.SearchNFInstances(ctx, targetNfType,
 		requestNfType, &param)
 	if err1 != nil {
 		err = err1
-		return
+		return nil, err
 	}
 
 	defer func() {

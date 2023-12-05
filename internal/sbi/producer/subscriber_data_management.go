@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -309,8 +308,12 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	if containDataSetName(dataSetNames, string(models.DataSetName_SMF_SEL)) {
 		var smfSelSubsbody models.SmfSelectionSubscriptionData
 		udm_context.GetSelf().CreateSmfSelectionSubsDataforUe(supi, smfSelSubsbody)
-		// TODO: [OAUTH2] should call GetTokenCtx("nudr-dr", "UDR")
-		smfSelData, res, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.QuerySmfSelectData(context.Background(),
+
+		ctx, pd, err := udm_consumer.GetTokenCtx("nudr-dr", "UDR")
+		if err != nil {
+			return nil, pd
+		}
+		smfSelData, res, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.QuerySmfSelectData(ctx,
 			supi, plmnID, &querySmfSelectDataParamOpts)
 		if err != nil {
 			if res == nil {

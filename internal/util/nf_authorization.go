@@ -13,7 +13,7 @@ import (
 func AuthorizationCheck(c *gin.Context, serviceName string) error {
 	if factory.UdmConfig.GetOAuth() {
 		oauth_err := oauth.VerifyOAuth(c.Request.Header.Get("Authorization"), serviceName,
-			factory.UdmConfig.GetNrfCertPemPath())
+			factory.UdmConfig.GetNrfCerPem())
 		if oauth_err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": oauth_err.Error()})
 			return oauth_err
