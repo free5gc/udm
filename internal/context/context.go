@@ -461,6 +461,9 @@ func (context *UDMContext) InitNFService(serviceList []factory.ServiceList, vers
 	for index, service := range serviceList {
 		name := models.ServiceName(service.ServiceName)
 		allowNfTypes := make([]models.NfType, len(service.AllowedNfTypes))
+		for idx, nf := range service.AllowedNfTypes {
+			allowNfTypes[idx] = models.NfType(nf)
+		}
 		context.NfService[name] = models.NfService{
 			ServiceInstanceId: strconv.Itoa(index),
 			ServiceName:       name,
@@ -480,8 +483,6 @@ func (context *UDMContext) InitNFService(serviceList []factory.ServiceList, vers
 					Port:        int32(context.SBIPort),
 				},
 			},
-			// TODO
-			// Not yet implement the verification of allowNfTypes using this parameters
 			AllowedNfTypes: allowNfTypes,
 		}
 	}
