@@ -129,12 +129,6 @@ func (c *Configuration) validate() (bool, error) {
 	return result, err
 }
 
-func (c *Config) GetNrfCerPem() string {
-	c.RLock()
-	defer c.RUnlock()
-	return c.Configuration.NrfCerPem
-}
-
 type Sbi struct {
 	Scheme       string `yaml:"scheme" valid:"scheme"`
 	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,required"` // IP that is registered at NRF.
