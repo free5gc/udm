@@ -45,7 +45,7 @@ type UDMContext struct {
 	NFDiscoveryClient              *Nnrf_NFDiscovery.APIClient
 	UdmUePool                      sync.Map // map[supi]*UdmUeContext
 	NrfUri                         string
-	NrfCerPem                      string
+	NrfCertPem                     string
 	GpsiSupiList                   models.IdentityData
 	SharedSubsDataMap              map[string]models.SharedData // sharedDataIds as key
 	SubscriptionOfSharedDataChange sync.Map                     // subscriptionID as key
@@ -123,8 +123,8 @@ func InitUdmContext(context *UDMContext) {
 		}
 	}
 	udmContext.NrfUri = configuration.NrfUri
-	if configuration.NrfCerPem != "" {
-		context.NrfCerPem = configuration.NrfCerPem
+	if configuration.NrfCertPem != "" {
+		context.NrfCertPem = configuration.NrfCertPem
 	}
 	servingNameList := configuration.ServiceNameList
 

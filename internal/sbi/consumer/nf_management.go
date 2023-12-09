@@ -74,8 +74,8 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 			oauth2 := nf.CustomInfo["oauth2"].(bool)
 			udm_context.GetSelf().OAuth2Required = oauth2
 			logger.MainLog.Infoln("OAuth2 setting receive from NRF:", oauth2)
-			if oauth2 && udm_context.GetSelf().NrfCerPem == "" {
-				logger.CfgLog.Error("OAuth2 enable but no nrfCerPem provided in config.")
+			if oauth2 && udm_context.GetSelf().NrfCertPem == "" {
+				logger.CfgLog.Error("OAuth2 enable but no nrfCertPem provided in config.")
 			}
 			break
 		} else {
