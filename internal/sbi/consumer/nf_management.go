@@ -71,7 +71,10 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 			resouceNrfUri = resourceUri[:strings.Index(resourceUri, "/nnrf-nfm/")]
 			retrieveNfInstanceId = resourceUri[strings.LastIndex(resourceUri, "/")+1:]
 
-			oauth2 := nf.CustomInfo["oauth2"].(bool)
+			oauth2 := false
+			if nf.CustomInfo != nil {
+				oauth2 = nf.CustomInfo["oauth2"].(bool)
+			}
 			udm_context.GetSelf().OAuth2Required = oauth2
 			logger.MainLog.Infoln("OAuth2 setting receive from NRF:", oauth2)
 			if oauth2 && udm_context.GetSelf().NrfCertPem == "" {
