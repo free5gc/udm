@@ -58,11 +58,6 @@ type Info struct {
 	Description string `yaml:"description,omitempty" valid:"type(string)"`
 }
 
-type ServiceList struct {
-	ServiceName    string   `yaml:"serviceName" valid:"required"`
-	AllowedNfTypes []string `yaml:"allowedNfTypes,omitempty" valid:"optional"`
-}
-
 type Configuration struct {
 	Sbi             *Sbi               `yaml:"sbi,omitempty"  valid:"required"`
 	ServiceNameList []string           `yaml:"serviceNameList,omitempty"  valid:"required"`
@@ -83,10 +78,9 @@ func (c *Configuration) validate() (bool, error) {
 		}
 	}
 
-	if c.ServiceList != nil {
+	if c.ServiceNameList != nil {
 		var errs govalidator.Errors
-		for _, service := range c.ServiceList {
-			v := service.ServiceName
+		for _, v := range c.ServiceNameList {
 			if v != "nudm-sdm" && v != "nudm-uecm" && v != "nudm-ueau" && v != "nudm-ee" && v != "nudm-pp" {
 				err := fmt.Errorf("Invalid ServiceNameList: [%s],"+
 					" value should be nudm-sdm or nudm-uecm or nudm-ueau or nudm-ee or nudm-pp", v)

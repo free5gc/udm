@@ -43,9 +43,9 @@ func InitUDMContext(udmContext *context.UDMContext) {
 		}
 	}
 	udmContext.NrfUri = configuration.NrfUri
-	serviceList := configuration.ServiceList
+	servingNameList := configuration.ServiceNameList
 
 	udmContext.SuciProfiles = configuration.SuciProfiles
 
-	udmContext.InitNFService(serviceList, config.Info.Version)
+	udmContext.InitNFService(servingNameList, config.Info.Version)
 }

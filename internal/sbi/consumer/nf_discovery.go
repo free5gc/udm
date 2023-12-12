@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
 	"github.com/free5gc/openapi/models"
@@ -41,6 +42,9 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 			logger.ConsumerLog.Errorf("SearchNFInstances response body cannot close: %+v", rspCloseErr)
 		}
 	}()
+	if res != nil && res.StatusCode == http.StatusTemporaryRedirect {
+		err = fmt.Errorf("Temporary Redirect For Non NRF Consumer")
+	}
 	return &result, err
 }
 

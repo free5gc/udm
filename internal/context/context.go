@@ -126,11 +126,11 @@ func InitUdmContext(context *UDMContext) {
 	if configuration.NrfCertPem != "" {
 		context.NrfCertPem = configuration.NrfCertPem
 	}
+	servingNameList := configuration.ServiceNameList
 
-	serviceList := configuration.ServiceList
 	udmContext.SuciProfiles = configuration.SuciProfiles
 
-	udmContext.InitNFService(serviceList, config.Info.Version)
+	udmContext.InitNFService(servingNameList, config.Info.Version)
 }
 
 func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string,
@@ -455,15 +455,11 @@ func (context *UDMContext) GetSDMUri() string {
 	return context.GetIPv4Uri() + factory.UdmSdmResUriPrefix
 }
 
-func (context *UDMContext) InitNFService(serviceList []factory.ServiceList, version string) {
+func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	tmpVersion := strings.Split(version, ".")
 	versionUri := "v" + tmpVersion[0]
-	for index, service := range serviceList {
-		name := models.ServiceName(service.ServiceName)
-		allowNfTypes := make([]models.NfType, len(service.AllowedNfTypes))
-		for idx, nf := range service.AllowedNfTypes {
-			allowNfTypes[idx] = models.NfType(nf)
-		}
+	for index, nameString := range serviceName {
+		name := models.ServiceName(nameString)
 		context.NfService[name] = models.NfService{
 			ServiceInstanceId: strconv.Itoa(index),
 			ServiceName:       name,
@@ -483,7 +479,6 @@ func (context *UDMContext) InitNFService(serviceList []factory.ServiceList, vers
 					Port:        int32(context.SBIPort),
 				},
 			},
-			AllowedNfTypes: allowNfTypes,
 		}
 	}
 }
