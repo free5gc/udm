@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi/oauth"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/udm/pkg/suci"
@@ -481,6 +483,16 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 			},
 		}
 	}
+}
+
+func (c *UDMContext) GetTokenCtx(scope, targetNF string) (
+	context.Context, *models.ProblemDetails, error,
+) {
+	if !c.OAuth2Required {
+		return context.TODO(), nil, nil
+	}
+	return oauth.GetTokenCtx(models.NfType_UDM,
+		c.NfId, c.NrfUri, scope, targetNF)
 }
 
 func GetSelf() *UDMContext {

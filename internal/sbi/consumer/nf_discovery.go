@@ -25,7 +25,7 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 	configuration.SetBasePath(nrfUri) // addr
 	clientNRF := Nnrf_NFDiscovery.NewAPIClient(configuration)
 
-	ctx, _, err := GetTokenCtx("nnrf-disc", "NRF")
+	ctx, _, err := udm_context.GetSelf().GetTokenCtx("nnrf-disc", "NRF")
 	if err != nil {
 		return
 	}
