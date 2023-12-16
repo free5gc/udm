@@ -125,9 +125,7 @@ func InitUdmContext(context *UDMContext) {
 		}
 	}
 	udmContext.NrfUri = configuration.NrfUri
-	if configuration.NrfCertPem != "" {
-		context.NrfCertPem = configuration.NrfCertPem
-	}
+	context.NrfCertPem = configuration.NrfCertPem
 	servingNameList := configuration.ServiceNameList
 
 	udmContext.SuciProfiles = configuration.SuciProfiles
