@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi/oauth"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/udm/pkg/suci"
@@ -45,11 +47,13 @@ type UDMContext struct {
 	NFDiscoveryClient              *Nnrf_NFDiscovery.APIClient
 	UdmUePool                      sync.Map // map[supi]*UdmUeContext
 	NrfUri                         string
+	NrfCertPem                     string
 	GpsiSupiList                   models.IdentityData
 	SharedSubsDataMap              map[string]models.SharedData // sharedDataIds as key
 	SubscriptionOfSharedDataChange sync.Map                     // subscriptionID as key
 	SuciProfiles                   []suci.SuciProfile
 	EeSubscriptionIDGenerator      *idgenerator.IDGenerator
+	OAuth2Required                 bool
 }
 
 type UdmUeContext struct {
@@ -121,6 +125,7 @@ func InitUdmContext(context *UDMContext) {
 		}
 	}
 	udmContext.NrfUri = configuration.NrfUri
+	context.NrfCertPem = configuration.NrfCertPem
 	servingNameList := configuration.ServiceNameList
 
 	udmContext.SuciProfiles = configuration.SuciProfiles
@@ -476,6 +481,16 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 			},
 		}
 	}
+}
+
+func (c *UDMContext) GetTokenCtx(scope, targetNF string) (
+	context.Context, *models.ProblemDetails, error,
+) {
+	if !c.OAuth2Required {
+		return context.TODO(), nil, nil
+	}
+	return oauth.GetTokenCtx(models.NfType_UDM,
+		c.NfId, c.NrfUri, scope, targetNF)
 }
 
 func GetSelf() *UDMContext {

@@ -827,7 +827,7 @@ func getSmfSelectDataProcedure(supi string, plmnID string, supportedFeatures str
 			}
 			return nil, problemDetails
 		}
-		return
+		return nil, problemDetails
 	}
 	defer func() {
 		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {

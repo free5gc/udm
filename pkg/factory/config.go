@@ -62,6 +62,7 @@ type Configuration struct {
 	Sbi             *Sbi               `yaml:"sbi,omitempty"  valid:"required"`
 	ServiceNameList []string           `yaml:"serviceNameList,omitempty"  valid:"required"`
 	NrfUri          string             `yaml:"nrfUri,omitempty"  valid:"required, url"`
+	NrfCertPem      string             `yaml:"nrfCertPem,omitempty" valid:"optional"`
 	SuciProfiles    []suci.SuciProfile `yaml:"SuciProfile,omitempty"`
 }
 type Logger struct {

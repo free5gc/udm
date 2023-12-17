@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -26,7 +25,12 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 	configuration.SetBasePath(nrfUri) // addr
 	clientNRF := Nnrf_NFDiscovery.NewAPIClient(configuration)
 
-	result, res, err1 := clientNRF.NFInstancesStoreApi.SearchNFInstances(context.TODO(), targetNfType,
+	ctx, _, err := udm_context.GetSelf().GetTokenCtx("nnrf-disc", "NRF")
+	if err != nil {
+		return
+	}
+
+	result, res, err1 := clientNRF.NFInstancesStoreApi.SearchNFInstances(ctx, targetNfType,
 		requestNfType, &param)
 	if err1 != nil {
 		err = err1
