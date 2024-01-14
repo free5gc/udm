@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/pkg/factory"
 	logger_util "github.com/free5gc/util/logger"
@@ -86,6 +87,11 @@ func AddService(engine *gin.Engine) *gin.RouterGroup {
 // Index is the index handler.
 func Index(c *gin.Context) {
 	c.String(http.StatusOK, "Hello World!")
+}
+
+func authorizationCheck(c *gin.Context) error {
+	token := c.Request.Header.Get("Authorization")
+	return udm_context.GetSelf().AuthorizationCheck(token, "nudm-ueau")
 }
 
 var routes = Routes{

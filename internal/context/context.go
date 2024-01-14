@@ -496,3 +496,14 @@ func (c *UDMContext) GetTokenCtx(scope, targetNF string) (
 func GetSelf() *UDMContext {
 	return &udmContext
 }
+
+func (context *UDMContext) AuthorizationCheck(token, serviceName string) error {
+	if !context.OAuth2Required {
+		return nil
+	}
+	err := oauth.VerifyOAuth(token, serviceName, context.NrfCertPem)
+	if err != nil {
+		return err
+	}
+	return nil
+}
