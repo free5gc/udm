@@ -1,7 +1,6 @@
 package callback
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/free5gc/openapi/Nudm_SubscriberDataManagement"

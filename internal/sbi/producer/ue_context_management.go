@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -104,7 +103,7 @@ func GetAmf3gppAccessProcedure(ueID string, supportedFeatures string) (
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
 	if err != nil {
-		return pd
+		return nil, pd
 	}
 	var queryAmfContext3gppParamOpts Nudr_DataRepository.QueryAmfContext3gppParamOpts
 	queryAmfContext3gppParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
@@ -168,7 +167,7 @@ func GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts Nudr_DataRepos
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
 	if err != nil {
-		return pd
+		return nil, pd
 	}
 	clientAPI, err := createUDMClientToUDR(ueID)
 	if err != nil {
@@ -178,7 +177,7 @@ func GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts Nudr_DataRepos
 	// amfNon3GppAccessRegistration, resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
 	// 	QueryAmfContextNon3gpp(context.Background(), ueID, &queryAmfContextNon3gppParamOpts)
 	amfNon3GppAccessRegistration, resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
-	 	QueryAmfContextNon3gpp(ctx, ueID, &queryAmfContextNon3gppParamOpts)
+		QueryAmfContextNon3gpp(ctx, ueID, &queryAmfContextNon3gppParamOpts)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
@@ -228,7 +227,7 @@ func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegi
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
 	if err != nil {
-		return pd
+		return nil, nil, pd
 	}
 	// TODO: EPS interworking with N26 is not supported yet in this stage
 	var oldAmf3GppAccessRegContext *models.Amf3GppAccessRegistration
@@ -329,7 +328,7 @@ func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRe
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
 	if err != nil {
-		return pd
+		return nil, nil, pd
 	}
 	var oldAmfNon3GppAccessRegContext *models.AmfNon3GppAccessRegistration
 	if udm_context.GetSelf().UdmAmfNon3gppRegContextExists(ueID) {
@@ -483,7 +482,7 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 	// resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.AmfContext3gpp(context.Background(), ueID,
 	// 	patchItemReqArray)
 	resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.AmfContext3gpp(ctx, ueID,
-	 	patchItemReqArray)
+		patchItemReqArray)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
@@ -606,7 +605,7 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 	// resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.AmfContextNon3gpp(context.Background(),
 	// 	ueID, patchItemReqArray)
 	resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.AmfContextNon3gpp(ctx,
-	 	ueID, patchItemReqArray)
+		ueID, patchItemReqArray)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
@@ -703,7 +702,7 @@ func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
 	if err != nil {
-		return pd
+		return nil, nil, pd
 	}
 	contextExisted := false
 	udm_context.GetSelf().CreateSmfRegContext(ueID, pduSessionID)
@@ -729,7 +728,7 @@ func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID
 	// resp, err := clientAPI.SMFRegistrationDocumentApi.CreateSmfContextNon3gpp(context.Background(), ueID,
 	// 	pduID32, &createSmfContextNon3gppParamOpts)
 	resp, err := clientAPI.SMFRegistrationDocumentApi.CreateSmfContextNon3gpp(ctx, ueID,
-	 	pduID32, &createSmfContextNon3gppParamOpts)
+		pduID32, &createSmfContextNon3gppParamOpts)
 	if err != nil {
 		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		problemDetails = &models.ProblemDetails{

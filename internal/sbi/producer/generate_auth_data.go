@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"context"
 	cryptoRand "crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -159,7 +158,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
 	if err != nil {
-		return pd
+		return nil, pd
 	}
 	logger.UeauLog.Traceln("In GenerateAuthDataProcedure")
 
