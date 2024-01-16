@@ -36,6 +36,10 @@ func Init() {
 	GetSelf().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
 }
 
+type NFContext interface {
+	AuthorizationCheck(token, serviceName string) error
+}
+
 type UDMContext struct {
 	NfId                           string
 	GroupId                        string

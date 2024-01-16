@@ -17,6 +17,7 @@ import (
 
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/factory"
 	logger_util "github.com/free5gc/util/logger"
 )
@@ -36,9 +37,17 @@ type Route struct {
 // Routes is the list of the generated Route.
 type Routes []Route
 
+const serviceName string = "nudm-ee"
+
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
+	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(serviceName)
+
+	router.Use(func(c *gin.Context) {
+		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
+	})
+
 	AddService(router)
 	return router
 }
@@ -46,6 +55,10 @@ func NewRouter() *gin.Engine {
 func AddService(engine *gin.Engine) *gin.RouterGroup {
 	group := engine.Group(factory.UdmEeResUriPrefix)
 
+	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(serviceName)
+	group.Use(func(c *gin.Context) {
+		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
+	})
 	for _, route := range routes {
 		switch route.Method {
 		case "GET":
@@ -66,11 +79,6 @@ func AddService(engine *gin.Engine) *gin.RouterGroup {
 // Index is the index handler.
 func Index(c *gin.Context) {
 	c.String(http.StatusOK, "Hello World!")
-}
-
-func authorizationCheck(c *gin.Context) error {
-	token := c.Request.Header.Get("Authorization")
-	return udm_context.GetSelf().AuthorizationCheck(token, "nudm-ee")
 }
 
 var routes = Routes{
