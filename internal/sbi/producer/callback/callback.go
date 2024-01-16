@@ -12,6 +12,11 @@ import (
 )
 
 func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi string) *models.ProblemDetails {
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudm-sdm", "UDM")
+	if err != nil {
+		return pd
+	}
+
 	ue, _ := udm_context.GetSelf().UdmUeFindBySupi(supi)
 	configuration := Nudm_SubscriberDataManagement.NewConfiguration()
 	clientAPI := Nudm_SubscriberDataManagement.NewAPIClient(configuration)
@@ -21,8 +26,10 @@ func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi strin
 		onDataChangeNotificationurl := subscriptionDataSubscription.OriginalCallbackReference
 		dataChangeNotification := models.ModificationNotification{}
 		dataChangeNotification.NotifyItems = notifyItems
+		//httpResponse, err := clientAPI.DataChangeNotificationCallbackDocumentApi.OnDataChangeNotification(
+		//	context.TODO(), onDataChangeNotificationurl, dataChangeNotification)
 		httpResponse, err := clientAPI.DataChangeNotificationCallbackDocumentApi.OnDataChangeNotification(
-			context.TODO(), onDataChangeNotificationurl, dataChangeNotification)
+			ctx, onDataChangeNotificationurl, dataChangeNotification)
 		if err != nil {
 			if httpResponse == nil {
 				logger.HttpLog.Error(err.Error())
@@ -52,11 +59,17 @@ func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi strin
 func SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
 	deregistData models.DeregistrationData,
 ) *models.ProblemDetails {
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudm-uecm", "UDM")
+	if err != nil {
+		return pd
+	}
 	configuration := Nudm_UEContextManagement.NewConfiguration()
 	clientAPI := Nudm_UEContextManagement.NewAPIClient(configuration)
 
+	// httpResponse, err := clientAPI.DeregistrationNotificationCallbackApi.DeregistrationNotify(
+	// 	context.TODO(), onDeregistrationNotificationUrl, deregistData)
 	httpResponse, err := clientAPI.DeregistrationNotificationCallbackApi.DeregistrationNotify(
-		context.TODO(), onDeregistrationNotificationUrl, deregistData)
+		ctx, onDeregistrationNotificationUrl, deregistData)
 	if err != nil {
 		if httpResponse == nil {
 			logger.HttpLog.Error(err.Error())

@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -40,10 +41,6 @@ func BuildNFInstance(udmContext *udm_context.UDMContext) (profile models.NfProfi
 func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfile) (resouceNrfUri string,
 	retrieveNfInstanceId string, err error,
 ) {
-	ctx, _, err := udm_context.GetSelf().GetTokenCtx("nnrf-nfm", "NRF")
-	if err != nil {
-		return "", "", err
-	}
 
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(nrfUri)
@@ -52,8 +49,7 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 	var res *http.Response
 	for {
 		var nf models.NfProfile
-		//nf, res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), nfInstanceId, profile)
-		nf, res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(ctx, nfInstanceId, profile)
+		nf, res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), nfInstanceId, profile)
 		if err != nil || res == nil {
 			// TODO : add log
 			fmt.Println(fmt.Errorf("UDM register to NRF Error[%v]", err.Error()))

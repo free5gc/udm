@@ -30,11 +30,16 @@ func HandleUpdateRequest(request *httpwrapper.Request) *httpwrapper.Response {
 }
 
 func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *models.ProblemDetails) {
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
+	if err != nil {
+		return pd
+	}
 	clientAPI, err := createUDMClientToUDR(gpsi)
 	if err != nil {
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
-	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(context.Background(), gpsi, nil)
+	// res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(context.Background(), gpsi, nil)
+	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(ctx, gpsi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: int32(res.StatusCode),
