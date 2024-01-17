@@ -10,8 +10,12 @@ import (
 	"github.com/free5gc/udm/internal/logger"
 )
 
+const serviceNameNudmSdm string = string(models.ServiceName_NUDM_SDM)
+const serviceNameNudmUecm string = string(models.ServiceName_NUDM_UECM)
+const nfTypeUDM string = string(models.NfType_UDM)
+
 func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi string) *models.ProblemDetails {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudm-sdm", "UDM")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudmSdm, nfTypeUDM)
 	if err != nil {
 		return pd
 	}
@@ -58,7 +62,7 @@ func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi strin
 func SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
 	deregistData models.DeregistrationData,
 ) *models.ProblemDetails {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudm-uecm", "UDM")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudmUecm, nfTypeUDM)
 	if err != nil {
 		return pd
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/util"
@@ -44,7 +45,7 @@ type Route struct {
 // Routes is the list of the generated Route.
 type Routes []Route
 
-const serviceName string = "nudm-ueau"
+const serviceName string = string(models.ServiceName_NUDM_UEAU)
 
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {

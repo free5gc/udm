@@ -10,6 +10,8 @@ import (
 	"github.com/free5gc/util/httpwrapper"
 )
 
+//const serviceName string = string(models.ServiceName_NUDR_DR)
+
 func HandleUpdateRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	// step 1: log
 	logger.PpLog.Infoln("Handle UpdateRequest")
@@ -30,7 +32,7 @@ func HandleUpdateRequest(request *httpwrapper.Request) *httpwrapper.Response {
 }
 
 func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *models.ProblemDetails) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
 	if err != nil {
 		return pd
 	}

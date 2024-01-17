@@ -18,6 +18,10 @@ const (
 	NFDiscoveryToUDRParamGpsi
 )
 
+const serviceNameNnrfDisc string = string(models.ServiceName_NNRF_DISC)
+const serviceNameNnrfNfm string = string(models.ServiceName_NNRF_NFM)
+const nfTypeNRF string = string(models.NfType_NRF)
+
 func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 	param Nnrf_NFDiscovery.SearchNFInstancesParamOpts,
 ) (result models.SearchResult, err error) {
@@ -25,7 +29,7 @@ func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 	configuration.SetBasePath(nrfUri) // addr
 	clientNRF := Nnrf_NFDiscovery.NewAPIClient(configuration)
 
-	ctx, _, err := udm_context.GetSelf().GetTokenCtx("nnrf-disc", "NRF")
+	ctx, _, err := udm_context.GetSelf().GetTokenCtx(serviceNameNnrfDisc, nfTypeNRF)
 	if err != nil {
 		return
 	}

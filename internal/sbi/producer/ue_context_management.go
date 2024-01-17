@@ -18,6 +18,11 @@ import (
 	"github.com/free5gc/util/httpwrapper"
 )
 
+const serviceNameNudrDr string = string(models.ServiceName_NUDR_DR)
+const serviceNameNudmSdm string = string(models.ServiceName_NUDM_SDM)
+const nfTypeUDR string = string(models.NfType_UDR)
+const nfTypeUDM string = string(models.NfType_UDM)
+
 func createUDMClientToUDR(id string) (*Nudr_DataRepository.APIClient, error) {
 	uri := getUdrURI(id)
 	if uri == "" {
@@ -101,7 +106,7 @@ func HandleGetAmf3gppAccessRequest(request *httpwrapper.Request) *httpwrapper.Re
 func GetAmf3gppAccessProcedure(ueID string, supportedFeatures string) (
 	response *models.Amf3GppAccessRegistration, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDM)
 	if err != nil {
 		return nil, pd
 	}
@@ -165,7 +170,7 @@ func GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts Nudr_DataRepos
 	QueryAmfContextNon3gppParamOpts, ueID string) (response *models.AmfNon3GppAccessRegistration,
 	problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDM)
 	if err != nil {
 		return nil, pd
 	}
@@ -225,7 +230,7 @@ func HandleRegistrationAmf3gppAccessRequest(request *httpwrapper.Request) *httpw
 func RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegistration, ueID string) (
 	header http.Header, response *models.Amf3GppAccessRegistration, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDM)
 	if err != nil {
 		return nil, nil, pd
 	}
@@ -326,7 +331,7 @@ func HandleRegisterAmfNon3gppAccessRequest(request *httpwrapper.Request) *httpwr
 func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRegistration, ueID string) (
 	header http.Header, response *models.AmfNon3GppAccessRegistration, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDM)
 	if err != nil {
 		return nil, nil, pd
 	}
@@ -406,7 +411,7 @@ func HandleUpdateAmf3gppAccessRequest(request *httpwrapper.Request) *httpwrapper
 func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModification, ueID string) (
 	problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDM)
 	if err != nil {
 		return pd
 	}
@@ -530,7 +535,7 @@ func HandleUpdateAmfNon3gppAccessRequest(request *httpwrapper.Request) *httpwrap
 func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistrationModification, ueID string) (
 	problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDM)
 	if err != nil {
 		return pd
 	}
@@ -643,7 +648,7 @@ func HandleDeregistrationSmfRegistrations(request *httpwrapper.Request) *httpwra
 }
 
 func DeregistrationSmfRegistrationsProcedure(ueID string, pduSessionID string) (problemDetails *models.ProblemDetails) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDM)
 	if err != nil {
 		return pd
 	}
@@ -700,7 +705,7 @@ func HandleRegistrationSmfRegistrationsRequest(request *httpwrapper.Request) *ht
 func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID string, pduSessionID string) (
 	header http.Header, response *models.SmfRegistration, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDM)
 	if err != nil {
 		return nil, nil, pd
 	}
