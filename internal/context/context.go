@@ -505,7 +505,7 @@ func GetSelf() *UDMContext {
 
 func (context *UDMContext) AuthorizationCheck(token, serviceName string) error {
 	if !context.OAuth2Required {
-		logger.UtilLog.Debugf("NSSFContext::AuthorizationCheck: OAuth2 not required\n")
+		logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: OAuth2 not required\n")
 		return nil
 	}
 	logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: token[%s] serviceName[%s]\n", token, serviceName)
