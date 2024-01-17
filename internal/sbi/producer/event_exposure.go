@@ -36,7 +36,6 @@ func CreateEeSubscriptionProcedure(ueIdentity string,
 	eesubscription models.EeSubscription,
 ) (*models.CreatedEeSubscription, *models.ProblemDetails) {
 	udmSelf := udm_context.GetSelf()
-
 	logger.EeLog.Debugf("udIdentity: %s", ueIdentity)
 	switch {
 	// GPSI (MSISDN identifier) represents a single UE

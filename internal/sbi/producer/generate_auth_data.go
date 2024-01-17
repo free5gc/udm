@@ -118,7 +118,7 @@ func HandleConfirmAuthDataRequest(request *httpwrapper.Request) *httpwrapper.Res
 }
 
 func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemDetails *models.ProblemDetails) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
 	if err != nil {
 		return pd
 	}
@@ -156,7 +156,7 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest, supiOrSuci string) (
 	response *models.AuthenticationInfoResult, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
 	if err != nil {
 		return nil, pd
 	}

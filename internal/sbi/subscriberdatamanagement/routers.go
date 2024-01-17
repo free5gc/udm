@@ -42,11 +42,6 @@ const serviceName string = "nudm-sdm"
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
-	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(serviceName)
-
-	router.Use(func(c *gin.Context) {
-		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
-	})
 
 	AddService(router)
 	return router

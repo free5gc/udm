@@ -30,7 +30,7 @@ func HandleUpdateRequest(request *httpwrapper.Request) *httpwrapper.Response {
 }
 
 func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *models.ProblemDetails) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dm", "UDR")
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx("nudr-dr", "UDR")
 	if err != nil {
 		return pd
 	}
