@@ -489,14 +489,14 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	}
 }
 
-func (c *UDMContext) GetTokenCtx(scope, targetNF string) (
+func (c *UDMContext) GetTokenCtx(scope string, targetNF models.NfType) (
 	context.Context, *models.ProblemDetails, error,
 ) {
 	if !c.OAuth2Required {
 		return context.TODO(), nil, nil
 	}
-	return oauth.GetTokenCtx(models.NfType_UDM,
-		c.NfId, c.NrfUri, scope, targetNF)
+	return oauth.GetTokenCtx(models.NfType_UDM, targetNF,
+		c.NfId, c.NrfUri, scope)
 }
 
 func GetSelf() *UDMContext {

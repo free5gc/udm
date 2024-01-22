@@ -20,8 +20,8 @@ import (
 
 const serviceNameNudrDr string = string(models.ServiceName_NUDR_DR)
 const serviceNameNudmSdm string = string(models.ServiceName_NUDM_SDM)
-const nfTypeUDR string = string(models.NfType_UDR)
-const nfTypeUDM string = string(models.NfType_UDM)
+const nfTypeUDR models.NfType = models.NfType_UDR
+const nfTypeUDM models.NfType = models.NfType_UDM
 
 func createUDMClientToUDR(id string) (*Nudr_DataRepository.APIClient, error) {
 	uri := getUdrURI(id)

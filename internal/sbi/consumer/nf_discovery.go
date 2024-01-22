@@ -20,7 +20,7 @@ const (
 
 const serviceNameNnrfDisc string = string(models.ServiceName_NNRF_DISC)
 const serviceNameNnrfNfm string = string(models.ServiceName_NNRF_NFM)
-const nfTypeNRF string = string(models.NfType_NRF)
+const nfTypeNRF models.NfType = models.NfType_NRF
 
 func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 	param Nnrf_NFDiscovery.SearchNFInstancesParamOpts,
