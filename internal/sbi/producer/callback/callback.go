@@ -29,8 +29,7 @@ func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi strin
 		onDataChangeNotificationurl := subscriptionDataSubscription.OriginalCallbackReference
 		dataChangeNotification := models.ModificationNotification{}
 		dataChangeNotification.NotifyItems = notifyItems
-		//httpResponse, err := clientAPI.DataChangeNotificationCallbackDocumentApi.OnDataChangeNotification(
-		//	context.TODO(), onDataChangeNotificationurl, dataChangeNotification)
+
 		httpResponse, err := clientAPI.DataChangeNotificationCallbackDocumentApi.OnDataChangeNotification(
 			ctx, onDataChangeNotificationurl, dataChangeNotification)
 		if err != nil {
@@ -69,8 +68,6 @@ func SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationU
 	configuration := Nudm_UEContextManagement.NewConfiguration()
 	clientAPI := Nudm_UEContextManagement.NewAPIClient(configuration)
 
-	// httpResponse, err := clientAPI.DeregistrationNotificationCallbackApi.DeregistrationNotify(
-	// 	context.TODO(), onDeregistrationNotificationUrl, deregistData)
 	httpResponse, err := clientAPI.DeregistrationNotificationCallbackApi.DeregistrationNotify(
 		ctx, onDeregistrationNotificationUrl, deregistData)
 	if err != nil {

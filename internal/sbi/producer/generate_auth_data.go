@@ -130,8 +130,7 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 	if err != nil {
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
-	// resp, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
-	// 	context.Background(), supi, &createAuthParam)
+
 	resp, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
 		ctx, supi, &createAuthParam)
 	if err != nil {
@@ -182,7 +181,6 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 	if err != nil {
 		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
 	}
-	// authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(context.Background(), supi, nil)
 	authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(ctx, supi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{

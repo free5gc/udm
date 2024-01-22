@@ -40,7 +40,6 @@ func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *
 	if err != nil {
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
-	// res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(context.Background(), gpsi, nil)
 	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(ctx, gpsi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{

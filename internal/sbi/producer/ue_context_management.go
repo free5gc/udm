@@ -118,8 +118,6 @@ func GetAmf3gppAccessProcedure(ueID string, supportedFeatures string) (
 		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
 	}
 
-	//amf3GppAccessRegistration, resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.
-	//QueryAmfContext3gpp(context.Background(), ueID, &queryAmfContext3gppParamOpts)
 	amf3GppAccessRegistration, resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.
 		QueryAmfContext3gpp(ctx, ueID, &queryAmfContext3gppParamOpts)
 	if err != nil {
@@ -179,8 +177,6 @@ func GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts Nudr_DataRepos
 		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
 	}
 
-	// amfNon3GppAccessRegistration, resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
-	// 	QueryAmfContextNon3gpp(context.Background(), ueID, &queryAmfContextNon3gppParamOpts)
 	amfNon3GppAccessRegistration, resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
 		QueryAmfContextNon3gpp(ctx, ueID, &queryAmfContextNon3gppParamOpts)
 	if err != nil {
@@ -351,8 +347,7 @@ func RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRe
 	var createAmfContextNon3gppParamOpts Nudr_DataRepository.CreateAmfContextNon3gppParamOpts
 	optInterface := optional.NewInterface(registerRequest)
 	createAmfContextNon3gppParamOpts.AmfNon3GppAccessRegistration = optInterface
-	// resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.CreateAmfContextNon3gpp(
-	// 	context.Background(), ueID, &createAmfContextNon3gppParamOpts)
+
 	resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.CreateAmfContextNon3gpp(
 		ctx, ueID, &createAmfContextNon3gppParamOpts)
 	if err != nil {
@@ -484,8 +479,6 @@ func UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModifi
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
 
-	// resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.AmfContext3gpp(context.Background(), ueID,
-	// 	patchItemReqArray)
 	resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.AmfContext3gpp(ctx, ueID,
 		patchItemReqArray)
 	if err != nil {
@@ -607,8 +600,6 @@ func UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistration
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
 
-	// resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.AmfContextNon3gpp(context.Background(),
-	// 	ueID, patchItemReqArray)
 	resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.AmfContextNon3gpp(ctx,
 		ueID, patchItemReqArray)
 	if err != nil {
@@ -657,7 +648,6 @@ func DeregistrationSmfRegistrationsProcedure(ueID string, pduSessionID string) (
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
 
-	// resp, err := clientAPI.SMFRegistrationDocumentApi.DeleteSmfContext(context.Background(), ueID, pduSessionID)
 	resp, err := clientAPI.SMFRegistrationDocumentApi.DeleteSmfContext(ctx, ueID, pduSessionID)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
@@ -730,8 +720,6 @@ func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID
 		return nil, nil, openapi.ProblemDetailsSystemFailure(err.Error())
 	}
 
-	// resp, err := clientAPI.SMFRegistrationDocumentApi.CreateSmfContextNon3gpp(context.Background(), ueID,
-	// 	pduID32, &createSmfContextNon3gppParamOpts)
 	resp, err := clientAPI.SMFRegistrationDocumentApi.CreateSmfContextNon3gpp(ctx, ueID,
 		pduID32, &createSmfContextNon3gppParamOpts)
 	if err != nil {
