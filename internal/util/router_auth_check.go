@@ -23,7 +23,6 @@ func NewRouterAuthorizationCheck(serviceName string) *RouterAuthorizationCheck {
 func (rac *RouterAuthorizationCheck) Check(c *gin.Context, udmContext udm_context.NFContext) {
 	token := c.Request.Header.Get("Authorization")
 	err := udmContext.AuthorizationCheck(token, rac.serviceName)
-
 	if err != nil {
 		logger.UtilLog.Debugf("RouterAuthorizationCheck::Check Unauthorized: %s", err.Error())
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})

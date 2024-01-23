@@ -10,9 +10,11 @@ import (
 	"github.com/free5gc/udm/internal/logger"
 )
 
-const serviceNameNudmSdm string = string(models.ServiceName_NUDM_SDM)
-const serviceNameNudmUecm string = string(models.ServiceName_NUDM_UECM)
-const nfTypeUDM models.NfType = models.NfType_UDM
+const (
+	serviceNameNudmSdm  string        = string(models.ServiceName_NUDM_SDM)
+	serviceNameNudmUecm string        = string(models.ServiceName_NUDM_UECM)
+	nfTypeUDM           models.NfType = models.NfType_UDM
+)
 
 func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi string) *models.ProblemDetails {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudmSdm, nfTypeUDM)

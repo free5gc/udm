@@ -18,9 +18,11 @@ const (
 	NFDiscoveryToUDRParamGpsi
 )
 
-const serviceNameNnrfDisc string = string(models.ServiceName_NNRF_DISC)
-const serviceNameNnrfNfm string = string(models.ServiceName_NNRF_NFM)
-const nfTypeNRF models.NfType = models.NfType_NRF
+const (
+	serviceNameNnrfDisc string        = string(models.ServiceName_NNRF_DISC)
+	serviceNameNnrfNfm  string        = string(models.ServiceName_NNRF_NFM)
+	nfTypeNRF           models.NfType = models.NfType_NRF
+)
 
 func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 	param Nnrf_NFDiscovery.SearchNFInstancesParamOpts,
