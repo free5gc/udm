@@ -3,8 +3,8 @@ package util
 import (
 	"net/http"
 
-	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/gin-gonic/gin"
 )
 
