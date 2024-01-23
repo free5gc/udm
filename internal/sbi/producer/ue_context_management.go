@@ -18,10 +18,12 @@ import (
 	"github.com/free5gc/util/httpwrapper"
 )
 
-const serviceNameNudrDr string = string(models.ServiceName_NUDR_DR)
-const serviceNameNudmSdm string = string(models.ServiceName_NUDM_SDM)
-const nfTypeUDR models.NfType = models.NfType_UDR
-const nfTypeUDM models.NfType = models.NfType_UDM
+const (
+	serviceNameNudrDr  string        = string(models.ServiceName_NUDR_DR)
+	serviceNameNudmSdm string        = string(models.ServiceName_NUDM_SDM)
+	nfTypeUDR          models.NfType = models.NfType_UDR
+	nfTypeUDM          models.NfType = models.NfType_UDM
+)
 
 func createUDMClientToUDR(id string) (*Nudr_DataRepository.APIClient, error) {
 	uri := getUdrURI(id)
