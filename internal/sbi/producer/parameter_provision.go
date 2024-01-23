@@ -7,10 +7,9 @@ import (
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/util/httpwrapper"
 )
-
-// const serviceName string = string(models.ServiceName_NUDR_DR)
 
 func HandleUpdateRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	// step 1: log
@@ -32,7 +31,7 @@ func HandleUpdateRequest(request *httpwrapper.Request) *httpwrapper.Response {
 }
 
 func UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *models.ProblemDetails) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return pd
 	}

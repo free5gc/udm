@@ -15,7 +15,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/util"
@@ -38,8 +37,6 @@ type Route struct {
 // Routes is the list of the generated Route.
 type Routes []Route
 
-const serviceName string = string(models.ServiceName_NUDM_EE)
-
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
@@ -51,7 +48,7 @@ func NewRouter() *gin.Engine {
 func AddService(engine *gin.Engine) *gin.RouterGroup {
 	group := engine.Group(factory.UdmEeResUriPrefix)
 
-	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(serviceName)
+	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(util.ServiceNameNudmEe)
 	group.Use(func(c *gin.Context) {
 		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
 	})

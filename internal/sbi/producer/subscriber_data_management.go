@@ -16,6 +16,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/util/httpwrapper"
 )
 
@@ -54,7 +55,7 @@ func HandleGetAmDataRequest(request *httpwrapper.Request) *httpwrapper.Response 
 func getAmDataProcedure(supi string, plmnID string, supportedFeatures string) (
 	response *models.AccessAndMobilitySubscriptionData, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, pd
 	}
@@ -133,7 +134,7 @@ func HandleGetIdTranslationResultRequest(request *httpwrapper.Request) *httpwrap
 func getIdTranslationResultProcedure(gpsi string) (response *models.IdTranslationResult,
 	problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeNRF)
 	if err != nil {
 		return nil, pd
 	}
@@ -229,7 +230,7 @@ func HandleGetSupiRequest(request *httpwrapper.Request) *httpwrapper.Response {
 func getSupiProcedure(supi string, plmnID string, dataSetNames []string, supportedFeatures string) (
 	response *models.SubscriptionDataSets, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, pd
 	}
@@ -308,8 +309,7 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	if containDataSetName(dataSetNames, string(models.DataSetName_SMF_SEL)) {
 		var smfSelSubsbody models.SmfSelectionSubscriptionData
 		udm_context.GetSelf().CreateSmfSelectionSubsDataforUe(supi, smfSelSubsbody)
-		// smfSelData, res, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.QuerySmfSelectData(context.Background(),
-		// 	supi, plmnID, &querySmfSelectDataParamOpts)
+
 		smfSelData, res, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.QuerySmfSelectData(ctx,
 			supi, plmnID, &querySmfSelectDataParamOpts)
 		if err != nil {
@@ -354,8 +354,7 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 		var querySmfRegListParamOpts Nudr.QuerySmfRegListParamOpts
 		querySmfRegListParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 		udm_context.GetSelf().CreateUeContextInSmfDataforUe(supi, UeContextInSmfbody)
-		// pdusess, res, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(
-		// 	context.Background(), supi, &querySmfRegListParamOpts)
+
 		pdusess, res, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(
 			ctx, supi, &querySmfRegListParamOpts)
 		if err != nil {
@@ -420,8 +419,7 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	// }
 
 	if containDataSetName(dataSetNames, string(models.DataSetName_SM)) {
-		// sessionManagementSubscriptionData, res, err := clientAPI.SessionManagementSubscriptionDataApi.
-		// 	QuerySmData(context.Background(), supi, plmnID, &querySmDataParamOpts)
+
 		sessionManagementSubscriptionData, res, err := clientAPI.SessionManagementSubscriptionDataApi.
 			QuerySmData(ctx, supi, plmnID, &querySmDataParamOpts)
 		if err != nil {
@@ -465,8 +463,7 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	if containDataSetName(dataSetNames, string(models.DataSetName_TRACE)) {
 		var TraceDatabody models.TraceData
 		udm_context.GetSelf().CreateTraceDataforUe(supi, TraceDatabody)
-		// traceData, res, err := clientAPI.TraceDataDocumentApi.QueryTraceData(
-		// 	context.Background(), supi, plmnID, &queryTraceDataParamOpts)
+
 		traceData, res, err := clientAPI.TraceDataDocumentApi.QueryTraceData(
 			ctx, supi, plmnID, &queryTraceDataParamOpts)
 		if err != nil {
@@ -542,7 +539,7 @@ func HandleGetSharedDataRequest(request *httpwrapper.Request) *httpwrapper.Respo
 func getSharedDataProcedure(sharedDataIds []string, supportedFeatures string) (
 	response []models.SharedData, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, pd
 	}
@@ -628,7 +625,7 @@ func HandleGetSmDataRequest(request *httpwrapper.Request) *httpwrapper.Response 
 func getSmDataProcedure(supi string, plmnID string, Dnn string, Snssai string, supportedFeatures string) (
 	response interface{}, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, pd
 	}
@@ -744,7 +741,7 @@ func HandleGetNssaiRequest(request *httpwrapper.Request) *httpwrapper.Response {
 func getNssaiProcedure(supi string, plmnID string, supportedFeatures string) (
 	*models.Nssai, *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, pd
 	}
@@ -833,7 +830,7 @@ func HandleGetSmfSelectDataRequest(request *httpwrapper.Request) *httpwrapper.Re
 func getSmfSelectDataProcedure(supi string, plmnID string, supportedFeatures string) (
 	response *models.SmfSelectionSubscriptionData, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, pd
 	}
@@ -914,7 +911,7 @@ func HandleSubscribeToSharedDataRequest(request *httpwrapper.Request) *httpwrapp
 func subscribeToSharedDataProcedure(sdmSubscription *models.SdmSubscription) (
 	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudmSdm, nfTypeUDM)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudmSdm, util.NfTypeUDM)
 	if err != nil {
 		return nil, nil, pd
 	}
@@ -993,7 +990,7 @@ func HandleSubscribeRequest(request *httpwrapper.Request) *httpwrapper.Response 
 func subscribeProcedure(sdmSubscription *models.SdmSubscription, supi string) (
 	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, nil, pd
 	}
@@ -1068,7 +1065,7 @@ func HandleUnsubscribeForSharedDataRequest(request *httpwrapper.Request) *httpwr
 // TS 29.503 5.2.2.4.3
 // Unsubscribe to notifications of data change
 func unsubscribeForSharedDataProcedure(subscriptionID string) *models.ProblemDetails {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudmSdm, nfTypeUDM)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudmSdm, util.NfTypeUDM)
 	if err != nil {
 		return pd
 	}
@@ -1130,7 +1127,7 @@ func HandleUnsubscribeRequest(request *httpwrapper.Request) *httpwrapper.Respons
 // TS 29.503 5.2.2.4.2
 // Unsubscribe to notifications of data change
 func unsubscribeProcedure(supi string, subscriptionID string) *models.ProblemDetails {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return pd
 	}
@@ -1203,7 +1200,7 @@ func HandleModifyRequest(request *httpwrapper.Request) *httpwrapper.Response {
 func modifyProcedure(sdmSubsModification *models.SdmSubsModification, supi string, subscriptionID string) (
 	response *models.SdmSubscription, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, pd
 	}
@@ -1282,7 +1279,7 @@ func HandleModifyForSharedDataRequest(request *httpwrapper.Request) *httpwrapper
 func modifyForSharedDataProcedure(sdmSubsModification *models.SdmSubsModification, supi string,
 	subscriptionID string,
 ) (response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, pd
 	}
@@ -1359,7 +1356,7 @@ func HandleGetTraceDataRequest(request *httpwrapper.Request) *httpwrapper.Respon
 func getTraceDataProcedure(supi string, plmnID string) (
 	response *models.TraceData, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(serviceNameNudrDr, nfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
 	if err != nil {
 		return nil, pd
 	}

@@ -3,9 +3,10 @@ package util
 import (
 	"net/http"
 
-	"github.com/free5gc/udm/internal/logger"
-	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/gin-gonic/gin"
+
+	udm_context "github.com/free5gc/udm/internal/context"
+	"github.com/free5gc/udm/internal/logger"
 )
 
 type NFContextGetter func() *udm_context.UDMContext
