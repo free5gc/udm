@@ -14,13 +14,13 @@ const (
 	Invalid = "invalid"
 )
 
-type mockNSSFContext struct{}
+type mockUDMContext struct{}
 
-func newMockNSSFContext() *mockNSSFContext {
-	return &mockNSSFContext{}
+func newMockUDMContext() *mockUDMContext {
+	return &mockUDMContext{}
 }
 
-func (m *mockNSSFContext) AuthorizationCheck(token string, serviceName string) error {
+func (m *mockUDMContext) AuthorizationCheck(token string, serviceName string) error {
 	if token == Valid {
 		return nil
 	}
@@ -82,7 +82,7 @@ func TestRouterAuthorizationCheck_Check(t *testing.T) {
 			c.Request.Header.Set("Authorization", tt.args.token)
 
 			rac := NewRouterAuthorizationCheck("testService")
-			rac.Check(c, newMockNSSFContext())
+			rac.Check(c, newMockUDMContext())
 			if w.Code != tt.want.statusCode {
 				t.Errorf("StatusCode should be %d, but got %d", tt.want.statusCode, w.Code)
 			}
