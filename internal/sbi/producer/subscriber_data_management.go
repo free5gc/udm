@@ -419,7 +419,6 @@ func getSupiProcedure(supi string, plmnID string, dataSetNames []string, support
 	// }
 
 	if containDataSetName(dataSetNames, string(models.DataSetName_SM)) {
-
 		sessionManagementSubscriptionData, res, err := clientAPI.SessionManagementSubscriptionDataApi.
 			QuerySmData(ctx, supi, plmnID, &querySmDataParamOpts)
 		if err != nil {
