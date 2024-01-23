@@ -712,7 +712,7 @@ func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID
 	pduID32 := int32(pduID64)
 
 	var createSmfContextNon3gppParamOpts Nudr_DataRepository.CreateSmfContextNon3gppParamOpts
-	optInterface := optional.NewInterface(request)
+	optInterface := optional.NewInterface(*request)
 	createSmfContextNon3gppParamOpts.SmfRegistration = optInterface
 
 	clientAPI, err := createUDMClientToUDR(ueID)
@@ -723,7 +723,6 @@ func RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID
 	resp, err := clientAPI.SMFRegistrationDocumentApi.CreateSmfContextNon3gpp(ctx, ueID,
 		pduID32, &createSmfContextNon3gppParamOpts)
 	if err != nil {
-		problemDetails.Cause = err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause
 		problemDetails = &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
 			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
