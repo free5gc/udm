@@ -10,7 +10,7 @@ import (
 	"github.com/free5gc/util/httpwrapper"
 )
 
-//const serviceName string = string(models.ServiceName_NUDR_DR)
+// const serviceName string = string(models.ServiceName_NUDR_DR)
 
 func HandleUpdateRequest(request *httpwrapper.Request) *httpwrapper.Response {
 	// step 1: log
