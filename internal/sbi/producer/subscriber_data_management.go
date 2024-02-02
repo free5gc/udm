@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -1453,8 +1452,13 @@ func getUeContextInSmfDataProcedure(supi string, supportedFeatures string) (
 	pduSessionMap := make(map[string]models.PduSession)
 	udm_context.GetSelf().CreateUeContextInSmfDataforUe(supi, body)
 
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
+	if err != nil {
+		return nil, pd
+	}
+
 	pdusess, res, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(
-		context.Background(), supi, &querySmfRegListParamOpts)
+		ctx, supi, &querySmfRegListParamOpts)
 	if err != nil {
 		if res == nil {
 			logger.SdmLog.Infoln(err)
