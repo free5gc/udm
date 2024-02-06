@@ -19,7 +19,6 @@ import (
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/httpwrapper"
 	"github.com/free5gc/util/milenage"
@@ -119,7 +118,7 @@ func HandleConfirmAuthDataRequest(request *httpwrapper.Request) *httpwrapper.Res
 }
 
 func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemDetails *models.ProblemDetails) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		return pd
 	}
@@ -156,7 +155,7 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest, supiOrSuci string) (
 	response *models.AuthenticationInfoResult, problemDetails *models.ProblemDetails,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudrDr, util.NfTypeUDR)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		return nil, pd
 	}

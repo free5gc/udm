@@ -12,7 +12,6 @@ import (
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/udm/internal/util"
 )
 
 func BuildNFInstance(udmContext *udm_context.UDMContext) (profile models.NfProfile, err error) {
@@ -95,7 +94,7 @@ func SendRegisterNFInstance(nrfUri, nfInstanceId string, profile models.NfProfil
 
 func SendDeregisterNFInstance() (problemDetails *models.ProblemDetails, err error) {
 	logger.ConsumerLog.Infof("Send Deregister NFInstance")
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNnrfNfm, util.NfTypeNRF)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NfType_NRF)
 	if err != nil {
 		return pd, err
 	}

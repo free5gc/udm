@@ -37,7 +37,7 @@ func Init() {
 }
 
 type NFContext interface {
-	AuthorizationCheck(token, serviceName string) error
+	AuthorizationCheck(token string, serviceName models.ServiceName) error
 }
 
 var _ NFContext = &UDMContext{}
@@ -489,27 +489,27 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	}
 }
 
-func (c *UDMContext) GetTokenCtx(scope string, targetNF models.NfType) (
+func (c *UDMContext) GetTokenCtx(serviceName models.ServiceName, targetNF models.NfType) (
 	context.Context, *models.ProblemDetails, error,
 ) {
 	if !c.OAuth2Required {
 		return context.TODO(), nil, nil
 	}
 	return oauth.GetTokenCtx(models.NfType_UDM, targetNF,
-		c.NfId, c.NrfUri, scope)
+		c.NfId, c.NrfUri, string(serviceName))
 }
 
 func GetSelf() *UDMContext {
 	return &udmContext
 }
 
-func (context *UDMContext) AuthorizationCheck(token, serviceName string) error {
+func (context *UDMContext) AuthorizationCheck(token string, serviceName models.ServiceName) error {
 	if !context.OAuth2Required {
 		logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: OAuth2 not required\n")
 		return nil
 	}
 	logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: token[%s] serviceName[%s]\n", token, serviceName)
-	err := oauth.VerifyOAuth(token, serviceName, context.NrfCertPem)
+	err := oauth.VerifyOAuth(token, string(serviceName), context.NrfCertPem)
 	if err != nil {
 		return err
 	}

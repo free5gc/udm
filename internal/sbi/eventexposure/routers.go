@@ -15,6 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/util"
@@ -48,7 +49,7 @@ func NewRouter() *gin.Engine {
 func AddService(engine *gin.Engine) *gin.RouterGroup {
 	group := engine.Group(factory.UdmEeResUriPrefix)
 
-	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(util.ServiceNameNudmEe)
+	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_EE)
 	group.Use(func(c *gin.Context) {
 		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
 	})

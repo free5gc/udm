@@ -8,11 +8,10 @@ import (
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/udm/internal/util"
 )
 
 func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi string) *models.ProblemDetails {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudmSdm, util.NfTypeUDM)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
 	if err != nil {
 		return pd
 	}
@@ -58,7 +57,7 @@ func DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi strin
 func SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
 	deregistData models.DeregistrationData,
 ) *models.ProblemDetails {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(util.ServiceNameNudmUecm, util.NfTypeUDM)
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_UECM, models.NfType_UDM)
 	if err != nil {
 		return pd
 	}

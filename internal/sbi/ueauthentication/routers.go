@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/util"
@@ -64,7 +65,7 @@ func genAuthDataHandlerFunc(c *gin.Context) {
 
 func AddService(engine *gin.Engine) *gin.RouterGroup {
 	group := engine.Group(factory.UdmUeauResUriPrefix)
-	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(util.ServiceNameNudmUeau)
+	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_UEAU)
 	group.Use(func(c *gin.Context) {
 		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
 	})

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 )
@@ -12,10 +13,10 @@ import (
 type NFContextGetter func() *udm_context.UDMContext
 
 type RouterAuthorizationCheck struct {
-	serviceName string
+	serviceName models.ServiceName
 }
 
-func NewRouterAuthorizationCheck(serviceName string) *RouterAuthorizationCheck {
+func NewRouterAuthorizationCheck(serviceName models.ServiceName) *RouterAuthorizationCheck {
 	return &RouterAuthorizationCheck{
 		serviceName: serviceName,
 	}
