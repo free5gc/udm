@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"context"
 	cryptoRand "crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -119,6 +118,10 @@ func HandleConfirmAuthDataRequest(request *httpwrapper.Request) *httpwrapper.Res
 }
 
 func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemDetails *models.ProblemDetails) {
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	if err != nil {
+		return pd
+	}
 	var createAuthParam Nudr_DataRepository.CreateAuthenticationStatusParamOpts
 	optInterface := optional.NewInterface(authEvent)
 	createAuthParam.AuthEvent = optInterface
@@ -127,8 +130,9 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 	if err != nil {
 		return openapi.ProblemDetailsSystemFailure(err.Error())
 	}
+
 	resp, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
-		context.Background(), supi, &createAuthParam)
+		ctx, supi, &createAuthParam)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
@@ -151,6 +155,10 @@ func ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemD
 func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest, supiOrSuci string) (
 	response *models.AuthenticationInfoResult, problemDetails *models.ProblemDetails,
 ) {
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	if err != nil {
+		return nil, pd
+	}
 	logger.UeauLog.Traceln("In GenerateAuthDataProcedure")
 
 	response = &models.AuthenticationInfoResult{}
@@ -173,7 +181,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 	if err != nil {
 		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
 	}
-	authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(context.Background(), supi, nil)
+	authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(ctx, supi, nil)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
@@ -461,8 +469,9 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 	}
 
 	var rsp *http.Response
+
 	rsp, err = client.AuthenticationDataDocumentApi.ModifyAuthentication(
-		context.Background(), supi, patchItemArray)
+		ctx, supi, patchItemArray)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,

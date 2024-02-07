@@ -16,7 +16,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"github.com/free5gc/openapi/models"
+	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/factory"
 	logger_util "github.com/free5gc/util/logger"
 )
@@ -45,6 +48,7 @@ type Routes []Route
 // NewRouter returns a new router.
 func NewRouter() *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
+
 	AddService(router)
 	return router
 }
@@ -61,7 +65,10 @@ func genAuthDataHandlerFunc(c *gin.Context) {
 
 func AddService(engine *gin.Engine) *gin.RouterGroup {
 	group := engine.Group(factory.UdmUeauResUriPrefix)
-
+	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_UEAU)
+	group.Use(func(c *gin.Context) {
+		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
+	})
 	for _, route := range routes {
 		switch route.Method {
 		case "GET":

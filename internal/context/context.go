@@ -21,7 +21,7 @@ import (
 	"github.com/free5gc/util/idgenerator"
 )
 
-var udmContext UDMContext
+var udmContext = UDMContext{}
 
 const (
 	LocationUriAmf3GppAccessRegistration int = iota
@@ -35,6 +35,12 @@ func Init() {
 	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
 	GetSelf().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
 }
+
+type NFContext interface {
+	AuthorizationCheck(token string, serviceName models.ServiceName) error
+}
+
+var _ NFContext = &UDMContext{}
 
 type UDMContext struct {
 	NfId                           string
@@ -483,16 +489,29 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	}
 }
 
-func (c *UDMContext) GetTokenCtx(scope, targetNF string) (
+func (c *UDMContext) GetTokenCtx(serviceName models.ServiceName, targetNF models.NfType) (
 	context.Context, *models.ProblemDetails, error,
 ) {
 	if !c.OAuth2Required {
 		return context.TODO(), nil, nil
 	}
-	return oauth.GetTokenCtx(models.NfType_UDM,
-		c.NfId, c.NrfUri, scope, targetNF)
+	return oauth.GetTokenCtx(models.NfType_UDM, targetNF,
+		c.NfId, c.NrfUri, string(serviceName))
 }
 
 func GetSelf() *UDMContext {
 	return &udmContext
+}
+
+func (context *UDMContext) AuthorizationCheck(token string, serviceName models.ServiceName) error {
+	if !context.OAuth2Required {
+		logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: OAuth2 not required\n")
+		return nil
+	}
+	logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: token[%s] serviceName[%s]\n", token, serviceName)
+	err := oauth.VerifyOAuth(token, string(serviceName), context.NrfCertPem)
+	if err != nil {
+		return err
+	}
+	return nil
 }
