@@ -1,11 +1,13 @@
 package service
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/signal"
 	"runtime/debug"
+	"sync"
 	"syscall"
 
 	"github.com/sirupsen/logrus"
@@ -27,23 +29,61 @@ import (
 type UdmApp struct {
 	cfg    *factory.Config
 	udmCtx *udm_context.UDMContext
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	//sbiServer *sbi.Server
+	consumer *consumer.Consumer
+	//processor *processor.Processor
+	wg sync.WaitGroup
 }
 
 func NewApp(cfg *factory.Config) (*UdmApp, error) {
-	udm := &UdmApp{cfg: cfg}
+	udm := &UdmApp{
+		cfg: cfg,
+		wg:  sync.WaitGroup{},
+	}
 	udm.SetLogEnable(cfg.GetLogEnable())
 	udm.SetLogLevel(cfg.GetLogLevel())
 	udm.SetReportCaller(cfg.GetLogReportCaller())
+
 	udm_context.Init()
 	udm.udmCtx = udm_context.GetSelf()
+
+	consumer, err := consumer.NewConsumer(udm)
+	if err != nil {
+		return udm, err
+	}
+	udm.consumer = consumer
+
 	return udm, nil
 }
+
+func (a *UdmApp) Config() *factory.Config {
+	return a.cfg
+}
+
+func (a *UdmApp) Context() *udm_context.UDMContext {
+	return a.udmCtx
+}
+
+func (a *UdmApp) CancelContext() context.Context {
+	return a.ctx
+}
+
+func (a *UdmApp) Consumer() *consumer.Consumer {
+	return a.consumer
+}
+
+/*func (a *UdmApp) Processor() *processor.Processor {
+	return a.processor
+}*/
 
 func (a *UdmApp) SetLogEnable(enable bool) {
 	logger.MainLog.Infof("Log enable is set to [%v]", enable)
 	if enable && logger.Log.Out == os.Stderr {
 		return
-	} else if !enable && logger.Log.Out == ioutil.Discard {
+	} else if !enable && logger.Log.Out == io.Discard {
 		return
 	}
 
@@ -51,7 +91,7 @@ func (a *UdmApp) SetLogEnable(enable bool) {
 	if enable {
 		logger.Log.SetOutput(os.Stderr)
 	} else {
-		logger.Log.SetOutput(ioutil.Discard)
+		logger.Log.SetOutput(io.Discard)
 	}
 }
 
