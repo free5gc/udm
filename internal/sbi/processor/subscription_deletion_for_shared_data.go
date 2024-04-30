@@ -8,7 +8,7 @@ import (
 )
 
 // UnsubscribeForSharedData - unsubscribe from notifications for shared data
-func HTTPUnsubscribeForSharedData(c *gin.Context) {
+func (p *Processor) HandleUnsubscribeForSharedData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle UnsubscribeForSharedData")
 
 	// step 2: retrieve request

@@ -12,7 +12,7 @@ import (
 )
 
 // GetAmData - retrieve a UE's Access and Mobility Subscription Data
-func HTTPGetAmData(c *gin.Context) {
+func (p *Processor) HandleGetAmData(c *gin.Context) {
 	var query url.Values
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("supported-features", c.Query("plmn-id"))
@@ -23,7 +23,7 @@ func HTTPGetAmData(c *gin.Context) {
 	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 
-	plmnIDStruct, problemDetails := getPlmnIDStruct(query)
+	plmnIDStruct, problemDetails := p.getPlmnIDStruct(query)
 	if problemDetails != nil {
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -52,7 +52,7 @@ func HTTPGetAmData(c *gin.Context) {
 	}
 }
 
-func getPlmnIDStruct(queryParameters url.Values) (plmnIDStruct *models.PlmnId, problemDetails *models.ProblemDetails) {
+func (p *Processor) getPlmnIDStruct(queryParameters url.Values) (plmnIDStruct *models.PlmnId, problemDetails *models.ProblemDetails) {
 	if queryParameters["plmn-id"] != nil {
 		plmnIDJson := queryParameters["plmn-id"][0]
 		plmnIDStruct := &models.PlmnId{}

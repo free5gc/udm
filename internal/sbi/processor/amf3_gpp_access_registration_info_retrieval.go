@@ -9,7 +9,7 @@ import (
 )
 
 // GetAmf3gppAccess - retrieve the AMF registration for 3GPP access information
-func HTTPGetAmf3gppAccess(c *gin.Context) {
+func (p *Processor) HandleGetAmf3gppAccess(c *gin.Context) {
 
 	// step 1: log
 	logger.UecmLog.Infof("Handle HandleGetAmf3gppAccessRequest")

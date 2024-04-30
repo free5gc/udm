@@ -11,7 +11,7 @@ import (
 )
 
 // SubscribeToSharedData - subscribe to notifications for shared data
-func HTTPSubscribeToSharedData(c *gin.Context) {
+func (p *Processor) HandleSubscribeToSharedData(c *gin.Context) {
 	var sharedDataSubsReq models.SdmSubscription
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()

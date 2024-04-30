@@ -9,7 +9,7 @@ import (
 )
 
 // GetUeContextInSmfData - retrieve a UE's UE Context In SMF Data
-func HTTPGetUeContextInSmfData(c *gin.Context) {
+func (p *Processor) HandleGetUeContextInSmfData(c *gin.Context) {
 
 	// step 1: log
 	logger.SdmLog.Infof("Handle GetUeContextInSmfData")

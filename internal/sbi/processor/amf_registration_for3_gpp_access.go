@@ -10,7 +10,7 @@ import (
 )
 
 // RegistrationAmf3gppAccess - register as AMF for 3GPP access
-func HTTPRegistrationAmf3gppAccess(c *gin.Context) {
+func (p *Processor) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 	var amf3GppAccessRegistration models.Amf3GppAccessRegistration
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()

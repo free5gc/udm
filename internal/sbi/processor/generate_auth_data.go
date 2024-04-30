@@ -11,7 +11,7 @@ import (
 )
 
 // GenerateAuthData - Generate authentication data for the UE
-func HttpGenerateAuthData(c *gin.Context) {
+func (p *Processor) HandleGenerateAuthData(c *gin.Context) {
 	var authInfoReq models.AuthenticationInfoRequest
 
 	// step 1: retrieve http request body

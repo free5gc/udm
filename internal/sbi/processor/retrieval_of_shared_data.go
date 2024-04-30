@@ -9,7 +9,7 @@ import (
 )
 
 // GetSharedData - retrieve shared data
-func HTTPGetSharedData(c *gin.Context) {
+func (p *Processor) HandleGetSharedData(c *gin.Context) {
 	// step 1: log
 	logger.SdmLog.Infof("Handle GetSharedData")
 

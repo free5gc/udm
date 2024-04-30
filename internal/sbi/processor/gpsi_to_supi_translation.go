@@ -10,7 +10,7 @@ import (
 )
 
 // GetIdTranslationResult - retrieve a UE's SUPI
-func HTTPGetIdTranslationResult(c *gin.Context) {
+func (p *Processor) HandleGetIdTranslationResult(c *gin.Context) {
 	//req.Query.Set("SupportedFeatures", c.Query("supported-features"))
 
 	// step 1: log

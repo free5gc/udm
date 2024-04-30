@@ -10,7 +10,7 @@ import (
 )
 
 // GetSmfSelectData - retrieve a UE's SMF Selection Subscription Data
-func HTTPGetSmfSelectData(c *gin.Context) {
+func (p *Processor) HandleGetSmfSelectData(c *gin.Context) {
 	var query url.Values
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("supported-features", c.Query("supported-features"))

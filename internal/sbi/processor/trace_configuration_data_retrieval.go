@@ -9,7 +9,7 @@ import (
 )
 
 // GetTraceData - retrieve a UE's Trace Configuration Data
-func HTTPGetTraceData(c *gin.Context) {
+func (p *Processor) HandleGetTraceData(c *gin.Context) {
 	// step 1: log
 	logger.SdmLog.Infof("Handle GetTraceData")
 

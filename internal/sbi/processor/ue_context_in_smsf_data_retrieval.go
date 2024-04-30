@@ -7,6 +7,6 @@ import (
 )
 
 // GetUeContextInSmsfData - retrieve a UE's UE Context In SMSF Data
-func HTTPGetUeContextInSmsfData(c *gin.Context) {
+func (p *Processor) HandleGetUeContextInSmsfData(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }

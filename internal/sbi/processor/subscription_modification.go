@@ -10,7 +10,7 @@ import (
 )
 
 // Modify - modify the subscription
-func HTTPModify(c *gin.Context) {
+func (p *Processor) HandleModify(c *gin.Context) {
 	var sdmSubsModificationReq models.SdmSubsModification
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()

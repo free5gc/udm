@@ -10,7 +10,7 @@ import (
 	"github.com/free5gc/udm/internal/logger"
 )
 
-func HTTPUpdate(c *gin.Context) {
+func (p *Processor) HandleUpdate(c *gin.Context) {
 	var ppDataReq models.PpData
 
 	// step 1: retrieve http request body

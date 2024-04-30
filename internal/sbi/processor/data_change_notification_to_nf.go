@@ -10,7 +10,7 @@ import (
 	"github.com/free5gc/udm/internal/logger"
 )
 
-func HTTPDataChangeNotificationToNF(c *gin.Context) {
+func (p *Processor) HandleDataChangeNotificationToNF(c *gin.Context) {
 	var dataChangeNotify models.DataChangeNotify
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()

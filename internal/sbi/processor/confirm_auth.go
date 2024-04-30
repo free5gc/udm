@@ -11,7 +11,7 @@ import (
 )
 
 // ConfirmAuth - Create a new confirmation event
-func HTTPConfirmAuth(c *gin.Context) {
+func (p *Processor) HandleConfirmAuth(c *gin.Context) {
 	var authEvent models.AuthEvent
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()

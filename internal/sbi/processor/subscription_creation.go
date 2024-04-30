@@ -10,7 +10,7 @@ import (
 )
 
 // Subscribe - subscribe to notifications
-func HTTPSubscribe(c *gin.Context) {
+func (p *Processor) HandleSubscribe(c *gin.Context) {
 	var sdmSubscriptionReq models.SdmSubscription
 
 	// step 1: retrieve http request body

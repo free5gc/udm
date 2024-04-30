@@ -8,7 +8,7 @@ import (
 )
 
 // DeregistrationSmfRegistrations - delete an SMF registration
-func HTTPDeregistrationSmfRegistrations(c *gin.Context) {
+func (p *Processor) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 
 	// step 1: log
 	logger.UecmLog.Infof("Handle DeregistrationSmfRegistrations")

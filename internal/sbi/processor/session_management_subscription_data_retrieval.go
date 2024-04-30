@@ -10,7 +10,7 @@ import (
 )
 
 // GetSmData - retrieve a UE's Session Management Subscription Data
-func HTTPGetSmData(c *gin.Context) {
+func (p *Processor) HandleGetSmData(c *gin.Context) {
 	var query url.Values
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("dnn", c.Query("dnn"))

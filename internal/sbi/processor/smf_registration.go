@@ -10,7 +10,7 @@ import (
 )
 
 // RegistrationSmfRegistrations - register as SMF
-func HTTPRegistrationSmfRegistrations(c *gin.Context) {
+func (p *Processor) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	var smfRegistration models.SmfRegistration
 
 	// step 1: retrieve http request body

@@ -8,7 +8,7 @@ import (
 )
 
 // Unsubscribe - unsubscribe from notifications
-func HTTPUnsubscribe(c *gin.Context) {
+func (p *Processor) HandleUnsubscribe(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle Unsubscribe")
 

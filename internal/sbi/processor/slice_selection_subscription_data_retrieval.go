@@ -10,7 +10,7 @@ import (
 )
 
 // GetNssai - retrieve a UE's subscribed NSSAI
-func HTTPGetNssai(c *gin.Context) {
+func (p *Processor) HandleGetNssai(c *gin.Context) {
 	var query url.Values
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("supported-features", c.Query("supported-features"))

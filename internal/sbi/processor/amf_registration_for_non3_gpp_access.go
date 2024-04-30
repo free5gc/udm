@@ -10,7 +10,7 @@ import (
 )
 
 // Register - register as AMF for non-3GPP access
-func HTTPRegistrationAmfNon3gppAccess(c *gin.Context) {
+func (p *Processor) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 	var amfNon3GppAccessRegistration models.AmfNon3GppAccessRegistration
 
 	// step 1: retrieve http request body

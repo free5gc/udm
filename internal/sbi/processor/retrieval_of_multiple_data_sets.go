@@ -11,7 +11,7 @@ import (
 )
 
 // GetSupi - retrieve multiple data sets
-func HTTPGetSupi(c *gin.Context) {
+func (p *Processor) HandleGetSupi(c *gin.Context) {
 	var query url.Values
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("dataset-names", c.Query("dataset-names"))

@@ -20,7 +20,7 @@ import (
 )
 
 // HTTPCreateEeSubscription - Subscribe
-func HTTPCreateEeSubscription(c *gin.Context) {
+func (p *Processor) HandleCreateEeSubscription(c *gin.Context) {
 	var eesubscription models.EeSubscription
 
 	requestBody, err := c.GetRawData()
@@ -71,7 +71,7 @@ func HTTPCreateEeSubscription(c *gin.Context) {
 	}
 }
 
-func HTTPDeleteEeSubscription(c *gin.Context) {
+func (p *Processor) HandleDeleteEeSubscription(c *gin.Context) {
 
 	ueIdentity := c.Params.ByName("ueIdentity")
 	subscriptionID := c.Params.ByName("subscriptionId")
@@ -81,7 +81,7 @@ func HTTPDeleteEeSubscription(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func HTTPUpdateEeSubscription(c *gin.Context) {
+func (p *Processor) HandleUpdateEeSubscription(c *gin.Context) {
 	var patchList []models.PatchItem
 
 	requestBody, err := c.GetRawData()

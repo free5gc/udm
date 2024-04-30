@@ -10,7 +10,7 @@ import (
 )
 
 // UpdateAmfNon3gppAccess - update a parameter in the AMF registration for non-3GPP access
-func HTTPUpdateAmfNon3gppAccess(c *gin.Context) {
+func (p *Processor) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 	var amfNon3GppAccessRegistrationModification models.AmfNon3GppAccessRegistrationModification
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
