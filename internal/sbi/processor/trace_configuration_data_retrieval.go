@@ -18,7 +18,7 @@ func (p *Processor) HandleGetTraceData(c *gin.Context) {
 	plmnID := c.Query("plmn-id")
 
 	// step 3: handle the message
-	response, problemDetails := getTraceDataProcedure(supi, plmnID)
+	response, problemDetails := p.consumer.GetTraceDataProcedure(supi, plmnID)
 
 	// step 4: process the return value from step 3
 	if response != nil {

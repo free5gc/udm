@@ -17,7 +17,7 @@ func (p *Processor) HandleUnsubscribe(c *gin.Context) {
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	// step 3: handle the message
-	problemDetails := unsubscribeProcedure(supi, subscriptionID)
+	problemDetails := p.consumer.UnsubscribeProcedure(supi, subscriptionID)
 
 	// step 4: process the return value from step 3
 	if problemDetails != nil {

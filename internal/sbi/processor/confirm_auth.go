@@ -45,7 +45,7 @@ func (p *Processor) HandleConfirmAuth(c *gin.Context) {
 
 	logger.UeauLog.Infoln("Handle ConfirmAuthDataRequest")
 
-	problemDetails := ConfirmAuthDataProcedure(authEvent, supi)
+	problemDetails := p.consumer.ConfirmAuthDataProcedure(authEvent, supi)
 
 	if problemDetails != nil {
 		c.JSON(int(problemDetails.Status), problemDetails)

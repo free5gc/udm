@@ -19,7 +19,7 @@ func (p *Processor) HandleGetAmf3gppAccess(c *gin.Context) {
 	supportedFeatures := c.Query("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := GetAmf3gppAccessProcedure(ueID, supportedFeatures)
+	response, problemDetails := p.consumer.GetAmf3gppAccessProcedure(ueID, supportedFeatures)
 
 	// step 4: process the return value from step 3
 	if response != nil {

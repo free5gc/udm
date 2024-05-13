@@ -18,7 +18,7 @@ func (p *Processor) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 	pduSessionID := c.Params.ByName("pduSessionId")
 
 	// step 3: handle the message
-	problemDetails := DeregistrationSmfRegistrationsProcedure(ueID, pduSessionID)
+	problemDetails := p.consumer.DeregistrationSmfRegistrationsProcedure(ueID, pduSessionID)
 
 	// step 4: process the return value from step 3
 	if problemDetails != nil {

@@ -47,7 +47,7 @@ func (p *Processor) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 
 	// step 3: handle the message
-	header, response, problemDetails := RegisterAmfNon3gppAccessProcedure(amfNon3GppAccessRegistration, ueID)
+	header, response, problemDetails := p.consumer.RegisterAmfNon3gppAccessProcedure(amfNon3GppAccessRegistration, ueID)
 
 	// step 4: process the return value from step 3
 	if response != nil {

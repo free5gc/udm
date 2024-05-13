@@ -49,7 +49,7 @@ func (p *Processor) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	pduSessionID := c.Params.ByName("pduSessionId")
 
 	// step 3: handle the message
-	header, response, problemDetails := RegistrationSmfRegistrationsProcedure(&smfRegistration, ueID, pduSessionID)
+	header, response, problemDetails := p.consumer.RegistrationSmfRegistrationsProcedure(&smfRegistration, ueID, pduSessionID)
 
 	// step 4: process the return value from step 3
 	if response != nil {

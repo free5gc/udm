@@ -22,7 +22,7 @@ func (p *Processor) HandleGetSupi(c *gin.Context) {
 
 	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
-	plmnIDStruct, problemDetails := getPlmnIDStruct(query)
+	plmnIDStruct, problemDetails := p.getPlmnIDStruct(query)
 	if problemDetails != nil {
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -32,7 +32,7 @@ func (p *Processor) HandleGetSupi(c *gin.Context) {
 	supportedFeatures := query.Get("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := getSupiProcedure(supi, plmnID, dataSetNames, supportedFeatures)
+	response, problemDetails := p.consumer.GetSupiProcedure(supi, plmnID, dataSetNames, supportedFeatures)
 
 	// step 4: process the return value from step 3
 	if response != nil {

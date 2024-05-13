@@ -66,7 +66,7 @@ func (s *nudmService) getUECMClient(uri string) *Nudm_UEContextManagement.APICli
 	return client
 }
 
-func (s *nudmService) subscribeToSharedDataProcedure(sdmSubscription *models.SdmSubscription) (
+func (s *nudmService) SubscribeToSharedDataProcedure(sdmSubscription *models.SdmSubscription) (
 	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
@@ -121,7 +121,7 @@ func (s *nudmService) subscribeToSharedDataProcedure(sdmSubscription *models.Sdm
 	}
 }
 
-func (s *nudmService) unsubscribeForSharedDataProcedure(subscriptionID string) *models.ProblemDetails {
+func (s *nudmService) UnsubscribeForSharedDataProcedure(subscriptionID string) *models.ProblemDetails {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
 	if err != nil {
 		return pd

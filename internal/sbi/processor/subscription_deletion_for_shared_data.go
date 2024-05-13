@@ -14,7 +14,7 @@ func (p *Processor) HandleUnsubscribeForSharedData(c *gin.Context) {
 	// step 2: retrieve request
 	subscriptionID := c.Params.ByName("subscriptionId")
 	// step 3: handle the message
-	problemDetails := unsubscribeForSharedDataProcedure(subscriptionID)
+	problemDetails := p.consumer.UnsubscribeForSharedDataProcedure(subscriptionID)
 
 	// step 4: process the return value from step 3
 	if problemDetails != nil {

@@ -47,7 +47,7 @@ func (p *Processor) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 
 	// step 3: handle the message
-	problemDetails := UpdateAmfNon3gppAccessProcedure(amfNon3GppAccessRegistrationModification, ueID)
+	problemDetails := p.consumer.UpdateAmfNon3gppAccessProcedure(amfNon3GppAccessRegistrationModification, ueID)
 
 	// step 4: process the return value from step 3
 	if problemDetails != nil {

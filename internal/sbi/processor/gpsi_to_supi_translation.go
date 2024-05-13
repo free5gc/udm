@@ -20,7 +20,7 @@ func (p *Processor) HandleGetIdTranslationResult(c *gin.Context) {
 	gpsi := c.Params.ByName("gpsi")
 
 	// step 3: handle the message
-	response, problemDetails := getIdTranslationResultProcedure(gpsi)
+	response, problemDetails := p.consumer.GetIdTranslationResultProcedure(gpsi)
 
 	// step 4: process the return value from step 3
 	if response != nil {

@@ -48,7 +48,7 @@ func (p *Processor) HandleSubscribe(c *gin.Context) {
 	supi := c.Params.ByName("supi")
 
 	// step 3: handle the message
-	header, response, problemDetails := subscribeProcedure(&sdmSubscriptionReq, supi)
+	header, response, problemDetails := p.consumer.SubscribeProcedure(&sdmSubscriptionReq, supi)
 
 	// step 4: process the return value from step 3
 	if response != nil {

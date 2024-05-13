@@ -1,26 +1,20 @@
 package consumer
 
 import (
-	"context"
-
 	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
 	"github.com/free5gc/openapi/Nnrf_NFManagement"
 	"github.com/free5gc/openapi/Nudm_SubscriberDataManagement"
 	"github.com/free5gc/openapi/Nudm_UEContextManagement"
 	"github.com/free5gc/openapi/Nudr_DataRepository"
-	"github.com/free5gc/udm/pkg/factory"
-
-	udm_context "github.com/free5gc/udm/internal/context"
+	"github.com/free5gc/udm/pkg/app"
 )
 
-type udm interface {
-	Config() *factory.Config
-	Context() *udm_context.UDMContext
-	CancelContext() context.Context
+type ConsumerUdm interface {
+	app.App
 }
 
 type Consumer struct {
-	udm
+	ConsumerUdm
 
 	// consumer services
 	*nnrfService
@@ -28,9 +22,9 @@ type Consumer struct {
 	*nudmService
 }
 
-func NewConsumer(udm udm) (*Consumer, error) {
+func NewConsumer(udm ConsumerUdm) (*Consumer, error) {
 	c := &Consumer{
-		udm: udm,
+		ConsumerUdm: udm,
 	}
 
 	c.nnrfService = &nnrfService{

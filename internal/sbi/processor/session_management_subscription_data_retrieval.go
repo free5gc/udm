@@ -22,7 +22,7 @@ func (p *Processor) HandleGetSmData(c *gin.Context) {
 
 	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
-	plmnIDStruct, problemDetails := getPlmnIDStruct(query)
+	plmnIDStruct, problemDetails := p.getPlmnIDStruct(query)
 	if problemDetails != nil {
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -33,7 +33,7 @@ func (p *Processor) HandleGetSmData(c *gin.Context) {
 	supportedFeatures := query.Get("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := getSmDataProcedure(supi, plmnID, Dnn, Snssai, supportedFeatures)
+	response, problemDetails := p.consumer.GetSmDataProcedure(supi, plmnID, Dnn, Snssai, supportedFeatures)
 
 	// step 4: process the return value from step 3
 	if response != nil {

@@ -49,7 +49,7 @@ func (p *Processor) HandleGenerateAuthData(c *gin.Context) {
 	supiOrSuci := c.Param("supiOrSuci")
 
 	// step 3: handle the message
-	response, problemDetails := GenerateAuthDataProcedure(authInfoReq, supiOrSuci)
+	response, problemDetails := p.consumer.GenerateAuthDataProcedure(authInfoReq, supiOrSuci)
 
 	// step 4: process the return value from step 3
 	if response != nil {

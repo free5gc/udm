@@ -10,7 +10,7 @@ import (
 )
 
 // UpdateAmf3gppAccess - Update a parameter in the AMF registration for 3GPP access
-func HTTPUpdateAmf3gppAccess(c *gin.Context) {
+func (p *Processor) HandleUpdateAmf3gppAccess(c *gin.Context) {
 	var amf3GppAccessRegistrationModification models.Amf3GppAccessRegistrationModification
 
 	// step 1: retrieve http request body
@@ -48,7 +48,7 @@ func HTTPUpdateAmf3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 
 	// step 3: handle the message
-	problemDetails := UpdateAmf3gppAccessProcedure(amf3GppAccessRegistrationModification, ueID)
+	problemDetails := p.consumer.UpdateAmf3gppAccessProcedure(amf3GppAccessRegistrationModification, ueID)
 
 	// step 4: process the return value from step 3
 	if problemDetails != nil {

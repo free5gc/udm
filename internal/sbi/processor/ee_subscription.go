@@ -54,7 +54,7 @@ func (p *Processor) HandleCreateEeSubscription(c *gin.Context) {
 
 	ueIdentity := c.Params.ByName("ueIdentity")
 
-	createdEESubscription, problemDetails := CreateEeSubscriptionProcedure(ueIdentity, eesubscription)
+	createdEESubscription, problemDetails := p.consumer.CreateEeSubscriptionProcedure(ueIdentity, eesubscription)
 	if createdEESubscription != nil {
 		c.JSON(http.StatusCreated, createdEESubscription)
 		return
@@ -76,7 +76,7 @@ func (p *Processor) HandleDeleteEeSubscription(c *gin.Context) {
 	ueIdentity := c.Params.ByName("ueIdentity")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
-	DeleteEeSubscriptionProcedure(ueIdentity, subscriptionID)
+	p.consumer.DeleteEeSubscriptionProcedure(ueIdentity, subscriptionID)
 	// only return 204 no content
 	c.Status(http.StatusNoContent)
 }
@@ -116,7 +116,7 @@ func (p *Processor) HandleUpdateEeSubscription(c *gin.Context) {
 	logger.EeLog.Infoln("Handle Update EE subscription")
 	logger.EeLog.Warnln("Update EE Subscription is not implemented")
 
-	problemDetails := UpdateEeSubscriptionProcedure(ueIdentity, subscriptionID, patchList)
+	problemDetails := p.consumer.UpdateEeSubscriptionProcedure(ueIdentity, subscriptionID, patchList)
 	if problemDetails != nil {
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return

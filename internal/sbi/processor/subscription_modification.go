@@ -48,7 +48,7 @@ func (p *Processor) HandleModify(c *gin.Context) {
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	// step 3: handle the message
-	response, problemDetails := modifyProcedure(&sdmSubsModificationReq, supi, subscriptionID)
+	response, problemDetails := p.consumer.ModifyProcedure(&sdmSubsModificationReq, supi, subscriptionID)
 
 	// step 4: process the return value from step 3
 	if response != nil {
@@ -70,7 +70,7 @@ func (p *Processor) HandleModify(c *gin.Context) {
 }
 
 // ModifyForSharedData - modify the subscription
-func HTTPModifyForSharedData(c *gin.Context) {
+func (p *Processor) HandleModifyForSharedData(c *gin.Context) {
 	var sharedDataSubscriptions models.SdmSubsModification
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
@@ -108,7 +108,7 @@ func HTTPModifyForSharedData(c *gin.Context) {
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	// step 3: handle the message
-	response, problemDetails := modifyForSharedDataProcedure(&sharedDataSubscriptions, supi, subscriptionID)
+	response, problemDetails := p.consumer.ModifyForSharedDataProcedure(&sharedDataSubscriptions, supi, subscriptionID)
 
 	// step 4: process the return value from step 3
 	if response != nil {

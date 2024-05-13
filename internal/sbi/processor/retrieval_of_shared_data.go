@@ -17,7 +17,7 @@ func (p *Processor) HandleGetSharedData(c *gin.Context) {
 	sharedDataIds := c.QueryArray("shared-data-ids")
 	supportedFeatures := c.QueryArray("supported-features")
 	// step 3: handle the message
-	response, problemDetails := getSharedDataProcedure(sharedDataIds, supportedFeatures)
+	response, problemDetails := p.consumer.GetSharedDataProcedure(sharedDataIds, supportedFeatures[0])
 
 	// step 4: process the return value from step 3
 	if response != nil {

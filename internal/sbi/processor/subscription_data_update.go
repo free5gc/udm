@@ -46,7 +46,7 @@ func (p *Processor) HandleUpdate(c *gin.Context) {
 	logger.PpLog.Infoln("Handle UpdateRequest")
 
 	// step 3: handle the message
-	problemDetails := UpdateProcedure(ppDataReq, gpsi)
+	problemDetails := p.consumer.UpdateProcedure(ppDataReq, gpsi)
 
 	// step 4: process the return value from step 3
 	if problemDetails != nil {

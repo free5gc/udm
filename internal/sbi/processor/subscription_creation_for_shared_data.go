@@ -6,7 +6,6 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/util/httpwrapper"
 	"github.com/gin-gonic/gin"
 )
 
@@ -47,9 +46,9 @@ func (p *Processor) HandleSubscribeToSharedData(c *gin.Context) {
 	// step 2: retrieve request
 
 	// step 3: handle the message
-	header, response, problemDetails := subscribeToSharedDataProcedure(&sharedDataSubsReq)
+	header, response, problemDetails := p.consumer.SubscribeToSharedDataProcedure(&sharedDataSubsReq)
 
-	var rsp *httpwrapper.Response
+	//var rsp *httpwrapper.Response
 	// step 4: process the return value from step 3
 	if response != nil {
 		// status code is based on SPEC, and option headers

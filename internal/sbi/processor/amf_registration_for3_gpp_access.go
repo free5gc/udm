@@ -48,7 +48,7 @@ func (p *Processor) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 	logger.UecmLog.Info("UEID: ", ueID)
 
 	// step 3: handle the message
-	header, response, problemDetails := RegistrationAmf3gppAccessProcedure(amf3GppAccessRegistration, ueID)
+	header, response, problemDetails := p.consumer.RegistrationAmf3gppAccessProcedure(amf3GppAccessRegistration, ueID)
 
 	// step 4: process the return value from step 3
 	if response != nil {

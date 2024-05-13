@@ -20,7 +20,7 @@ func (p *Processor) HandleGetNssai(c *gin.Context) {
 
 	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
-	plmnIDStruct, problemDetails := getPlmnIDStruct(query)
+	plmnIDStruct, problemDetails := p.getPlmnIDStruct(query)
 	if problemDetails != nil {
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -29,7 +29,7 @@ func (p *Processor) HandleGetNssai(c *gin.Context) {
 	supportedFeatures := query.Get("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := getNssaiProcedure(supi, plmnID, supportedFeatures)
+	response, problemDetails := p.consumer.GetNssaiProcedure(supi, plmnID, supportedFeatures)
 
 	// step 4: process the return value from step 3
 	if response != nil {

@@ -32,7 +32,7 @@ func (p *Processor) HandleGetAmData(c *gin.Context) {
 	supportedFeatures := query.Get("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := getAmDataProcedure(supi, plmnID, supportedFeatures)
+	response, problemDetails := p.consumer.GetAmDataProcedure(supi, plmnID, supportedFeatures)
 
 	// step 4: process the return value from step 3
 	if response != nil {

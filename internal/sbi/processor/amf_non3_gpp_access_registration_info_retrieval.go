@@ -23,7 +23,8 @@ func (p *Processor) HandleGetAmfNon3gppAccess(c *gin.Context) {
 	var queryAmfContextNon3gppParamOpts Nudr_DataRepository.QueryAmfContextNon3gppParamOpts
 	queryAmfContextNon3gppParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	// step 3: handle the message
-	response, problemDetails := GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts, ueId)
+
+	response, problemDetails := p.consumer.GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts, ueId)
 
 	// step 4: process the return value from step 3
 	if response != nil {

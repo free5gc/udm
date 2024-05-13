@@ -19,7 +19,7 @@ func (p *Processor) HandleGetUeContextInSmfData(c *gin.Context) {
 	supportedFeatures := c.Query("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := getUeContextInSmfDataProcedure(supi, supportedFeatures)
+	response, problemDetails := p.consumer.GetUeContextInSmfDataProcedure(supi, supportedFeatures)
 
 	// step 4: process the return value from step 3
 	if response != nil {

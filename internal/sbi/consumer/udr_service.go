@@ -168,6 +168,204 @@ func (s *nudrService) strictHex(ss string, n int) string {
 	}
 }
 
+// EE service
+func (s *nudrService) CreateEeSubscriptionProcedure(ueIdentity string,
+	eesubscription models.EeSubscription,
+) (*models.CreatedEeSubscription, *models.ProblemDetails) {
+	udmSelf := udm_context.GetSelf()
+	logger.EeLog.Debugf("udIdentity: %s", ueIdentity)
+	switch {
+	// GPSI (MSISDN identifier) represents a single UE
+	case strings.HasPrefix(ueIdentity, "msisdn-"):
+		fallthrough
+	// GPSI (External identifier) represents a single UE
+	case strings.HasPrefix(ueIdentity, "extid-"):
+		if ue, ok := udmSelf.UdmUeFindByGpsi(ueIdentity); ok {
+			id, err := udmSelf.EeSubscriptionIDGenerator.Allocate()
+			if err != nil {
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Cause:  "UNSPECIFIED_NF_FAILURE",
+				}
+				return nil, problemDetails
+			}
+
+			subscriptionID := strconv.Itoa(int(id))
+			ue.EeSubscriptions[subscriptionID] = &eesubscription
+			createdEeSubscription := &models.CreatedEeSubscription{
+				EeSubscription: &eesubscription,
+			}
+			return createdEeSubscription, nil
+		} else {
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusNotFound,
+				Cause:  "USER_NOT_FOUND",
+			}
+			return nil, problemDetails
+		}
+	// external groupID represents a group of UEs
+	case strings.HasPrefix(ueIdentity, "extgroupid-"):
+		id, err := udmSelf.EeSubscriptionIDGenerator.Allocate()
+		if err != nil {
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Cause:  "UNSPECIFIED_NF_FAILURE",
+			}
+			return nil, problemDetails
+		}
+		subscriptionID := strconv.Itoa(int(id))
+		createdEeSubscription := &models.CreatedEeSubscription{
+			EeSubscription: &eesubscription,
+		}
+
+		udmSelf.UdmUePool.Range(func(key, value interface{}) bool {
+			ue := value.(*udm_context.UdmUeContext)
+			if ue.ExternalGroupID == ueIdentity {
+				ue.EeSubscriptions[subscriptionID] = &eesubscription
+			}
+			return true
+		})
+		return createdEeSubscription, nil
+	// represents any UEs
+	case ueIdentity == "anyUE":
+		id, err := udmSelf.EeSubscriptionIDGenerator.Allocate()
+		if err != nil {
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Cause:  "UNSPECIFIED_NF_FAILURE",
+			}
+			return nil, problemDetails
+		}
+		subscriptionID := strconv.Itoa(int(id))
+		createdEeSubscription := &models.CreatedEeSubscription{
+			EeSubscription: &eesubscription,
+		}
+		udmSelf.UdmUePool.Range(func(key, value interface{}) bool {
+			ue := value.(*udm_context.UdmUeContext)
+			ue.EeSubscriptions[subscriptionID] = &eesubscription
+			return true
+		})
+		return createdEeSubscription, nil
+	default:
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "MANDATORY_IE_INCORRECT",
+			InvalidParams: []models.InvalidParam{
+				{
+					Param:  "ueIdentity",
+					Reason: "incorrect format",
+				},
+			},
+		}
+		return nil, problemDetails
+	}
+}
+
+// TODO: complete this procedure based on TS 29503 5.5
+func (s *nudrService) DeleteEeSubscriptionProcedure(ueIdentity string, subscriptionID string) {
+	udmSelf := udm_context.GetSelf()
+
+	switch {
+	case strings.HasPrefix(ueIdentity, "msisdn-"):
+		fallthrough
+	case strings.HasPrefix(ueIdentity, "extid-"):
+		if ue, ok := udmSelf.UdmUeFindByGpsi(ueIdentity); ok {
+			delete(ue.EeSubscriptions, subscriptionID)
+		}
+	case strings.HasPrefix(ueIdentity, "extgroupid-"):
+		udmSelf.UdmUePool.Range(func(key, value interface{}) bool {
+			ue := value.(*udm_context.UdmUeContext)
+			if ue.ExternalGroupID == ueIdentity {
+				delete(ue.EeSubscriptions, subscriptionID)
+			}
+			return true
+		})
+	case ueIdentity == "anyUE":
+		udmSelf.UdmUePool.Range(func(key, value interface{}) bool {
+			ue := value.(*udm_context.UdmUeContext)
+			delete(ue.EeSubscriptions, subscriptionID)
+			return true
+		})
+	}
+	if id, err := strconv.ParseInt(subscriptionID, 10, 64); err != nil {
+		logger.EeLog.Warnf("subscriptionID covert type error: %+v", err)
+	} else {
+		udmSelf.EeSubscriptionIDGenerator.FreeID(id)
+	}
+}
+
+// TODO: complete this procedure based on TS 29503 5.5
+func (s *nudrService) UpdateEeSubscriptionProcedure(ueIdentity string, subscriptionID string,
+	patchList []models.PatchItem,
+) *models.ProblemDetails {
+	udmSelf := udm_context.GetSelf()
+
+	switch {
+	case strings.HasPrefix(ueIdentity, "msisdn-"):
+		fallthrough
+	case strings.HasPrefix(ueIdentity, "extid-"):
+		if ue, ok := udmSelf.UdmUeFindByGpsi(ueIdentity); ok {
+			if _, ok := ue.EeSubscriptions[subscriptionID]; ok {
+				for _, patchItem := range patchList {
+					logger.EeLog.Debugf("patch item: %+v", patchItem)
+					// TODO: patch the Eesubscription
+				}
+				return nil
+			} else {
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusNotFound,
+					Cause:  "SUBSCRIPTION_NOT_FOUND",
+				}
+				return problemDetails
+			}
+		} else {
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusNotFound,
+				Cause:  "SUBSCRIPTION_NOT_FOUND",
+			}
+			return problemDetails
+		}
+	case strings.HasPrefix(ueIdentity, "extgroupid-"):
+		udmSelf.UdmUePool.Range(func(key, value interface{}) bool {
+			ue := value.(*udm_context.UdmUeContext)
+			if ue.ExternalGroupID == ueIdentity {
+				if _, ok := ue.EeSubscriptions[subscriptionID]; ok {
+					for _, patchItem := range patchList {
+						logger.EeLog.Debugf("patch item: %+v", patchItem)
+						// TODO: patch the Eesubscription
+					}
+				}
+			}
+			return true
+		})
+		return nil
+	case ueIdentity == "anyUE":
+		udmSelf.UdmUePool.Range(func(key, value interface{}) bool {
+			ue := value.(*udm_context.UdmUeContext)
+			if _, ok := ue.EeSubscriptions[subscriptionID]; ok {
+				for _, patchItem := range patchList {
+					logger.EeLog.Debugf("patch item: %+v", patchItem)
+					// TODO: patch the Eesubscription
+				}
+			}
+			return true
+		})
+		return nil
+	default:
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "MANDATORY_IE_INCORRECT",
+			InvalidParams: []models.InvalidParam{
+				{
+					Param:  "ueIdentity",
+					Reason: "incorrect format",
+				},
+			},
+		}
+		return problemDetails
+	}
+}
+
 func (s *nudrService) ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemDetails *models.ProblemDetails) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
@@ -667,7 +865,7 @@ func (s *nudrService) UpdateProcedure(updateRequest models.PpData, gpsi string) 
 	return nil
 }
 
-func (s *nudrService) getAmDataProcedure(supi string, plmnID string, supportedFeatures string) (
+func (s *nudrService) GetAmDataProcedure(supi string, plmnID string, supportedFeatures string) (
 	response *models.AccessAndMobilitySubscriptionData, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -720,7 +918,7 @@ func (s *nudrService) getAmDataProcedure(supi string, plmnID string, supportedFe
 	}
 }
 
-func (s *nudrService) getIdTranslationResultProcedure(gpsi string) (response *models.IdTranslationResult,
+func (s *nudrService) GetIdTranslationResultProcedure(gpsi string) (response *models.IdTranslationResult,
 	problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -783,7 +981,7 @@ func (s *nudrService) getIdTranslationResultProcedure(gpsi string) (response *mo
 	}
 }
 
-func (s *nudrService) getSupiProcedure(supi string, plmnID string, dataSetNames []string, supportedFeatures string) (
+func (s *nudrService) GetSupiProcedure(supi string, plmnID string, dataSetNames []string, supportedFeatures string) (
 	response *models.SubscriptionDataSets, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1065,7 +1263,7 @@ func (s *nudrService) getSupiProcedure(supi string, plmnID string, dataSetNames 
 	return &subscriptionDataSets, nil
 }
 
-func (s *nudrService) getSharedDataProcedure(sharedDataIds []string, supportedFeatures string) (
+func (s *nudrService) GetSharedDataProcedure(sharedDataIds []string, supportedFeatures string) (
 	response []models.SharedData, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1117,7 +1315,7 @@ func (s *nudrService) getSharedDataProcedure(sharedDataIds []string, supportedFe
 	}
 }
 
-func (s *nudrService) getSmDataProcedure(supi string, plmnID string, Dnn string, Snssai string, supportedFeatures string) (
+func (s *nudrService) GetSmDataProcedure(supi string, plmnID string, Dnn string, Snssai string, supportedFeatures string) (
 	response interface{}, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1201,7 +1399,7 @@ func (s *nudrService) getSmDataProcedure(supi string, plmnID string, Dnn string,
 	}
 }
 
-func (s *nudrService) getNssaiProcedure(supi string, plmnID string, supportedFeatures string) (
+func (s *nudrService) GetNssaiProcedure(supi string, plmnID string, supportedFeatures string) (
 	*models.Nssai, *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1258,7 +1456,7 @@ func (s *nudrService) getNssaiProcedure(supi string, plmnID string, supportedFea
 	}
 }
 
-func (s *nudrService) getSmfSelectDataProcedure(supi string, plmnID string, supportedFeatures string) (
+func (s *nudrService) GetSmfSelectDataProcedure(supi string, plmnID string, supportedFeatures string) (
 	response *models.SmfSelectionSubscriptionData, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1316,7 +1514,7 @@ func (s *nudrService) getSmfSelectDataProcedure(supi string, plmnID string, supp
 	}
 }
 
-func (s *nudrService) subscribeProcedure(sdmSubscription *models.SdmSubscription, supi string) (
+func (s *nudrService) SubscribeProcedure(sdmSubscription *models.SdmSubscription, supi string) (
 	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1375,7 +1573,7 @@ func (s *nudrService) subscribeProcedure(sdmSubscription *models.SdmSubscription
 	}
 }
 
-func (s *nudrService) unsubscribeProcedure(supi string, subscriptionID string) *models.ProblemDetails {
+func (s *nudrService) UnsubscribeProcedure(supi string, subscriptionID string) *models.ProblemDetails {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		return pd
@@ -1418,7 +1616,7 @@ func (s *nudrService) unsubscribeProcedure(supi string, subscriptionID string) *
 	}
 }
 
-func (s *nudrService) modifyProcedure(sdmSubsModification *models.SdmSubsModification, supi string, subscriptionID string) (
+func (s *nudrService) ModifyProcedure(sdmSubsModification *models.SdmSubsModification, supi string, subscriptionID string) (
 	response *models.SdmSubscription, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1469,7 +1667,7 @@ func (s *nudrService) modifyProcedure(sdmSubsModification *models.SdmSubsModific
 	}
 }
 
-func (s *nudrService) getTraceDataProcedure(supi string, plmnID string) (
+func (s *nudrService) GetTraceDataProcedure(supi string, plmnID string) (
 	response *models.TraceData, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1528,7 +1726,7 @@ func (s *nudrService) getTraceDataProcedure(supi string, plmnID string) (
 	}
 }
 
-func (s *nudrService) getUeContextInSmfDataProcedure(supi string, supportedFeatures string) (
+func (s *nudrService) GetUeContextInSmfDataProcedure(supi string, supportedFeatures string) (
 	response *models.UeContextInSmfData, problemDetails *models.ProblemDetails,
 ) {
 	var body models.UeContextInSmfData
@@ -2087,5 +2285,59 @@ func (s *nudrService) RegistrationSmfRegistrationsProcedure(request *models.SmfR
 		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriSmfRegistration))
 		return header, request, nil
+	}
+}
+
+// TS 29.503 5.2.2.7.3
+// Modification of a subscription to notifications of shared data change
+func (s *nudrService) ModifyForSharedDataProcedure(sdmSubsModification *models.SdmSubsModification, supi string,
+	subscriptionID string,
+) (response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
+	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	if err != nil {
+		return nil, pd
+	}
+	clientAPI, err := s.createUDMClientToUDR(supi)
+	if err != nil {
+		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+	}
+
+	var sdmSubscription models.SdmSubscription
+	sdmSubs := models.SdmSubscription{}
+	body := Nudr_DataRepository.UpdatesdmsubscriptionsParamOpts{
+		SdmSubscription: optional.NewInterface(sdmSubs),
+	}
+
+	res, err := clientAPI.SDMSubscriptionDocumentApi.Updatesdmsubscriptions(
+		ctx, supi, subscriptionID, &body)
+	if err != nil {
+		if res == nil {
+			logger.SdmLog.Warnln(err)
+		} else if err.Error() != res.Status {
+			logger.SdmLog.Warnln(err)
+		} else {
+			problemDetails = &models.ProblemDetails{
+				Status: int32(res.StatusCode),
+				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
+		}
+	}
+	defer func() {
+		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
+			logger.SdmLog.Errorf("Updatesdmsubscriptions response body cannot close: %+v", rspCloseErr)
+		}
+	}()
+
+	if res.StatusCode == http.StatusOK {
+		return &sdmSubscription, nil
+	} else {
+		problemDetails = &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "USER_NOT_FOUND",
+		}
+
+		return nil, problemDetails
 	}
 }

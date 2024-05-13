@@ -44,7 +44,7 @@ func (p *Processor) HandleDataChangeNotificationToNF(c *gin.Context) {
 
 	logger.CallbackLog.Infof("Handle DataChangeNotificationToNF")
 
-	problemDetails := DataChangeNotificationProcedure(dataChangeNotify.NotifyItems, supi)
+	problemDetails := p.consumer.DataChangeNotificationProcedure(dataChangeNotify.NotifyItems, supi)
 
 	// step 4: process the return value from step 3
 	if problemDetails != nil {

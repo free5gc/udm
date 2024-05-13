@@ -2,43 +2,49 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
-	"os/signal"
 	"runtime/debug"
 	"sync"
-	"syscall"
 
 	"github.com/sirupsen/logrus"
 
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/sbi"
 	"github.com/free5gc/udm/internal/sbi/consumer"
-	"github.com/free5gc/udm/internal/sbi/eventexposure"
-	"github.com/free5gc/udm/internal/sbi/httpcallback"
-	"github.com/free5gc/udm/internal/sbi/parameterprovision"
-	"github.com/free5gc/udm/internal/sbi/subscriberdatamanagement"
-	"github.com/free5gc/udm/internal/sbi/ueauthentication"
-	"github.com/free5gc/udm/internal/sbi/uecontextmanagement"
+	"github.com/free5gc/udm/internal/sbi/processor"
+	"github.com/free5gc/udm/pkg/app"
 	"github.com/free5gc/udm/pkg/factory"
-	"github.com/free5gc/util/httpwrapper"
-	logger_util "github.com/free5gc/util/logger"
 )
 
+var UDM *UdmApp
+
+var _ app.App = &UdmApp{}
+
 type UdmApp struct {
-	cfg    *factory.Config
+	app.App
+	consumer.ConsumerUdm
+	processor.ProcessorUdm
+	sbi.ServerUdm
+
 	udmCtx *udm_context.UDMContext
+	cfg    *factory.Config
+
 	ctx    context.Context
 	cancel context.CancelFunc
+	wg     sync.WaitGroup
 
-	//sbiServer *sbi.Server
-	consumer *consumer.Consumer
-	//processor *processor.Processor
-	wg sync.WaitGroup
+	sbiServer *sbi.Server
+	consumer  *consumer.Consumer
+	processor *processor.Processor
 }
 
-func NewApp(cfg *factory.Config) (*UdmApp, error) {
+func GetApp() *UdmApp {
+	return UDM
+}
+
+func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*UdmApp, error) {
 	udm := &UdmApp{
 		cfg: cfg,
 		wg:  sync.WaitGroup{},
@@ -47,8 +53,11 @@ func NewApp(cfg *factory.Config) (*UdmApp, error) {
 	udm.SetLogLevel(cfg.GetLogLevel())
 	udm.SetReportCaller(cfg.GetLogReportCaller())
 
-	udm_context.Init()
-	udm.udmCtx = udm_context.GetSelf()
+	processor, err_p := processor.NewProcessor(udm)
+	if err_p != nil {
+		return udm, err_p
+	}
+	udm.processor = processor
 
 	consumer, err := consumer.NewConsumer(udm)
 	if err != nil {
@@ -56,28 +65,17 @@ func NewApp(cfg *factory.Config) (*UdmApp, error) {
 	}
 	udm.consumer = consumer
 
+	udm.ctx, udm.cancel = context.WithCancel(ctx)
+	udm.udmCtx = udm_context.GetSelf()
+
+	if udm.sbiServer, err = sbi.NewServer(udm, tlsKeyLogPath); err != nil {
+		return nil, err
+	}
+
+	UDM = udm
+
 	return udm, nil
 }
-
-func (a *UdmApp) Config() *factory.Config {
-	return a.cfg
-}
-
-func (a *UdmApp) Context() *udm_context.UDMContext {
-	return a.udmCtx
-}
-
-func (a *UdmApp) CancelContext() context.Context {
-	return a.ctx
-}
-
-func (a *UdmApp) Consumer() *consumer.Consumer {
-	return a.consumer
-}
-
-/*func (a *UdmApp) Processor() *processor.Processor {
-	return a.processor
-}*/
 
 func (a *UdmApp) SetLogEnable(enable bool) {
 	logger.MainLog.Infof("Log enable is set to [%v]", enable)
@@ -120,8 +118,16 @@ func (a *UdmApp) SetReportCaller(reportCaller bool) {
 	logger.Log.SetReportCaller(reportCaller)
 }
 
-func (a *UdmApp) Start(tlsKeyLogPath string) {
-	config := factory.UdmConfig
+func (a *UdmApp) Start() {
+	logger.InitLog.Infoln("Server started")
+
+	a.wg.Add(1)
+	go a.listenShutdownEvent()
+
+	if err := a.sbiServer.Run(context.Background(), &a.wg); err != nil {
+		logger.MainLog.Fatalf("Run SBI server failed: %+v", err)
+	}
+	/*config := factory.UdmConfig
 	configuration := config.Configuration
 	sbi := configuration.Sbi
 
@@ -198,19 +204,66 @@ func (a *UdmApp) Start(tlsKeyLogPath string) {
 
 	if err != nil {
 		logger.InitLog.Fatalf("HTTP server setup failed: %+v", err)
-	}
+	}*/
 }
 
 func (a *UdmApp) Terminate() {
-	logger.InitLog.Infof("Terminating UDM...")
+	logger.MainLog.Infof("Terminating UDM...")
+	a.cancel()
+	a.CallServerStop()
+
 	// deregister with NRF
-	problemDetails, err := consumer.SendDeregisterNFInstance()
+	problemDetails, err := a.Consumer().SendDeregisterNFInstance()
 	if problemDetails != nil {
-		logger.InitLog.Errorf("Deregister NF instance Failed Problem[%+v]", problemDetails)
+		logger.MainLog.Errorf("Deregister NF instance Failed Problem[%+v]", problemDetails)
 	} else if err != nil {
-		logger.InitLog.Errorf("Deregister NF instance Error[%+v]", err)
+		logger.MainLog.Errorf("Deregister NF instance Error[%+v]", err)
 	} else {
-		logger.InitLog.Infof("Deregister from NRF successfully")
+		logger.MainLog.Infof("Deregister from NRF successfully")
 	}
-	logger.InitLog.Infof("UDM terminated")
+	logger.MainLog.Infof("CHF SBI Server terminated")
+}
+
+func (a *UdmApp) listenShutdownEvent() {
+	defer func() {
+		if p := recover(); p != nil {
+			// Print stack for panic to log. Fatalf() will let program exit.
+			logger.MainLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
+		}
+		a.wg.Done()
+	}()
+
+	<-a.ctx.Done()
+	a.Terminate()
+}
+
+func (a *UdmApp) CallServerStop() {
+	if a.sbiServer != nil {
+		a.sbiServer.Stop()
+	}
+}
+
+func (a *UdmApp) WaitRoutineStopped() {
+	a.wg.Wait()
+	logger.MainLog.Infof("CHF App is terminated")
+}
+
+func (a *UdmApp) Config() *factory.Config {
+	return a.cfg
+}
+
+func (a *UdmApp) Context() *udm_context.UDMContext {
+	return a.udmCtx
+}
+
+func (a *UdmApp) CancelContext() context.Context {
+	return a.ctx
+}
+
+func (a *UdmApp) Consumer() *consumer.Consumer {
+	return a.consumer
+}
+
+func (a *UdmApp) Processor() *processor.Processor {
+	return a.processor
 }
