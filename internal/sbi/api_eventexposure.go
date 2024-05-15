@@ -34,5 +34,4 @@ func (s *Server) getEventExposureRoutes() []Route {
 			s.Processor().HandleUpdateEeSubscription,
 		},
 	}
-
 }

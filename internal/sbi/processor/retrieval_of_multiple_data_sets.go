@@ -5,9 +5,10 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // GetSupi - retrieve multiple data sets

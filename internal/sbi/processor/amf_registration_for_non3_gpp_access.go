@@ -3,10 +3,11 @@ package processor
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // Register - register as AMF for non-3GPP access
@@ -64,5 +65,4 @@ func (p *Processor) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-
 }

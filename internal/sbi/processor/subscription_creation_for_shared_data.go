@@ -3,10 +3,11 @@ package processor
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // SubscribeToSharedData - subscribe to notifications for shared data
@@ -48,7 +49,7 @@ func (p *Processor) HandleSubscribeToSharedData(c *gin.Context) {
 	// step 3: handle the message
 	header, response, problemDetails := p.consumer.SubscribeToSharedDataProcedure(&sharedDataSubsReq)
 
-	//var rsp *httpwrapper.Response
+	// var rsp *httpwrapper.Response
 	// step 4: process the return value from step 3
 	if response != nil {
 		// status code is based on SPEC, and option headers
@@ -70,5 +71,4 @@ func (p *Processor) HandleSubscribeToSharedData(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, problemDetails)
 		return
 	}
-
 }

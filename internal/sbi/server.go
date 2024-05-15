@@ -9,28 +9,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/udm/pkg/app"
-	"github.com/free5gc/udm/pkg/factory"
-	"github.com/free5gc/util/httpwrapper"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/sbi/consumer"
 	"github.com/free5gc/udm/internal/sbi/processor"
 	"github.com/free5gc/udm/internal/util"
+	"github.com/free5gc/udm/pkg/app"
+	"github.com/free5gc/udm/pkg/factory"
+	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
-	"github.com/gin-gonic/gin"
 )
-
-type udm interface {
-	Config() *factory.Config
-	Context() *udm_context.UdmNFContext
-	CancelContext() context.Context
-	//Consumer() *consumer.Consumer
-	// Processor() *processor.Processor
-}
 
 type ServerUdm interface {
 	app.App
@@ -71,7 +63,6 @@ func NewServer(udm ServerUdm, tlsKeyLogPath string) (*Server, error) {
 	}*/
 
 	return s, err
-
 }
 
 func (s *Server) Run(traceCtx context.Context, wg *sync.WaitGroup) error {
@@ -163,13 +154,6 @@ func (s *Server) shutdownHttpServer() {
 	}
 }
 
-func bindRouter(cfg *factory.Config, router *gin.Engine, tlsKeyLogPath string) (*http.Server, error) {
-	sbiConfig := cfg.Configuration.Sbi
-	bindAddr := fmt.Sprintf("%s:%d", sbiConfig.BindingIPv4, sbiConfig.Port)
-
-	return httpwrapper.NewHttp2Server(bindAddr, tlsKeyLogPath, router)
-}
-
 func newRouter(s *Server) *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
 
@@ -236,24 +220,4 @@ func newRouter(s *Server) *gin.Engine {
 	AddService(udmPPGroup, udmPPRoutes)
 
 	return router
-}
-
-func (s *Server) unsecureServe() error {
-	return s.httpServer.ListenAndServe()
-}
-
-func (s *Server) secureServe() error {
-	sbiConfig := s.Config().Configuration.Sbi
-
-	pemPath := sbiConfig.Tls.Pem
-	if pemPath == "" {
-		pemPath = factory.UdmConfig.GetCertKeyPath()
-	}
-
-	keyPath := sbiConfig.Tls.Key
-	if keyPath == "" {
-		keyPath = factory.UdmConfig.GetCertKeyPath()
-	}
-
-	return s.httpServer.ListenAndServeTLS(pemPath, keyPath)
 }

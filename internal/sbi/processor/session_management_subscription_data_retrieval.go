@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // GetSmData - retrieve a UE's Session Management Subscription Data
@@ -51,5 +52,4 @@ func (p *Processor) HandleGetSmData(c *gin.Context) {
 		c.JSON(http.StatusForbidden, problemDetails)
 		return
 	}
-
 }

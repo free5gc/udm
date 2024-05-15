@@ -3,10 +3,11 @@ package processor
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // RegistrationSmfRegistrations - register as SMF
@@ -49,7 +50,11 @@ func (p *Processor) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	pduSessionID := c.Params.ByName("pduSessionId")
 
 	// step 3: handle the message
-	header, response, problemDetails := p.consumer.RegistrationSmfRegistrationsProcedure(&smfRegistration, ueID, pduSessionID)
+	header, response, problemDetails := p.consumer.RegistrationSmfRegistrationsProcedure(
+		&smfRegistration,
+		ueID,
+		pduSessionID,
+	)
 
 	// step 4: process the return value from step 3
 	if response != nil {
@@ -67,5 +72,4 @@ func (p *Processor) HandleRegistrationSmfRegistrations(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-
 }

@@ -3,9 +3,10 @@ package processor
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // GetTraceData - retrieve a UE's Trace Configuration Data
@@ -36,5 +37,4 @@ func (p *Processor) HandleGetTraceData(c *gin.Context) {
 		c.JSON(http.StatusForbidden, problemDetails)
 		return
 	}
-
 }

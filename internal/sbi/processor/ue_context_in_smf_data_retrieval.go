@@ -3,14 +3,14 @@ package processor
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // GetUeContextInSmfData - retrieve a UE's UE Context In SMF Data
 func (p *Processor) HandleGetUeContextInSmfData(c *gin.Context) {
-
 	// step 1: log
 	logger.SdmLog.Infof("Handle GetUeContextInSmfData")
 
@@ -37,5 +37,4 @@ func (p *Processor) HandleGetUeContextInSmfData(c *gin.Context) {
 		c.JSON(http.StatusForbidden, problemDetails)
 		return
 	}
-
 }

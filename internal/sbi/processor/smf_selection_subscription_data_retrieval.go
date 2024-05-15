@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // GetSmfSelectData - retrieve a UE's SMF Selection Subscription Data
@@ -47,5 +48,4 @@ func (p *Processor) HandleGetSmfSelectData(c *gin.Context) {
 		c.JSON(http.StatusForbidden, problemDetails)
 		return
 	}
-
 }

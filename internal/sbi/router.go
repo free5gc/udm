@@ -35,7 +35,6 @@ func AddService(group *gin.RouterGroup, routes []Route) {
 			group.PATCH(route.Pattern, route.HandlerFunc)
 		}
 	}
-
 }
 
 func AddSDMService(group *gin.RouterGroup, routes []Route) {
@@ -70,5 +69,4 @@ func AddUEAUService(group *gin.RouterGroup, routes []Route) {
 			group.PATCH(route.Pattern, route.HandlerFunc)
 		}
 	}
-
 }

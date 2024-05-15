@@ -3,10 +3,11 @@ package processor
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // Modify - modify the subscription
@@ -59,7 +60,6 @@ func (p *Processor) HandleModify(c *gin.Context) {
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	} else {
-
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusForbidden,
 			Cause:  "UNSPECIFIED",

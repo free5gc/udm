@@ -11,7 +11,7 @@ import (
 
 // GetIdTranslationResult - retrieve a UE's SUPI
 func (p *Processor) HandleGetIdTranslationResult(c *gin.Context) {
-	//req.Query.Set("SupportedFeatures", c.Query("supported-features"))
+	// req.Query.Set("SupportedFeatures", c.Query("supported-features"))
 
 	// step 1: log
 	logger.SdmLog.Infof("Handle GetIdTranslationResultRequest")

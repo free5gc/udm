@@ -3,8 +3,9 @@ package processor
 import (
 	"net/http"
 
-	"github.com/free5gc/udm/internal/logger"
 	"github.com/gin-gonic/gin"
+
+	"github.com/free5gc/udm/internal/logger"
 )
 
 // UnsubscribeForSharedData - unsubscribe from notifications for shared data
@@ -24,5 +25,4 @@ func (p *Processor) HandleUnsubscribeForSharedData(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-
 }

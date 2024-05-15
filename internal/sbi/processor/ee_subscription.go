@@ -72,7 +72,6 @@ func (p *Processor) HandleCreateEeSubscription(c *gin.Context) {
 }
 
 func (p *Processor) HandleDeleteEeSubscription(c *gin.Context) {
-
 	ueIdentity := c.Params.ByName("ueIdentity")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
@@ -124,5 +123,4 @@ func (p *Processor) HandleUpdateEeSubscription(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-
 }

@@ -3,14 +3,14 @@ package processor
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // GetAmf3gppAccess - retrieve the AMF registration for 3GPP access information
 func (p *Processor) HandleGetAmf3gppAccess(c *gin.Context) {
-
 	// step 1: log
 	logger.UecmLog.Infof("Handle HandleGetAmf3gppAccessRequest")
 
@@ -37,5 +37,4 @@ func (p *Processor) HandleGetAmf3gppAccess(c *gin.Context) {
 		c.JSON(http.StatusForbidden, problemDetails)
 		return
 	}
-
 }

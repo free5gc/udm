@@ -124,6 +124,7 @@ func (c *Configuration) validate() (bool, error) {
 	result, err := govalidator.ValidateStruct(c)
 	return result, err
 }
+
 func (c *Config) GetCertPemPath() string {
 	c.RLock()
 	defer c.RUnlock()

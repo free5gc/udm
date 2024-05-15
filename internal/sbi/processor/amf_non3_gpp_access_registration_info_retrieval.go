@@ -4,15 +4,15 @@ import (
 	"net/http"
 
 	"github.com/antihax/optional"
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi/Nudr_DataRepository"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // GetAmfNon3gppAccess - retrieve the AMF registration for non-3GPP access information
 func (p *Processor) HandleGetAmfNon3gppAccess(c *gin.Context) {
-
 	// step 1: log
 	logger.UecmLog.Infoln("Handle GetAmfNon3gppAccessRequest")
 
@@ -42,5 +42,4 @@ func (p *Processor) HandleGetAmfNon3gppAccess(c *gin.Context) {
 		c.JSON(http.StatusForbidden, problemDetails)
 		return
 	}
-
 }

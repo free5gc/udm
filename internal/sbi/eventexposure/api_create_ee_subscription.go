@@ -37,7 +37,7 @@ func HTTPCreateEeSubscription(c *gin.Context) {
 		return
 	}
 
-	//err = openapi.Deserialize(&eeSubscription, requestBody, "application/json")
+	// err = openapi.Deserialize(&eeSubscription, requestBody, "application/json")
 	err = openapi.Deserialize(nil, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()

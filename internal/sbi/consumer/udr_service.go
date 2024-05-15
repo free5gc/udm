@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/Nudr_DataRepository"
 	"github.com/free5gc/openapi/models"
@@ -366,7 +367,10 @@ func (s *nudrService) UpdateEeSubscriptionProcedure(ueIdentity string, subscript
 	}
 }
 
-func (s *nudrService) ConfirmAuthDataProcedure(authEvent models.AuthEvent, supi string) (problemDetails *models.ProblemDetails) {
+func (s *nudrService) ConfirmAuthDataProcedure(
+	authEvent models.AuthEvent,
+	supi string,
+) (problemDetails *models.ProblemDetails) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		return pd
@@ -411,7 +415,7 @@ func (s *nudrService) GenerateAuthDataProcedure(authInfoRequest models.Authentic
 	logger.UeauLog.Traceln("In GenerateAuthDataProcedure")
 
 	response = &models.AuthenticationInfoResult{}
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	supi, err := suci.ToSupi(supiOrSuci, udm_context.GetSelf().SuciProfiles)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
@@ -839,7 +843,10 @@ func (s *nudrService) GenerateAuthDataProcedure(authInfoRequest models.Authentic
 	return response, nil
 }
 
-func (s *nudrService) UpdateProcedure(updateRequest models.PpData, gpsi string) (problemDetails *models.ProblemDetails) {
+func (s *nudrService) UpdateProcedure(
+	updateRequest models.PpData,
+	gpsi string,
+) (problemDetails *models.ProblemDetails) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		return pd
@@ -1315,7 +1322,13 @@ func (s *nudrService) GetSharedDataProcedure(sharedDataIds []string, supportedFe
 	}
 }
 
-func (s *nudrService) GetSmDataProcedure(supi string, plmnID string, Dnn string, Snssai string, supportedFeatures string) (
+func (s *nudrService) GetSmDataProcedure(
+	supi string,
+	plmnID string,
+	Dnn string,
+	Snssai string,
+	supportedFeatures string,
+) (
 	response interface{}, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1616,7 +1629,11 @@ func (s *nudrService) UnsubscribeProcedure(supi string, subscriptionID string) *
 	}
 }
 
-func (s *nudrService) ModifyProcedure(sdmSubsModification *models.SdmSubsModification, supi string, subscriptionID string) (
+func (s *nudrService) ModifyProcedure(
+	sdmSubsModification *models.SdmSubsModification,
+	supi string,
+	subscriptionID string,
+) (
 	response *models.SdmSubscription, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1873,7 +1890,10 @@ func (s *nudrService) GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOp
 	return &amfNon3GppAccessRegistration, nil
 }
 
-func (s *nudrService) RegistrationAmf3gppAccessProcedure(registerRequest models.Amf3GppAccessRegistration, ueID string) (
+func (s *nudrService) RegistrationAmf3gppAccessProcedure(
+	registerRequest models.Amf3GppAccessRegistration,
+	ueID string,
+) (
 	header http.Header, response *models.Amf3GppAccessRegistration, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -1951,7 +1971,10 @@ func (s *nudrService) RegistrationAmf3gppAccessProcedure(registerRequest models.
 	}
 }
 
-func (s *nudrService) RegisterAmfNon3gppAccessProcedure(registerRequest models.AmfNon3GppAccessRegistration, ueID string) (
+func (s *nudrService) RegisterAmfNon3gppAccessProcedure(
+	registerRequest models.AmfNon3GppAccessRegistration,
+	ueID string,
+) (
 	header http.Header, response *models.AmfNon3GppAccessRegistration, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -2112,7 +2135,10 @@ func (s *nudrService) UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessR
 	return nil
 }
 
-func (s *nudrService) UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppAccessRegistrationModification, ueID string) (
+func (s *nudrService) UpdateAmfNon3gppAccessProcedure(
+	request models.AmfNon3GppAccessRegistrationModification,
+	ueID string,
+) (
 	problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
@@ -2206,7 +2232,10 @@ func (s *nudrService) UpdateAmfNon3gppAccessProcedure(request models.AmfNon3GppA
 	return problemDetails
 }
 
-func (s *nudrService) DeregistrationSmfRegistrationsProcedure(ueID string, pduSessionID string) (problemDetails *models.ProblemDetails) {
+func (s *nudrService) DeregistrationSmfRegistrationsProcedure(
+	ueID string,
+	pduSessionID string,
+) (problemDetails *models.ProblemDetails) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		return pd
@@ -2234,7 +2263,11 @@ func (s *nudrService) DeregistrationSmfRegistrationsProcedure(ueID string, pduSe
 	return nil
 }
 
-func (s *nudrService) RegistrationSmfRegistrationsProcedure(request *models.SmfRegistration, ueID string, pduSessionID string) (
+func (s *nudrService) RegistrationSmfRegistrationsProcedure(
+	request *models.SmfRegistration,
+	ueID string,
+	pduSessionID string,
+) (
 	header http.Header, response *models.SmfRegistration, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)

@@ -52,7 +52,9 @@ func (p *Processor) HandleGetAmData(c *gin.Context) {
 	}
 }
 
-func (p *Processor) getPlmnIDStruct(queryParameters url.Values) (plmnIDStruct *models.PlmnId, problemDetails *models.ProblemDetails) {
+func (p *Processor) getPlmnIDStruct(
+	queryParameters url.Values,
+) (plmnIDStruct *models.PlmnId, problemDetails *models.ProblemDetails) {
 	if queryParameters["plmn-id"] != nil {
 		plmnIDJson := queryParameters["plmn-id"][0]
 		plmnIDStruct := &models.PlmnId{}

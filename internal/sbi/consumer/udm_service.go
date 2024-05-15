@@ -101,7 +101,9 @@ func (s *nudmService) SubscribeToSharedDataProcedure(sdmSubscription *models.Sdm
 	if res.StatusCode == http.StatusCreated {
 		header = make(http.Header)
 		udm_context.GetSelf().CreateSubstoNotifSharedData(sdmSubscriptionResp.SubscriptionId, &sdmSubscriptionResp)
-		reourceUri := udm_context.GetSelf().GetSDMUri() + "//shared-data-subscriptions/" + sdmSubscriptionResp.SubscriptionId
+		reourceUri := udm_context.GetSelf().
+			GetSDMUri() +
+			"//shared-data-subscriptions/" + sdmSubscriptionResp.SubscriptionId
 		header.Set("Location", reourceUri)
 		return header, &sdmSubscriptionResp, nil
 	} else if res.StatusCode == http.StatusNotFound {
@@ -163,7 +165,10 @@ func (s *nudmService) UnsubscribeForSharedDataProcedure(subscriptionID string) *
 	}
 }
 
-func (s *nudmService) DataChangeNotificationProcedure(notifyItems []models.NotifyItem, supi string) *models.ProblemDetails {
+func (s *nudmService) DataChangeNotificationProcedure(
+	notifyItems []models.NotifyItem,
+	supi string,
+) *models.ProblemDetails {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
 	if err != nil {
 		return pd

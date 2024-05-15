@@ -3,13 +3,13 @@ package processor
 import (
 	"net/http"
 
-	"github.com/free5gc/udm/internal/logger"
 	"github.com/gin-gonic/gin"
+
+	"github.com/free5gc/udm/internal/logger"
 )
 
 // DeregistrationSmfRegistrations - delete an SMF registration
 func (p *Processor) HandleDeregistrationSmfRegistrations(c *gin.Context) {
-
 	// step 1: log
 	logger.UecmLog.Infof("Handle DeregistrationSmfRegistrations")
 
@@ -28,5 +28,4 @@ func (p *Processor) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-
 }

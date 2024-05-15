@@ -3,10 +3,11 @@ package processor
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // UpdateAmf3gppAccess - Update a parameter in the AMF registration for 3GPP access
@@ -58,5 +59,4 @@ func (p *Processor) HandleUpdateAmf3gppAccess(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-
 }

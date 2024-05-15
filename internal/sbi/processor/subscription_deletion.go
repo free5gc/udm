@@ -3,13 +3,13 @@ package processor
 import (
 	"net/http"
 
-	"github.com/free5gc/udm/internal/logger"
 	"github.com/gin-gonic/gin"
+
+	"github.com/free5gc/udm/internal/logger"
 )
 
 // Unsubscribe - unsubscribe from notifications
 func (p *Processor) HandleUnsubscribe(c *gin.Context) {
-
 	logger.SdmLog.Infof("Handle Unsubscribe")
 
 	// step 2: retrieve request
