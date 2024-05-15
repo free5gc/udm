@@ -162,7 +162,7 @@ func GenerateAuthDataProcedure(authInfoRequest models.AuthenticationInfoRequest,
 	logger.UeauLog.Traceln("In GenerateAuthDataProcedure")
 
 	response = &models.AuthenticationInfoResult{}
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	supi, err := suci.ToSupi(supiOrSuci, udm_context.GetSelf().SuciProfiles)
 	if err != nil {
 		problemDetails = &models.ProblemDetails{
