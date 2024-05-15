@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (p *Processor) genAuthDataHandlerFunc(c *gin.Context) {
+func (p *Processor) GenAuthDataHandlerFunc(c *gin.Context) {
 	c.Params = append(c.Params, gin.Param{Key: "supiOrSuci", Value: c.Param("supi")})
 	if strings.ToUpper("Post") == c.Request.Method {
 		p.HandleGenerateAuthData(c)

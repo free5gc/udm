@@ -18,12 +18,11 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/sbi/producer"
-	"github.com/free5gc/util/httpwrapper"
 )
 
 // HTTPCreateEeSubscription - Subscribe
 func HTTPCreateEeSubscription(c *gin.Context) {
-	var eeSubscriptionReq models.EeSubscription
+	var eesubscription models.EeSubscription
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -38,7 +37,8 @@ func HTTPCreateEeSubscription(c *gin.Context) {
 		return
 	}
 
-	err = openapi.Deserialize(&eeSubscriptionReq, requestBody, "application/json")
+	//err = openapi.Deserialize(&eeSubscription, requestBody, "application/json")
+	err = openapi.Deserialize(nil, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
 		rsp := models.ProblemDetails{
@@ -51,21 +51,25 @@ func HTTPCreateEeSubscription(c *gin.Context) {
 		return
 	}
 
-	req := httpwrapper.NewRequest(c.Request, eeSubscriptionReq)
-	req.Params["ueIdentity"] = c.Params.ByName("ueIdentity")
+	// Start
+	logger.EeLog.Infoln("Handle Create EE Subscription")
 
-	rsp := producer.HandleCreateEeSubscription(req)
+	ueIdentity := c.Params.ByName("ueIdentity")
 
-	responseBody, err := openapi.Serialize(rsp.Body, "application/json")
-	if err != nil {
-		logger.EeLog.Errorln(err)
-		problemDetails := models.ProblemDetails{
+	createdEESubscription, problemDetails := producer.CreateEeSubscriptionProcedure(ueIdentity, eesubscription)
+
+	if createdEESubscription != nil {
+		c.JSON(http.StatusCreated, createdEESubscription)
+		return
+	} else if problemDetails != nil {
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
+	} else {
+		problemDetails = &models.ProblemDetails{
 			Status: http.StatusInternalServerError,
-			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
+			Cause:  "UNSPECIFIED_NF_FAILURE",
 		}
 		c.JSON(http.StatusInternalServerError, problemDetails)
-	} else {
-		c.Data(rsp.Status, "application/json", responseBody)
+		return
 	}
 }

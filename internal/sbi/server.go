@@ -173,6 +173,7 @@ func bindRouter(cfg *factory.Config, router *gin.Engine, tlsKeyLogPath string) (
 func newRouter(s *Server) *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
 
+	// EE
 	udmEERoutes := s.getEventExposureRoutes()
 	udmEEGroup := s.router.Group(factory.UdmEeResUriPrefix)
 	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_EE)
@@ -181,10 +182,12 @@ func newRouter(s *Server) *gin.Engine {
 	})
 	AddService(udmEEGroup, udmEERoutes)
 
+	// Callback
 	udmCallBackRoutes := s.getHttpCallBackRoutes()
 	udmCallNackGroup := s.router.Group("")
 	AddService(udmCallNackGroup, udmCallBackRoutes)
 
+	// UEAU
 	udmUEAURoutes := s.getUEAuthenticationRoutes()
 	udmUEAUGroup := s.router.Group(factory.UdmUeauResUriPrefix)
 	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_UEAU)
@@ -193,6 +196,10 @@ func newRouter(s *Server) *gin.Engine {
 	})
 	AddService(udmUEAUGroup, udmUEAURoutes)
 
+	genAuthDataPath := "/:supi/security-information/generate-auth-data"
+	udmUEAUGroup.Any(genAuthDataPath, s.Processor().GenAuthDataHandlerFunc)
+
+	// UECM
 	udmUECMRoutes := s.getUEContextManagementRoutes()
 	udmUECMGroup := s.router.Group(factory.UdmUecmResUriPrefix)
 	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_UECM)
@@ -201,6 +208,7 @@ func newRouter(s *Server) *gin.Engine {
 	})
 	AddService(udmUECMGroup, udmUECMRoutes)
 
+	// SDM
 	udmSDMRoutes := s.getSubscriberDataManagementRoutes()
 	udmSDMGroup := s.router.Group(factory.UdmSdmResUriPrefix)
 	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_SDM)
@@ -209,6 +217,16 @@ func newRouter(s *Server) *gin.Engine {
 	})
 	AddService(udmSDMGroup, udmSDMRoutes)
 
+	oneLayerPath := "/:supi"
+	udmSDMGroup.Any(oneLayerPath, s.Processor().OneLayerPathHandlerFunc)
+
+	twoLayerPath := "/:supi/:subscriptionId"
+	udmSDMGroup.Any(twoLayerPath, s.Processor().TwoLayerPathHandlerFunc)
+
+	threeLayerPath := "/:supi/:subscriptionId/:thirdLayer"
+	udmSDMGroup.Any(threeLayerPath, s.Processor().ThreeLayerPathHandlerFunc)
+
+	// PP
 	udmPPRoutes := s.getParameterProvisionRoutes()
 	udmPPGroup := s.router.Group(factory.UdmPpResUriPrefix)
 	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_PP)
