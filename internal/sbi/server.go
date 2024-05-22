@@ -181,7 +181,7 @@ func newRouter(s *Server) *gin.Engine {
 	AddService(udmUEAUGroup, udmUEAURoutes)
 
 	genAuthDataPath := "/:supi/security-information/generate-auth-data"
-	udmUEAUGroup.Any(genAuthDataPath, s.Processor().GenAuthDataHandlerFunc)
+	udmUEAUGroup.Any(genAuthDataPath, s.GenAuthDataHandlerFunc)
 
 	// UECM
 	udmUECMRoutes := s.getUEContextManagementRoutes()
@@ -202,13 +202,13 @@ func newRouter(s *Server) *gin.Engine {
 	AddService(udmSDMGroup, udmSDMRoutes)
 
 	oneLayerPath := "/:supi"
-	udmSDMGroup.Any(oneLayerPath, s.Processor().OneLayerPathHandlerFunc)
+	udmSDMGroup.Any(oneLayerPath, s.OneLayerPathHandlerFunc)
 
 	twoLayerPath := "/:supi/:subscriptionId"
-	udmSDMGroup.Any(twoLayerPath, s.Processor().TwoLayerPathHandlerFunc)
+	udmSDMGroup.Any(twoLayerPath, s.TwoLayerPathHandlerFunc)
 
 	threeLayerPath := "/:supi/:subscriptionId/:thirdLayer"
-	udmSDMGroup.Any(threeLayerPath, s.Processor().ThreeLayerPathHandlerFunc)
+	udmSDMGroup.Any(threeLayerPath, s.ThreeLayerPathHandlerFunc)
 
 	// PP
 	udmPPRoutes := s.getParameterProvisionRoutes()
