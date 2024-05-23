@@ -77,9 +77,9 @@ func (s *nnrfService) SendSearchNFInstances(
 	*models.SearchResult, error,
 ) {
 	// Set client and set url
-	chfContext := s.consumer.Context()
+	udmContext := s.consumer.Context()
 
-	client := s.getNFDiscClient(chfContext.NrfUri)
+	client := s.getNFDiscClient(udmContext.NrfUri)
 
 	ctx, _, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NNRF_DISC, models.NfType_NRF)
 	if err != nil {
@@ -150,7 +150,7 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 	for {
 		nf, res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(context.TODO(), udmContext.NfId, nfProfile)
 		if err != nil || res == nil {
-			logger.ConsumerLog.Errorf("CHF register to NRF Error[%v]", err)
+			logger.ConsumerLog.Errorf("UDM register to NRF Error[%v]", err)
 			time.Sleep(2 * time.Second)
 			continue
 		}

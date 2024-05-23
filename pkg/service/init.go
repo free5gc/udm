@@ -221,7 +221,7 @@ func (a *UdmApp) Terminate() {
 	} else {
 		logger.MainLog.Infof("Deregister from NRF successfully")
 	}
-	logger.MainLog.Infof("CHF SBI Server terminated")
+	logger.MainLog.Infof("UDM SBI Server terminated")
 }
 
 func (a *UdmApp) listenShutdownEvent() {
@@ -245,7 +245,7 @@ func (a *UdmApp) CallServerStop() {
 
 func (a *UdmApp) WaitRoutineStopped() {
 	a.wg.Wait()
-	logger.MainLog.Infof("CHF App is terminated")
+	logger.MainLog.Infof("UDM App is terminated")
 }
 
 func (a *UdmApp) Config() *factory.Config {
