@@ -34,6 +34,7 @@ const (
 func Init() {
 	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
 	GetSelf().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
+	InitUdmContext(GetSelf())
 }
 
 type NFContext interface {

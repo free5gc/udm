@@ -17,8 +17,6 @@ import (
 	"github.com/free5gc/util/version"
 )
 
-var UDM *service.UdmApp
-
 func main() {
 	defer func() {
 		if p := recover(); p != nil {
@@ -74,10 +72,9 @@ func action(cliCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	UDM = udm
 
 	udm.Start()
-	UDM.WaitRoutineStopped()
+	udm.WaitRoutineStopped()
 
 	return nil
 }

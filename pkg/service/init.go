@@ -52,6 +52,7 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Ud
 	udm.SetLogEnable(cfg.GetLogEnable())
 	udm.SetLogLevel(cfg.GetLogLevel())
 	udm.SetReportCaller(cfg.GetLogReportCaller())
+	udm_context.Init()
 
 	processor, err_p := processor.NewProcessor(udm)
 	if err_p != nil {
@@ -127,84 +128,6 @@ func (a *UdmApp) Start() {
 	if err := a.sbiServer.Run(context.Background(), &a.wg); err != nil {
 		logger.MainLog.Fatalf("Run SBI server failed: %+v", err)
 	}
-	/*config := factory.UdmConfig
-	configuration := config.Configuration
-	sbi := configuration.Sbi
-
-	logger.InitLog.Infof("UDM Config Info: Version[%s] Description[%s]", config.Info.Version, config.Info.Description)
-
-	logger.InitLog.Infoln("Server started")
-
-	router := logger_util.NewGinWithLogrus(logger.GinLog)
-
-	eventexposure.AddService(router)
-	httpcallback.AddService(router)
-	parameterprovision.AddService(router)
-	subscriberdatamanagement.AddService(router)
-	ueauthentication.AddService(router)
-	uecontextmanagement.AddService(router)
-
-	pemPath := factory.UdmDefaultCertPemPath
-	keyPath := factory.UdmDefaultPrivateKeyPath
-	if sbi.Tls != nil {
-		pemPath = sbi.Tls.Pem
-		keyPath = sbi.Tls.Key
-	}
-
-	self := a.udmCtx
-	udm_context.InitUdmContext(self)
-
-	addr := fmt.Sprintf("%s:%d", self.BindingIPv4, self.SBIPort)
-
-	proflie, err := consumer.BuildNFInstance(self)
-	if err != nil {
-		logger.InitLog.Errorln(err.Error())
-	} else {
-		var newNrfUri string
-		var err1 error
-		newNrfUri, self.NfId, err1 = consumer.SendRegisterNFInstance(self.NrfUri, self.NfId, proflie)
-		if err1 != nil {
-			logger.InitLog.Errorln(err1.Error())
-		} else {
-			self.NrfUri = newNrfUri
-		}
-	}
-
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				// Print stack for panic to log. Fatalf() will let program exit.
-				logger.InitLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
-			}
-		}()
-
-		<-signalChannel
-		a.Terminate()
-		os.Exit(0)
-	}()
-
-	server, err := httpwrapper.NewHttp2Server(addr, tlsKeyLogPath, router)
-	if server == nil {
-		logger.InitLog.Errorf("Initialize HTTP server failed: %+v", err)
-		return
-	}
-
-	if err != nil {
-		logger.InitLog.Warnf("Initialize HTTP server: +%v", err)
-	}
-
-	serverScheme := factory.UdmConfig.Configuration.Sbi.Scheme
-	if serverScheme == "http" {
-		err = server.ListenAndServe()
-	} else if serverScheme == "https" {
-		err = server.ListenAndServeTLS(pemPath, keyPath)
-	}
-
-	if err != nil {
-		logger.InitLog.Fatalf("HTTP server setup failed: %+v", err)
-	}*/
 }
 
 func (a *UdmApp) Terminate() {

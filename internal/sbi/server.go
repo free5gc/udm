@@ -54,14 +54,6 @@ func NewServer(udm ServerUdm, tlsKeyLogPath string) (*Server, error) {
 	}
 	s.httpServer.ErrorLog = log.New(logger.SBILog.WriterLevel(logrus.ErrorLevel), "HTTP2: ", 0)
 
-	/*server, err := bindRouter(s.Config(), s.router, tlsKeyLogPath)
-	s.httpServer = server
-
-	if err != nil {
-		logger.SBILog.Errorf("bind Router Error: %+v", err)
-		panic("Server initialization failed")
-	}*/
-
 	return s, err
 }
 
@@ -76,14 +68,6 @@ func (s *Server) Run(traceCtx context.Context, wg *sync.WaitGroup) error {
 
 	wg.Add(1)
 	go s.startServer(wg)
-	/*go func() {
-		defer wg.Done()
-
-		err := s.serve()
-		if err != http.ErrServerClosed {
-			logger.SBILog.Panicf("HTTP server setup failed: %+v", err)
-		}
-	}()*/
 
 	return nil
 }
