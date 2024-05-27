@@ -11,26 +11,6 @@ import (
 	"github.com/free5gc/util/httpwrapper"
 )
 
-func HandleCreateEeSubscription(request *httpwrapper.Request) *httpwrapper.Response {
-	logger.EeLog.Infoln("Handle Create EE Subscription")
-
-	eesubscription := request.Body.(models.EeSubscription)
-	ueIdentity := request.Params["ueIdentity"]
-
-	createdEESubscription, problemDetails := CreateEeSubscriptionProcedure(ueIdentity, eesubscription)
-	if createdEESubscription != nil {
-		return httpwrapper.NewResponse(http.StatusCreated, nil, createdEESubscription)
-	} else if problemDetails != nil {
-		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "UNSPECIFIED_NF_FAILURE",
-		}
-		return httpwrapper.NewResponse(http.StatusInternalServerError, nil, problemDetails)
-	}
-}
-
 // TODO: complete this procedure based on TS 29503 5.5
 func CreateEeSubscriptionProcedure(ueIdentity string,
 	eesubscription models.EeSubscription,

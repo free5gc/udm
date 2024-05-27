@@ -54,17 +54,17 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Ud
 	udm.SetReportCaller(cfg.GetLogReportCaller())
 	udm_context.Init()
 
-	processor, err_p := processor.NewProcessor(udm)
-	if err_p != nil {
-		return udm, err_p
-	}
-	udm.processor = processor
-
 	consumer, err := consumer.NewConsumer(udm)
 	if err != nil {
 		return udm, err
 	}
 	udm.consumer = consumer
+
+	processor, err_p := processor.NewProcessor(udm)
+	if err_p != nil {
+		return udm, err_p
+	}
+	udm.processor = processor
 
 	udm.ctx, udm.cancel = context.WithCancel(ctx)
 	udm.udmCtx = udm_context.GetSelf()

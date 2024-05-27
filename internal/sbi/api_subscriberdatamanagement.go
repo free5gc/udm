@@ -26,7 +26,7 @@ func (s *Server) getSubscriberDataManagementRoutes() []Route {
 
 // GetAmData - retrieve a UE's Access and Mobility Subscription Data
 func (s *Server) HandleGetAmData(c *gin.Context) {
-	var query url.Values
+	query := url.Values{}
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("supported-features", c.Query("plmn-id"))
 
@@ -98,7 +98,7 @@ func (s *Server) HandlePutUpuAck(c *gin.Context) {
 
 // GetSmfSelectData - retrieve a UE's SMF Selection Subscription Data
 func (s *Server) HandleGetSmfSelectData(c *gin.Context) {
-	var query url.Values
+	query := url.Values{}
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("supported-features", c.Query("supported-features"))
 
@@ -148,7 +148,7 @@ func (s *Server) HandleGetSmsData(c *gin.Context) {
 
 // GetSupi - retrieve multiple data sets
 func (s *Server) HandleGetSupi(c *gin.Context) {
-	var query url.Values
+	query := url.Values{}
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("dataset-names", c.Query("dataset-names"))
 	query.Set("supported-features", c.Query("supported-features"))
@@ -563,7 +563,7 @@ func (s *Server) HandleGetUeContextInSmsfData(c *gin.Context) {
 
 // GetNssai - retrieve a UE's subscribed NSSAI
 func (s *Server) HandleGetNssai(c *gin.Context) {
-	var query url.Values
+	query := url.Values{}
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("supported-features", c.Query("supported-features"))
 
@@ -603,7 +603,7 @@ func (s *Server) HandleGetNssai(c *gin.Context) {
 
 // GetSmData - retrieve a UE's Session Management Subscription Data
 func (s *Server) HandleGetSmData(c *gin.Context) {
-	var query url.Values
+	query := url.Values{}
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("dnn", c.Query("dnn"))
 	query.Set("single-nssai", c.Query("single-nssai"))

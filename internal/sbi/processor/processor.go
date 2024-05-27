@@ -7,6 +7,8 @@ import (
 
 type ProcessorUdm interface {
 	app.App
+
+	Consumer() *consumer.Consumer
 }
 
 type Processor struct {
@@ -23,6 +25,11 @@ type HandlerResponse struct {
 func NewProcessor(udm ProcessorUdm) (*Processor, error) {
 	p := &Processor{
 		ProcessorUdm: udm,
+		consumer:     udm.Consumer(),
 	}
 	return p, nil
+}
+
+func (p *Processor) Consumer() *consumer.Consumer {
+	return p.consumer
 }
