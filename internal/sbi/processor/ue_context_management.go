@@ -11,7 +11,6 @@ import (
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/udm/internal/sbi/producer/callback"
 )
 
 // ue_context_managemanet_service
@@ -145,7 +144,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(
 
 			go func() {
 				logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
-				pd := callback.SendOnDeregistrationNotification(ueID,
+				pd := p.SendOnDeregistrationNotification(ueID,
 					oldAmf3GppAccessRegContext.DeregCallbackUri,
 					deregistData) // Deregistration Notify Triggered
 				if pd != nil {
@@ -212,7 +211,7 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(
 			DeregReason: models.DeregistrationReason_UE_INITIAL_REGISTRATION,
 			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
 		}
-		callback.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
+		p.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
 			deregistData) // Deregistration Notify Triggered
 
 		return nil, nil, nil
