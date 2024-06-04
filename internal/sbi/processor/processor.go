@@ -16,12 +16,6 @@ type Processor struct {
 	consumer *consumer.Consumer
 }
 
-type HandlerResponse struct {
-	Status  int
-	Headers map[string][]string
-	Body    interface{}
-}
-
 func NewProcessor(udm ProcessorUdm) (*Processor, error) {
 	p := &Processor{
 		ProcessorUdm: udm,

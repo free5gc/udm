@@ -18,8 +18,6 @@ import (
 	"github.com/free5gc/udm/pkg/factory"
 )
 
-var UDM *UdmApp
-
 var _ app.App = &UdmApp{}
 
 type UdmApp struct {
@@ -38,10 +36,6 @@ type UdmApp struct {
 	sbiServer *sbi.Server
 	consumer  *consumer.Consumer
 	processor *processor.Processor
-}
-
-func GetApp() *UdmApp {
-	return UDM
 }
 
 func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*UdmApp, error) {
@@ -72,8 +66,6 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Ud
 	if udm.sbiServer, err = sbi.NewServer(udm, tlsKeyLogPath); err != nil {
 		return nil, err
 	}
-
-	UDM = udm
 
 	return udm, nil
 }
