@@ -34,7 +34,7 @@ func (s *nudrService) CreateUDMClientToUDR(id string) (*Nudr_DataRepository.APIC
 	s.nfDRMu.RLock()
 	client, ok := s.nfDRClients[uri]
 	if ok {
-		defer s.nfDRMu.RUnlock()
+		s.nfDRMu.RUnlock()
 		return client, nil
 	}
 

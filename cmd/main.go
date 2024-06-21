@@ -74,7 +74,6 @@ func action(cliCtx *cli.Context) error {
 	}
 
 	udm.Start()
-	udm.WaitRoutineStopped()
 
 	return nil
 }

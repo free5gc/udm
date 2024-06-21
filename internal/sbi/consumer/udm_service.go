@@ -24,7 +24,7 @@ func (s *nudmService) GetSDMClient(uri string) *Nudm_SubscriberDataManagement.AP
 	s.nfSDMMu.RLock()
 	client, ok := s.nfSDMClients[uri]
 	if ok {
-		defer s.nfSDMMu.RUnlock()
+		s.nfSDMMu.RUnlock()
 		return client
 	}
 

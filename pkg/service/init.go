@@ -21,11 +21,6 @@ import (
 var _ app.App = &UdmApp{}
 
 type UdmApp struct {
-	app.App
-	consumer.ConsumerUdm
-	processor.ProcessorUdm
-	sbi.ServerUdm
-
 	udmCtx *udm_context.UDMContext
 	cfg    *factory.Config
 
@@ -120,23 +115,8 @@ func (a *UdmApp) Start() {
 	if err := a.sbiServer.Run(context.Background(), &a.wg); err != nil {
 		logger.MainLog.Fatalf("Run SBI server failed: %+v", err)
 	}
-}
 
-func (a *UdmApp) Terminate() {
-	logger.MainLog.Infof("Terminating UDM...")
-	a.cancel()
-	a.CallServerStop()
-
-	// deregister with NRF
-	problemDetails, err := a.Consumer().SendDeregisterNFInstance()
-	if problemDetails != nil {
-		logger.MainLog.Errorf("Deregister NF instance Failed Problem[%+v]", problemDetails)
-	} else if err != nil {
-		logger.MainLog.Errorf("Deregister NF instance Error[%+v]", err)
-	} else {
-		logger.MainLog.Infof("Deregister from NRF successfully")
-	}
-	logger.MainLog.Infof("UDM SBI Server terminated")
+	a.WaitRoutineStopped()
 }
 
 func (a *UdmApp) listenShutdownEvent() {
@@ -149,13 +129,33 @@ func (a *UdmApp) listenShutdownEvent() {
 	}()
 
 	<-a.ctx.Done()
-	a.Terminate()
+	a.terminateProcedure()
 }
 
 func (a *UdmApp) CallServerStop() {
 	if a.sbiServer != nil {
 		a.sbiServer.Stop()
 	}
+}
+
+func (a *UdmApp) Terminate() {
+	a.cancel()
+}
+
+func (a *UdmApp) terminateProcedure() {
+	logger.MainLog.Infof("Terminating UDM...")
+	a.CallServerStop()
+
+	// deregister with NRF
+	problemDetails, err := a.Consumer().SendDeregisterNFInstance()
+	if problemDetails != nil {
+		logger.MainLog.Errorf("Deregister NF instance Failed Problem[%+v]", problemDetails)
+	} else if err != nil {
+		logger.MainLog.Errorf("Deregister NF instance Error[%+v]", err)
+	} else {
+		logger.MainLog.Infof("Deregister from NRF successfully")
+	}
+	logger.MainLog.Infof("UDM SBI Server terminated")
 }
 
 func (a *UdmApp) WaitRoutineStopped() {
