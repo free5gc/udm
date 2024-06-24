@@ -102,7 +102,7 @@ func (s *Server) startServer(wg *sync.WaitGroup) {
 	if err != nil && err != http.ErrServerClosed {
 		logger.SBILog.Errorf("SBI server error: %v", err)
 	}
-	logger.SBILog.Info("SBI server (listen on %s) stopped", s.httpServer.Addr)
+	logger.SBILog.Infof("SBI server (listen on %s) stopped", s.httpServer.Addr)
 }
 
 func (s *Server) Shutdown() {
