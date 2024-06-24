@@ -102,7 +102,7 @@ func (s *Server) startServer(wg *sync.WaitGroup) {
 	if err != nil && err != http.ErrServerClosed {
 		logger.SBILog.Errorf("SBI server error: %v", err)
 	}
-	logger.SBILog.Warnf("SBI server (listen on %s) stopped", s.httpServer.Addr)
+	logger.SBILog.Info("SBI server (listen on %s) stopped", s.httpServer.Addr)
 }
 
 func (s *Server) Shutdown() {
@@ -146,7 +146,7 @@ func newRouter(s *Server) *gin.Engine {
 	udmEEGroup := s.router.Group(factory.UdmEeResUriPrefix)
 	routerAuthorizationCheck := util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_EE)
 	udmEEGroup.Use(func(c *gin.Context) {
-		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
+		routerAuthorizationCheck.Check(c, s.Context())
 	})
 	AddService(udmEEGroup, udmEERoutes)
 

@@ -377,32 +377,32 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 
 // DeregistrationSmsfNon3gppAccess - delete SMSF registration for non 3GPP access
 func (s *Server) HandleDeregistrationSmsfNon3gppAccess(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 // DeregistrationSmsf3gppAccess - delete the SMSF registration for 3GPP access
 func (s *Server) HandleDeregistrationSmsf3gppAccess(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 // GetSmsfNon3gppAccess - retrieve the SMSF registration for non-3GPP access information
 func (s *Server) HandleGetSmsfNon3gppAccess(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 // RegistrationSmsfNon3gppAccess - register as SMSF for non-3GPP access
 func (s *Server) HandleRegistrationSmsfNon3gppAccess(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 // UpdateSMSFReg3GPP - register as SMSF for 3GPP access
 func (s *Server) HandleUpdateSMSFReg3GPP(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 // GetSmsf3gppAccess - retrieve the SMSF registration for 3GPP access information
 func (s *Server) HandleGetSmsf3gppAccess(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 // DeregistrationSmfRegistrations - delete an SMF registration
