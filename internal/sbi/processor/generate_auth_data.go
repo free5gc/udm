@@ -18,7 +18,6 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/Nudr_DataRepository"
 	"github.com/free5gc/openapi/models"
-	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/milenage"
@@ -81,7 +80,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 	authEvent models.AuthEvent,
 	supi string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -124,7 +123,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 	authInfoRequest models.AuthenticationInfoRequest,
 	supiOrSuci string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -133,7 +132,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 
 	response := &models.AuthenticationInfoResult{}
 	rand.New(rand.NewSource(time.Now().UnixNano()))
-	supi, err := suci.ToSupi(supiOrSuci, udm_context.GetSelf().SuciProfiles)
+	supi, err := suci.ToSupi(supiOrSuci, p.Context().SuciProfiles)
 	if err != nil {
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusForbidden,
@@ -409,7 +408,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 						keyIndex)
 				} else {
 					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key ",
-						udm_context.GetSelf().SuciProfiles[keyIndex-1].PublicKey)
+						p.Context().SuciProfiles[keyIndex-1].PublicKey)
 				}
 			}
 			logger.UeauLog.Errorln("MACS ", macS)

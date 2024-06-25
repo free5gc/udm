@@ -16,7 +16,7 @@ import (
 func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity string,
 	eesubscription models.EeSubscription,
 ) {
-	udmSelf := udm_context.GetSelf()
+	udmSelf := p.Context()
 	logger.EeLog.Debugf("udIdentity: %s", ueIdentity)
 	switch {
 	// GPSI (MSISDN identifier) represents a single UE
@@ -110,7 +110,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 
 // TODO: complete this procedure based on TS 29503 5.5
 func (p *Processor) DeleteEeSubscriptionProcedure(c *gin.Context, ueIdentity string, subscriptionID string) {
-	udmSelf := udm_context.GetSelf()
+	udmSelf := p.Context()
 
 	switch {
 	case strings.HasPrefix(ueIdentity, "msisdn-"):
@@ -148,7 +148,7 @@ func (p *Processor) DeleteEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 func (p *Processor) UpdateEeSubscriptionProcedure(c *gin.Context, ueIdentity string, subscriptionID string,
 	patchList []models.PatchItem,
 ) {
-	udmSelf := udm_context.GetSelf()
+	udmSelf := p.Context()
 
 	switch {
 	case strings.HasPrefix(ueIdentity, "msisdn-"):

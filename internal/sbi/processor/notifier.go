@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/openapi/models"
-	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 )
 
@@ -14,13 +13,13 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 	notifyItems []models.NotifyItem,
 	supi string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 
-	ue, _ := udm_context.GetSelf().UdmUeFindBySupi(supi)
+	ue, _ := p.Context().UdmUeFindBySupi(supi)
 
 	clientAPI := p.consumer.GetSDMClient("DataChangeNotification")
 
@@ -61,7 +60,7 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 func (p *Processor) SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
 	deregistData models.DeregistrationData,
 ) *models.ProblemDetails {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_UECM, models.NfType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_UECM, models.NfType_UDM)
 	if err != nil {
 		return pd
 	}

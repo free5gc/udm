@@ -7,7 +7,6 @@ import (
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
-	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 )
 
@@ -15,7 +14,7 @@ func (p *Processor) UpdateProcedure(c *gin.Context,
 	updateRequest models.PpData,
 	gpsi string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return

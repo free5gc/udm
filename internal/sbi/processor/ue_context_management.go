@@ -16,7 +16,7 @@ import (
 
 // ue_context_managemanet_service
 func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, supportedFeatures string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -54,7 +54,7 @@ func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, suppo
 func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContextNon3gppParamOpts Nudr_DataRepository.
 	QueryAmfContextNon3gppParamOpts, ueID string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 	}
@@ -89,7 +89,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 	registerRequest models.Amf3GppAccessRegistration,
 	ueID string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -98,12 +98,12 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 	var oldAmf3GppAccessRegContext *models.Amf3GppAccessRegistration
 	var ue *udm_context.UdmUeContext
 
-	if udm_context.GetSelf().UdmAmf3gppRegContextExists(ueID) {
-		ue, _ = udm_context.GetSelf().UdmUeFindBySupi(ueID)
+	if p.Context().UdmAmf3gppRegContextExists(ueID) {
+		ue, _ = p.Context().UdmUeFindBySupi(ueID)
 		oldAmf3GppAccessRegContext = ue.Amf3GppAccessRegistration
 	}
 
-	udm_context.GetSelf().CreateAmf3gppRegContext(ueID, registerRequest)
+	p.Context().CreateAmf3gppRegContext(ueID, registerRequest)
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
@@ -172,18 +172,18 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 	registerRequest models.AmfNon3GppAccessRegistration,
 	ueID string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	var oldAmfNon3GppAccessRegContext *models.AmfNon3GppAccessRegistration
-	if udm_context.GetSelf().UdmAmfNon3gppRegContextExists(ueID) {
-		ue, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
+	if p.Context().UdmAmfNon3gppRegContextExists(ueID) {
+		ue, _ := p.Context().UdmUeFindBySupi(ueID)
 		oldAmfNon3GppAccessRegContext = ue.AmfNon3GppAccessRegistration
 	}
 
-	udm_context.GetSelf().CreateAmfNon3gppRegContext(ueID, registerRequest)
+	p.Context().CreateAmfNon3gppRegContext(ueID, registerRequest)
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
@@ -236,13 +236,13 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 	request models.Amf3GppAccessRegistrationModification,
 	ueID string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	var patchItemReqArray []models.PatchItem
-	currentContext := udm_context.GetSelf().GetAmf3gppRegContext(ueID)
+	currentContext := p.Context().GetAmf3gppRegContext(ueID)
 	if currentContext == nil {
 		logger.UecmLog.Errorln("[UpdateAmf3gppAccess] Empty Amf3gppRegContext")
 		problemDetails := &models.ProblemDetails{
@@ -254,7 +254,7 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 	}
 
 	if request.Guami != nil {
-		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
+		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
 		if udmUe.SameAsStoredGUAMI3gpp(*request.Guami) { // deregistration
 			logger.UecmLog.Infoln("UpdateAmf3gppAccess - deregistration")
 			request.PurgeFlag = true
@@ -327,7 +327,7 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 	}
 
 	if request.PurgeFlag {
-		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
+		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
 		udmUe.Amf3GppAccessRegistration = nil
 	}
 
@@ -344,13 +344,13 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 	request models.AmfNon3GppAccessRegistrationModification,
 	ueID string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	var patchItemReqArray []models.PatchItem
-	currentContext := udm_context.GetSelf().GetAmfNon3gppRegContext(ueID)
+	currentContext := p.Context().GetAmfNon3gppRegContext(ueID)
 	if currentContext == nil {
 		logger.UecmLog.Errorln("[UpdateAmfNon3gppAccess] Empty AmfNon3gppRegContext")
 		problemDetails := &models.ProblemDetails{
@@ -362,7 +362,7 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 	}
 
 	if request.Guami != nil {
-		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
+		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
 		if udmUe.SameAsStoredGUAMINon3gpp(*request.Guami) { // deregistration
 			logger.UecmLog.Infoln("UpdateAmfNon3gppAccess - deregistration")
 			request.PurgeFlag = true
@@ -446,7 +446,7 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 	ueID string,
 	pduSessionID string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -483,14 +483,14 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 	ueID string,
 	pduSessionID string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	contextExisted := false
-	udm_context.GetSelf().CreateSmfRegContext(ueID, pduSessionID)
-	if !udm_context.GetSelf().UdmSmfRegContextNotExists(ueID) {
+	p.Context().CreateSmfRegContext(ueID, pduSessionID)
+	if !p.Context().UdmSmfRegContextNotExists(ueID) {
 		contextExisted = true
 	}
 

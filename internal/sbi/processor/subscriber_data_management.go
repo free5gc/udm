@@ -15,7 +15,7 @@ import (
 )
 
 func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -54,9 +54,9 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+		udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 		if !ok {
-			udmUe = udm_context.GetSelf().NewUdmUe(supi)
+			udmUe = p.Context().NewUdmUe(supi)
 		}
 		udmUe.SetAMSubsriptionData(&accessAndMobilitySubscriptionDataResp)
 		c.JSON(http.StatusOK, accessAndMobilitySubscriptionDataResp)
@@ -70,7 +70,7 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 }
 
 func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 	}
@@ -135,7 +135,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 	dataSetNames []string,
 	supportedFeatures string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -170,11 +170,11 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	querySmfSelectDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
-	udm_context.GetSelf().CreateSubsDataSetsForUe(supi, subsDataSetBody)
+	p.Context().CreateSubsDataSetsForUe(supi, subsDataSetBody)
 
 	if p.containDataSetName(dataSetNames, string(models.DataSetName_AM)) {
 		var body models.AccessAndMobilitySubscriptionData
-		udm_context.GetSelf().CreateAccessMobilitySubsDataForUe(supi, body)
+		p.Context().CreateAccessMobilitySubsDataForUe(supi, body)
 
 		amData, res, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.QueryAmData(
 			ctx, supi, plmnID, &queryAmDataParamOpts)
@@ -200,9 +200,9 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			}
 		}()
 		if res.StatusCode == http.StatusOK {
-			udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+			udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 			if !ok {
-				udmUe = udm_context.GetSelf().NewUdmUe(supi)
+				udmUe = p.Context().NewUdmUe(supi)
 			}
 			udmUe.SetAMSubsriptionData(&amData)
 			subscriptionDataSets.AmData = &amData
@@ -219,7 +219,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 
 	if p.containDataSetName(dataSetNames, string(models.DataSetName_SMF_SEL)) {
 		var smfSelSubsbody models.SmfSelectionSubscriptionData
-		udm_context.GetSelf().CreateSmfSelectionSubsDataforUe(supi, smfSelSubsbody)
+		p.Context().CreateSmfSelectionSubsDataforUe(supi, smfSelSubsbody)
 
 		smfSelData, res, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.QuerySmfSelectData(ctx,
 			supi, plmnID, &querySmfSelectDataParamOpts)
@@ -245,9 +245,9 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			}
 		}()
 		if res.StatusCode == http.StatusOK {
-			udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+			udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 			if !ok {
-				udmUe = udm_context.GetSelf().NewUdmUe(supi)
+				udmUe = p.Context().NewUdmUe(supi)
 			}
 			udmUe.SetSmfSelectionSubsData(&smfSelData)
 			subscriptionDataSets.SmfSelData = &smfSelData
@@ -266,7 +266,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		var UeContextInSmfbody models.UeContextInSmfData
 		var querySmfRegListParamOpts Nudr_DataRepository.QuerySmfRegListParamOpts
 		querySmfRegListParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
-		udm_context.GetSelf().CreateUeContextInSmfDataforUe(supi, UeContextInSmfbody)
+		p.Context().CreateUeContextInSmfDataforUe(supi, UeContextInSmfbody)
 
 		pdusess, res, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(
 			ctx, supi, &querySmfRegListParamOpts)
@@ -311,9 +311,9 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		ueContextInSmfDataResp.PgwInfo = pgwInfoArray
 
 		if res.StatusCode == http.StatusOK {
-			udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+			udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 			if !ok {
-				udmUe = udm_context.GetSelf().NewUdmUe(supi)
+				udmUe = p.Context().NewUdmUe(supi)
 			}
 			udmUe.UeCtxtInSmfData = &ueContextInSmfDataResp
 			subscriptionDataSets.UecSmfData = &ueContextInSmfDataResp
@@ -357,11 +357,11 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			}
 		}()
 		if res.StatusCode == http.StatusOK {
-			udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+			udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 			if !ok {
-				udmUe = udm_context.GetSelf().NewUdmUe(supi)
+				udmUe = p.Context().NewUdmUe(supi)
 			}
-			smData, _, _, _ := udm_context.GetSelf().ManageSmData(sessionManagementSubscriptionData, "", "")
+			smData, _, _, _ := p.Context().ManageSmData(sessionManagementSubscriptionData, "", "")
 			udmUe.SetSMSubsData(smData)
 			subscriptionDataSets.SmData = sessionManagementSubscriptionData
 		} else {
@@ -377,7 +377,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 
 	if p.containDataSetName(dataSetNames, string(models.DataSetName_TRACE)) {
 		var TraceDatabody models.TraceData
-		udm_context.GetSelf().CreateTraceDataforUe(supi, TraceDatabody)
+		p.Context().CreateTraceDataforUe(supi, TraceDatabody)
 
 		traceData, res, err := clientAPI.TraceDataDocumentApi.QueryTraceData(
 			ctx, supi, plmnID, &queryTraceDataParamOpts)
@@ -405,9 +405,9 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			}
 		}()
 		if res.StatusCode == http.StatusOK {
-			udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+			udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 			if !ok {
-				udmUe = udm_context.GetSelf().NewUdmUe(supi)
+				udmUe = p.Context().NewUdmUe(supi)
 			}
 			udmUe.TraceData = &traceData
 			udmUe.TraceDataResponse.TraceData = &traceData
@@ -431,7 +431,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 }
 
 func (p *Processor) GetSharedDataProcedure(c *gin.Context, sharedDataIds []string, supportedFeatures string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -472,7 +472,7 @@ func (p *Processor) GetSharedDataProcedure(c *gin.Context, sharedDataIds []strin
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		udm_context.GetSelf().SharedSubsDataMap = udm_context.MappingSharedData(sharedDataResp)
+		p.Context().SharedSubsDataMap = udm_context.MappingSharedData(sharedDataResp)
 		sharedData := udm_context.ObtainRequiredSharedData(sharedDataIds, sharedDataResp)
 		c.JSON(http.StatusOK, sharedData)
 	} else {
@@ -492,7 +492,7 @@ func (p *Processor) GetSmDataProcedure(
 	Snssai string,
 	supportedFeatures string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 	}
@@ -533,11 +533,11 @@ func (p *Processor) GetSmDataProcedure(
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+		udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 		if !ok {
-			udmUe = udm_context.GetSelf().NewUdmUe(supi)
+			udmUe = p.Context().NewUdmUe(supi)
 		}
-		smData, snssaikey, AllDnnConfigsbyDnn, AllDnns := udm_context.GetSelf().ManageSmData(
+		smData, snssaikey, AllDnnConfigsbyDnn, AllDnns := p.Context().ManageSmData(
 			sessionManagementSubscriptionDataResp, Snssai, Dnn)
 		udmUe.SetSMSubsData(smData)
 
@@ -576,7 +576,7 @@ func (p *Processor) GetSmDataProcedure(
 }
 
 func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -619,9 +619,9 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 	nssaiResp = *accessAndMobilitySubscriptionDataResp.Nssai
 
 	if res.StatusCode == http.StatusOK {
-		udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+		udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 		if !ok {
-			udmUe = udm_context.GetSelf().NewUdmUe(supi)
+			udmUe = p.Context().NewUdmUe(supi)
 		}
 		udmUe.Nssai = &nssaiResp
 		c.JSON(http.StatusOK, udmUe.Nssai)
@@ -635,7 +635,7 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 }
 
 func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -651,7 +651,7 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 		return
 	}
 
-	udm_context.GetSelf().CreateSmfSelectionSubsDataforUe(supi, body)
+	p.Context().CreateSmfSelectionSubsDataforUe(supi, body)
 
 	smfSelectionSubscriptionDataResp, res, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.
 		QuerySmfSelectData(ctx, supi, plmnID, &querySmfSelectDataParamOpts)
@@ -681,9 +681,9 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+		udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 		if !ok {
-			udmUe = udm_context.GetSelf().NewUdmUe(supi)
+			udmUe = p.Context().NewUdmUe(supi)
 		}
 		udmUe.SetSmfSelectionSubsData(&smfSelectionSubscriptionDataResp)
 		c.JSON(http.StatusOK, udmUe.SmfSelSubsData)
@@ -697,7 +697,7 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 }
 
 func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -729,15 +729,11 @@ func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscripti
 	}()
 
 	if res.StatusCode == http.StatusCreated {
-		header := make(http.Header)
-		udm_context.GetSelf().CreateSubstoNotifSharedData(sdmSubscriptionResp.SubscriptionId, &sdmSubscriptionResp)
-		reourceUri := udm_context.GetSelf().
+		p.Context().CreateSubstoNotifSharedData(sdmSubscriptionResp.SubscriptionId, &sdmSubscriptionResp)
+		reourceUri := p.Context().
 			GetSDMUri() +
 			"//shared-data-subscriptions/" + sdmSubscriptionResp.SubscriptionId
-		header.Set("Location", reourceUri)
-		for key, val := range header { // header response is optional
-			c.Header(key, val[0])
-		}
+		c.Header("Location", reourceUri)
 		c.JSON(http.StatusOK, sdmSubscriptionResp)
 	} else if res.StatusCode == http.StatusNotFound {
 		problemDetails := &models.ProblemDetails{
@@ -757,7 +753,7 @@ func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscripti
 }
 
 func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription, supi string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -794,16 +790,12 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.S
 	}()
 
 	if res.StatusCode == http.StatusCreated {
-		header := make(http.Header)
-		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(supi)
+		udmUe, _ := p.Context().UdmUeFindBySupi(supi)
 		if udmUe == nil {
-			udmUe = udm_context.GetSelf().NewUdmUe(supi)
+			udmUe = p.Context().NewUdmUe(supi)
 		}
 		udmUe.CreateSubscriptiontoNotifChange(sdmSubscriptionResp.SubscriptionId, &sdmSubscriptionResp)
-		header.Set("Location", udmUe.GetLocationURI2(udm_context.LocationUriSdmSubscription, supi))
-		for key, val := range header { // header response is optional
-			c.Header(key, val[0])
-		}
+		c.Header("Location", udmUe.GetLocationURI2(udm_context.LocationUriSdmSubscription, supi))
 		c.JSON(http.StatusCreated, sdmSubscriptionResp)
 	} else if res.StatusCode == http.StatusNotFound {
 		problemDetails := &models.ProblemDetails{
@@ -821,7 +813,7 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.S
 }
 
 func (p *Processor) UnsubscribeForSharedDataProcedure(c *gin.Context, subscriptionID string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -865,7 +857,7 @@ func (p *Processor) UnsubscribeForSharedDataProcedure(c *gin.Context, subscripti
 }
 
 func (p *Processor) UnsubscribeProcedure(c *gin.Context, supi string, subscriptionID string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -916,7 +908,7 @@ func (p *Processor) ModifyProcedure(c *gin.Context,
 	supi string,
 	subscriptionID string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -975,7 +967,7 @@ func (p *Processor) ModifyForSharedDataProcedure(c *gin.Context,
 	supi string,
 	subscriptionID string,
 ) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -1028,7 +1020,7 @@ func (p *Processor) ModifyForSharedDataProcedure(c *gin.Context,
 }
 
 func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID string) {
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -1043,7 +1035,7 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 		return
 	}
 
-	udm_context.GetSelf().CreateTraceDataforUe(supi, body)
+	p.Context().CreateTraceDataforUe(supi, body)
 
 	traceDataRes, res, err := clientAPI.TraceDataDocumentApi.QueryTraceData(
 		ctx, supi, plmnID, &queryTraceDataParamOpts)
@@ -1069,9 +1061,9 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+		udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 		if !ok {
-			udmUe = udm_context.GetSelf().NewUdmUe(supi)
+			udmUe = p.Context().NewUdmUe(supi)
 		}
 		udmUe.TraceData = &traceDataRes
 		udmUe.TraceDataResponse.TraceData = &traceDataRes
@@ -1102,9 +1094,9 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 	}
 
 	pduSessionMap := make(map[string]models.PduSession)
-	udm_context.GetSelf().CreateUeContextInSmfDataforUe(supi, body)
+	p.Context().CreateUeContextInSmfDataforUe(supi, body)
 
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -1154,9 +1146,9 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 	ueContextInSmfData.PgwInfo = pgwInfoArray
 
 	if res.StatusCode == http.StatusOK {
-		udmUe, ok := udm_context.GetSelf().UdmUeFindBySupi(supi)
+		udmUe, ok := p.Context().UdmUeFindBySupi(supi)
 		if !ok {
-			udmUe = udm_context.GetSelf().NewUdmUe(supi)
+			udmUe = p.Context().NewUdmUe(supi)
 		}
 		udmUe.UeCtxtInSmfData = &ueContextInSmfData
 		c.JSON(http.StatusOK, udmUe.UeCtxtInSmfData)
