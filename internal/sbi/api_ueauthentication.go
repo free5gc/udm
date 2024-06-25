@@ -64,15 +64,7 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 
 	logger.UeauLog.Infoln("Handle ConfirmAuthDataRequest")
 
-	problemDetails := s.Processor().ConfirmAuthDataProcedure(authEvent, supi)
-
-	if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusCreated)
-		return
-	}
+	s.Processor().ConfirmAuthDataProcedure(c, authEvent, supi)
 }
 
 // GenerateAuthData - Generate authentication data for the UE
@@ -114,24 +106,7 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 	supiOrSuci := c.Param("supiOrSuci")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GenerateAuthDataProcedure(authInfoReq, supiOrSuci)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GenerateAuthDataProcedure(c, authInfoReq, supiOrSuci)
 }
 
 func (s *Server) GenAuthDataHandlerFunc(c *gin.Context) {

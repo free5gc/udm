@@ -45,24 +45,7 @@ func (s *Server) HandleGetAmData(c *gin.Context) {
 	supportedFeatures := query.Get("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetAmDataProcedure(supi, plmnID, supportedFeatures)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetAmDataProcedure(c, supi, plmnID, supportedFeatures)
 }
 
 func (s *Server) getPlmnIDStruct(
@@ -116,24 +99,7 @@ func (s *Server) HandleGetSmfSelectData(c *gin.Context) {
 	supportedFeatures := query.Get("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetSmfSelectDataProcedure(supi, plmnID, supportedFeatures)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetSmfSelectDataProcedure(c, supi, plmnID, supportedFeatures)
 }
 
 // GetSmsMngData - retrieve a UE's SMS Management Subscription Data
@@ -168,24 +134,7 @@ func (s *Server) HandleGetSupi(c *gin.Context) {
 	supportedFeatures := query.Get("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetSupiProcedure(supi, plmnID, dataSetNames, supportedFeatures)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetSupiProcedure(c, supi, plmnID, dataSetNames, supportedFeatures)
 }
 
 // GetSharedData - retrieve shared data
@@ -197,24 +146,7 @@ func (s *Server) HandleGetSharedData(c *gin.Context) {
 	sharedDataIds := c.QueryArray("shared-data-ids")
 	supportedFeatures := c.QueryArray("supported-features")
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetSharedDataProcedure(sharedDataIds, supportedFeatures[0])
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetSharedDataProcedure(c, sharedDataIds, supportedFeatures[0])
 }
 
 // SubscribeToSharedData - subscribe to notifications for shared data
@@ -254,30 +186,7 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 	// step 2: retrieve request
 
 	// step 3: handle the message
-	header, response, problemDetails := s.Processor().SubscribeToSharedDataProcedure(&sharedDataSubsReq)
-
-	// var rsp *httpwrapper.Response
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		// step 5: response
-		for key, val := range header { // header response is optional
-			c.Header(key, val[0])
-		}
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails := models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "SYSTEM_FAILURE",
-			Detail: err.Error(),
-		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-		return
-	}
+	s.Processor().SubscribeToSharedDataProcedure(c, &sharedDataSubsReq)
 }
 
 // Subscribe - subscribe to notifications
@@ -319,23 +228,7 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 	supi := c.Params.ByName("supi")
 
 	// step 3: handle the message
-	header, response, problemDetails := s.Processor().SubscribeProcedure(&sdmSubscriptionReq, supi)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		for key, val := range header { // header response is optional
-			c.Header(key, val[0])
-		}
-		c.JSON(http.StatusCreated, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNotFound)
-		return
-	}
+	s.Processor().SubscribeProcedure(c, &sdmSubscriptionReq, supi)
 }
 
 // Unsubscribe - unsubscribe from notifications
@@ -347,16 +240,7 @@ func (s *Server) HandleUnsubscribe(c *gin.Context) {
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	// step 3: handle the message
-	problemDetails := s.Processor().UnsubscribeProcedure(supi, subscriptionID)
-
-	// step 4: process the return value from step 3
-	if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().UnsubscribeProcedure(c, supi, subscriptionID)
 }
 
 // UnsubscribeForSharedData - unsubscribe from notifications for shared data
@@ -366,16 +250,7 @@ func (s *Server) HandleUnsubscribeForSharedData(c *gin.Context) {
 	// step 2: retrieve request
 	subscriptionID := c.Params.ByName("subscriptionId")
 	// step 3: handle the message
-	problemDetails := s.Processor().UnsubscribeForSharedDataProcedure(subscriptionID)
-
-	// step 4: process the return value from step 3
-	if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().UnsubscribeForSharedDataProcedure(c, subscriptionID)
 }
 
 // Modify - modify the subscription
@@ -417,24 +292,7 @@ func (s *Server) HandleModify(c *gin.Context) {
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().ModifyProcedure(&sdmSubsModificationReq, supi, subscriptionID)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().ModifyProcedure(c, &sdmSubsModificationReq, supi, subscriptionID)
 }
 
 // ModifyForSharedData - modify the subscription
@@ -476,24 +334,7 @@ func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().ModifyForSharedDataProcedure(&sharedDataSubscriptions, supi, subscriptionID)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().ModifyForSharedDataProcedure(c, &sharedDataSubscriptions, supi, subscriptionID)
 }
 
 // GetTraceData - retrieve a UE's Trace Configuration Data
@@ -506,24 +347,7 @@ func (s *Server) HandleGetTraceData(c *gin.Context) {
 	plmnID := c.Query("plmn-id")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetTraceDataProcedure(supi, plmnID)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetTraceDataProcedure(c, supi, plmnID)
 }
 
 // GetUeContextInSmfData - retrieve a UE's UE Context In SMF Data
@@ -536,24 +360,7 @@ func (s *Server) HandleGetUeContextInSmfData(c *gin.Context) {
 	supportedFeatures := c.Query("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetUeContextInSmfDataProcedure(supi, supportedFeatures)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetUeContextInSmfDataProcedure(c, supi, supportedFeatures)
 }
 
 // GetUeContextInSmsfData - retrieve a UE's UE Context In SMSF Data
@@ -581,24 +388,7 @@ func (s *Server) HandleGetNssai(c *gin.Context) {
 	supportedFeatures := query.Get("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetNssaiProcedure(supi, plmnID, supportedFeatures)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetNssaiProcedure(c, supi, plmnID, supportedFeatures)
 }
 
 // GetSmData - retrieve a UE's Session Management Subscription Data
@@ -625,24 +415,7 @@ func (s *Server) HandleGetSmData(c *gin.Context) {
 	supportedFeatures := query.Get("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetSmDataProcedure(supi, plmnID, Dnn, Snssai, supportedFeatures)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetSmDataProcedure(c, supi, plmnID, Dnn, Snssai, supportedFeatures)
 }
 
 // GetIdTranslationResult - retrieve a UE's SUPI
@@ -656,24 +429,7 @@ func (s *Server) HandleGetIdTranslationResult(c *gin.Context) {
 	gpsi := c.Params.ByName("gpsi")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetIdTranslationResultProcedure(gpsi)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetIdTranslationResultProcedure(c, gpsi)
 }
 
 func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {

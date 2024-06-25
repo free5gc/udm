@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/antihax/optional"
+	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/Nudr_DataRepository"
@@ -13,19 +14,20 @@ import (
 	"github.com/free5gc/udm/internal/logger"
 )
 
-func (p *Processor) GetAmDataProcedure(supi string, plmnID string, supportedFeatures string) (
-	response *models.AccessAndMobilitySubscriptionData, problemDetails *models.ProblemDetails,
-) {
+func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	var queryAmDataParamOpts Nudr_DataRepository.QueryAmDataParamOpts
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	accessAndMobilitySubscriptionDataResp, res, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.
@@ -36,12 +38,13 @@ func (p *Processor) GetAmDataProcedure(supi string, plmnID string, supportedFeat
 		} else if err.Error() != res.Status {
 			logger.SdmLog.Errorf("Response State: %+v", err.Error())
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -56,29 +59,29 @@ func (p *Processor) GetAmDataProcedure(supi string, plmnID string, supportedFeat
 			udmUe = udm_context.GetSelf().NewUdmUe(supi)
 		}
 		udmUe.SetAMSubsriptionData(&accessAndMobilitySubscriptionDataResp)
-		return &accessAndMobilitySubscriptionDataResp, nil
+		c.JSON(http.StatusOK, accessAndMobilitySubscriptionDataResp)
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) GetIdTranslationResultProcedure(gpsi string) (response *models.IdTranslationResult,
-	problemDetails *models.ProblemDetails,
-) {
+func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
 	}
 	var idTranslationResult models.IdTranslationResult
 	var getIdentityDataParamOpts Nudr_DataRepository.GetIdentityDataParamOpts
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(gpsi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	idTranslationResultResp, res, err := clientAPI.QueryIdentityDataBySUPIOrGPSIDocumentApi.GetIdentityData(
@@ -89,13 +92,13 @@ func (p *Processor) GetIdTranslationResultProcedure(gpsi string) (response *mode
 		} else if err.Error() != res.Status {
 			logger.SdmLog.Errorf("Response State: %+v", err.Error())
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -109,45 +112,49 @@ func (p *Processor) GetIdTranslationResultProcedure(gpsi string) (response *mode
 			// GetCorrespondingSupi get corresponding Supi(here IMSI) matching the given Gpsi from the queried SUPI list from UDR
 			idTranslationResult.Supi = udm_context.GetCorrespondingSupi(idList)
 			idTranslationResult.Gpsi = gpsi
-
-			return &idTranslationResult, nil
+			c.JSON(http.StatusOK, idTranslationResult)
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: http.StatusNotFound,
 				Cause:  "USER_NOT_FOUND",
 			}
-
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
 		}
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
-
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []string, supportedFeatures string) (
-	response *models.SubscriptionDataSets, problemDetails *models.ProblemDetails,
+func (p *Processor) GetSupiProcedure(c *gin.Context,
+	supi string,
+	plmnID string,
+	dataSetNames []string,
+	supportedFeatures string,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	if len(dataSetNames) < 2 {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusBadRequest,
 			Cause:  "BAD_REQUEST",
 			Detail: "datasetNames must have at least 2 elements",
 		}
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	var subscriptionDataSets, subsDataSetBody models.SubscriptionDataSets
@@ -177,13 +184,14 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 			} else if err.Error() != res.Status {
 				logger.SdmLog.Errorf("Response State: %+v", err.Error())
 			} else {
-				problemDetails = &models.ProblemDetails{
+				problemDetails := &models.ProblemDetails{
 					Status: int32(res.StatusCode),
 					Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 					Detail: err.Error(),
 				}
 
-				return nil, problemDetails
+				c.JSON(int(problemDetails.Status), problemDetails)
+				return
 			}
 		}
 		defer func() {
@@ -199,12 +207,13 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 			udmUe.SetAMSubsriptionData(&amData)
 			subscriptionDataSets.AmData = &amData
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: http.StatusNotFound,
 				Cause:  "DATA_NOT_FOUND",
 			}
 
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 
@@ -220,13 +229,14 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 			} else if err.Error() != res.Status {
 				logger.SdmLog.Errorln(err.Error())
 			} else {
-				problemDetails = &models.ProblemDetails{
+				problemDetails := &models.ProblemDetails{
 					Status: int32(res.StatusCode),
 					Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 					Detail: err.Error(),
 				}
 
-				return nil, problemDetails
+				c.JSON(int(problemDetails.Status), problemDetails)
+				return
 			}
 		}
 		defer func() {
@@ -242,12 +252,13 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 			udmUe.SetSmfSelectionSubsData(&smfSelData)
 			subscriptionDataSets.SmfSelData = &smfSelData
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: http.StatusNotFound,
 				Cause:  "DATA_NOT_FOUND",
 			}
 
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 
@@ -265,13 +276,14 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 			} else if err.Error() != res.Status {
 				logger.SdmLog.Errorf("Response State: %+v", err.Error())
 			} else {
-				problemDetails = &models.ProblemDetails{
+				problemDetails := &models.ProblemDetails{
 					Status: int32(res.StatusCode),
 					Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 					Detail: err.Error(),
 				}
 
-				return nil, problemDetails
+				c.JSON(int(problemDetails.Status), problemDetails)
+				return
 			}
 		}
 		defer func() {
@@ -329,13 +341,14 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 			} else if err.Error() != res.Status {
 				logger.SdmLog.Errorf("Response State: %+v", err.Error())
 			} else {
-				problemDetails = &models.ProblemDetails{
+				problemDetails := &models.ProblemDetails{
 					Status: int32(res.StatusCode),
 					Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 					Detail: err.Error(),
 				}
 
-				return nil, problemDetails
+				c.JSON(int(problemDetails.Status), problemDetails)
+				return
 			}
 		}
 		defer func() {
@@ -352,12 +365,13 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 			udmUe.SetSMSubsData(smData)
 			subscriptionDataSets.SmData = sessionManagementSubscriptionData
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: http.StatusNotFound,
 				Cause:  "DATA_NOT_FOUND",
 			}
 
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 
@@ -373,13 +387,17 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 			} else if err.Error() != res.Status {
 				logger.SdmLog.Errorf("Response State: %+v", err.Error())
 			} else {
-				problemDetails = &models.ProblemDetails{
+				problemDetails := &models.ProblemDetails{
 					Status: int32(res.StatusCode),
 					Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 					Detail: err.Error(),
 				}
+				c.JSON(int(problemDetails.Status), problemDetails)
+				return
 			}
-			return nil, problemDetails
+			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 		defer func() {
 			if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
@@ -395,12 +413,13 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 			udmUe.TraceDataResponse.TraceData = &traceData
 			subscriptionDataSets.TraceData = &traceData
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: http.StatusNotFound,
 				Cause:  "DATA_NOT_FOUND",
 			}
 
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 
@@ -408,19 +427,20 @@ func (p *Processor) GetSupiProcedure(supi string, plmnID string, dataSetNames []
 	// if containDataSetName(dataSetNames, string(models.DataSetName_SMS_MNG)) {
 	// }
 
-	return &subscriptionDataSets, nil
+	c.JSON(http.StatusOK, subscriptionDataSets)
 }
 
-func (p *Processor) GetSharedDataProcedure(sharedDataIds []string, supportedFeatures string) (
-	response []models.SharedData, problemDetails *models.ProblemDetails,
-) {
+func (p *Processor) GetSharedDataProcedure(c *gin.Context, sharedDataIds []string, supportedFeatures string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	clientAPI, err := p.consumer.CreateUDMClientToUDR("")
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	var getSharedDataParamOpts Nudr_DataRepository.GetSharedDataParamOpts
@@ -435,13 +455,14 @@ func (p *Processor) GetSharedDataProcedure(sharedDataIds []string, supportedFeat
 			logger.SdmLog.Warnln(err)
 		} else {
 			logger.SdmLog.Warnln(err)
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
 
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -453,34 +474,35 @@ func (p *Processor) GetSharedDataProcedure(sharedDataIds []string, supportedFeat
 	if res.StatusCode == http.StatusOK {
 		udm_context.GetSelf().SharedSubsDataMap = udm_context.MappingSharedData(sharedDataResp)
 		sharedData := udm_context.ObtainRequiredSharedData(sharedDataIds, sharedDataResp)
-		return sharedData, nil
+		c.JSON(http.StatusOK, sharedData)
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
 func (p *Processor) GetSmDataProcedure(
+	c *gin.Context,
 	supi string,
 	plmnID string,
 	Dnn string,
 	Snssai string,
 	supportedFeatures string,
-) (
-	response interface{}, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
 	}
 	logger.SdmLog.Infof("getSmDataProcedure: SUPI[%s] PLMNID[%s] DNN[%s] SNssai[%s]", supi, plmnID, Dnn, Snssai)
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	var querySmDataParamOpts Nudr_DataRepository.QuerySmDataParamOpts
@@ -495,13 +517,13 @@ func (p *Processor) GetSmDataProcedure(
 			logger.SdmLog.Warnln(err)
 		} else {
 			logger.SdmLog.Warnln(err)
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -529,43 +551,44 @@ func (p *Processor) GetSmDataProcedure(
 
 		switch {
 		case Snssai == "" && Dnn == "":
-			return AllDnns, nil
+			c.JSON(http.StatusOK, AllDnns)
 		case Snssai != "" && Dnn == "":
 			udmUe.SmSubsDataLock.RLock()
 			defer udmUe.SmSubsDataLock.RUnlock()
-			return udmUe.SessionManagementSubsData[snssaikey].DnnConfigurations, nil
+			c.JSON(http.StatusOK, udmUe.SessionManagementSubsData[snssaikey].DnnConfigurations)
 		case Snssai == "" && Dnn != "":
-			return AllDnnConfigsbyDnn, nil
+			c.JSON(http.StatusOK, AllDnnConfigsbyDnn)
 		case Snssai != "" && Dnn != "":
-			return rspSMSubDataList, nil
+			c.JSON(http.StatusOK, rspSMSubDataList)
 		default:
 			udmUe.SmSubsDataLock.RLock()
 			defer udmUe.SmSubsDataLock.RUnlock()
-			return udmUe.SessionManagementSubsData, nil
+			c.JSON(http.StatusOK, udmUe.SessionManagementSubsData)
 		}
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
-
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 }
 
-func (p *Processor) GetNssaiProcedure(supi string, plmnID string, supportedFeatures string) (
-	*models.Nssai, *models.ProblemDetails,
-) {
+func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	var queryAmDataParamOpts Nudr_DataRepository.QueryAmDataParamOpts
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	var nssaiResp models.Nssai
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	accessAndMobilitySubscriptionDataResp, res, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.
@@ -583,7 +606,8 @@ func (p *Processor) GetNssaiProcedure(supi string, plmnID string, supportedFeatu
 				Detail: err.Error(),
 			}
 
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -600,22 +624,21 @@ func (p *Processor) GetNssaiProcedure(supi string, plmnID string, supportedFeatu
 			udmUe = udm_context.GetSelf().NewUdmUe(supi)
 		}
 		udmUe.Nssai = &nssaiResp
-		return udmUe.Nssai, nil
+		c.JSON(http.StatusOK, udmUe.Nssai)
 	} else {
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) GetSmfSelectDataProcedure(supi string, plmnID string, supportedFeatures string) (
-	response *models.SmfSelectionSubscriptionData, problemDetails *models.ProblemDetails,
-) {
+func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	var querySmfSelectDataParamOpts Nudr_DataRepository.QuerySmfSelectDataParamOpts
 	querySmfSelectDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
@@ -623,7 +646,9 @@ func (p *Processor) GetSmfSelectDataProcedure(supi string, plmnID string, suppor
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	udm_context.GetSelf().CreateSmfSelectionSubsDataforUe(supi, body)
@@ -637,14 +662,17 @@ func (p *Processor) GetSmfSelectDataProcedure(supi string, plmnID string, suppor
 			logger.SdmLog.Warnln(err)
 		} else {
 			logger.SdmLog.Warnln(err)
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
-		return nil, problemDetails
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 	defer func() {
 		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
@@ -658,22 +686,21 @@ func (p *Processor) GetSmfSelectDataProcedure(supi string, plmnID string, suppor
 			udmUe = udm_context.GetSelf().NewUdmUe(supi)
 		}
 		udmUe.SetSmfSelectionSubsData(&smfSelectionSubscriptionDataResp)
-		return udmUe.SmfSelSubsData, nil
+		c.JSON(http.StatusOK, udmUe.SmfSelSubsData)
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) SubscribeToSharedDataProcedure(sdmSubscription *models.SdmSubscription) (
-	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails,
-) {
+func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
 	if err != nil {
-		return nil, nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 
 	udmClientAPI := p.consumer.GetSDMClient("subscribeToSharedData")
@@ -686,12 +713,13 @@ func (p *Processor) SubscribeToSharedDataProcedure(sdmSubscription *models.SdmSu
 		} else if err.Error() != res.Status {
 			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-			return nil, nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -701,40 +729,44 @@ func (p *Processor) SubscribeToSharedDataProcedure(sdmSubscription *models.SdmSu
 	}()
 
 	if res.StatusCode == http.StatusCreated {
-		header = make(http.Header)
+		header := make(http.Header)
 		udm_context.GetSelf().CreateSubstoNotifSharedData(sdmSubscriptionResp.SubscriptionId, &sdmSubscriptionResp)
 		reourceUri := udm_context.GetSelf().
 			GetSDMUri() +
 			"//shared-data-subscriptions/" + sdmSubscriptionResp.SubscriptionId
 		header.Set("Location", reourceUri)
-		return header, &sdmSubscriptionResp, nil
+		for key, val := range header { // header response is optional
+			c.Header(key, val[0])
+		}
+		c.JSON(http.StatusOK, sdmSubscriptionResp)
 	} else if res.StatusCode == http.StatusNotFound {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
 
-		return nil, nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotImplemented,
 			Cause:  "UNSUPPORTED_RESOURCE_URI",
 		}
 
-		return nil, nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) SubscribeProcedure(sdmSubscription *models.SdmSubscription, supi string) (
-	header http.Header, response *models.SdmSubscription, problemDetails *models.ProblemDetails,
-) {
+func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription, supi string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	sdmSubscriptionResp, res, err := clientAPI.SDMSubscriptionsCollectionApi.CreateSdmSubscriptions(
@@ -746,12 +778,13 @@ func (p *Processor) SubscribeProcedure(sdmSubscription *models.SdmSubscription, 
 			logger.SdmLog.Warnln(err)
 		} else {
 			logger.SdmLog.Warnln(err)
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-			return nil, nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -761,33 +794,37 @@ func (p *Processor) SubscribeProcedure(sdmSubscription *models.SdmSubscription, 
 	}()
 
 	if res.StatusCode == http.StatusCreated {
-		header = make(http.Header)
+		header := make(http.Header)
 		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(supi)
 		if udmUe == nil {
 			udmUe = udm_context.GetSelf().NewUdmUe(supi)
 		}
 		udmUe.CreateSubscriptiontoNotifChange(sdmSubscriptionResp.SubscriptionId, &sdmSubscriptionResp)
 		header.Set("Location", udmUe.GetLocationURI2(udm_context.LocationUriSdmSubscription, supi))
-		return header, &sdmSubscriptionResp, nil
+		for key, val := range header { // header response is optional
+			c.Header(key, val[0])
+		}
+		c.JSON(http.StatusCreated, sdmSubscriptionResp)
 	} else if res.StatusCode == http.StatusNotFound {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
-		return nil, nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotImplemented,
 			Cause:  "UNSUPPORTED_RESOURCE_URI",
 		}
-		return nil, nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) UnsubscribeForSharedDataProcedure(subscriptionID string) *models.ProblemDetails {
+func (p *Processor) UnsubscribeForSharedDataProcedure(c *gin.Context, subscriptionID string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
 	if err != nil {
-		return pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 
 	udmClientAPI := p.consumer.GetSDMClient("unsubscribeForSharedData")
@@ -806,7 +843,8 @@ func (p *Processor) UnsubscribeForSharedDataProcedure(subscriptionID string) *mo
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-			return problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -816,24 +854,27 @@ func (p *Processor) UnsubscribeForSharedDataProcedure(subscriptionID string) *mo
 	}()
 
 	if res.StatusCode == http.StatusNoContent {
-		return nil
+		c.Status(http.StatusNoContent)
 	} else {
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
-		return problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) UnsubscribeProcedure(supi string, subscriptionID string) *models.ProblemDetails {
+func (p *Processor) UnsubscribeProcedure(c *gin.Context, supi string, subscriptionID string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	res, err := clientAPI.SDMSubscriptionDocumentApi.RemovesdmSubscriptions(ctx, supi, subscriptionID)
@@ -849,7 +890,8 @@ func (p *Processor) UnsubscribeProcedure(supi string, subscriptionID string) *mo
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-			return problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -859,30 +901,31 @@ func (p *Processor) UnsubscribeProcedure(supi string, subscriptionID string) *mo
 	}()
 
 	if res.StatusCode == http.StatusNoContent {
-		return nil
+		c.Status(http.StatusNoContent)
 	} else {
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "USER_NOT_FOUND",
 		}
-		return problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) ModifyProcedure(
+func (p *Processor) ModifyProcedure(c *gin.Context,
 	sdmSubsModification *models.SdmSubsModification,
 	supi string,
 	subscriptionID string,
-) (
-	response *models.SdmSubscription, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	sdmSubscription := models.SdmSubscription{}
@@ -898,12 +941,13 @@ func (p *Processor) ModifyProcedure(
 		} else if err.Error() != res.Status {
 			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -913,29 +957,34 @@ func (p *Processor) ModifyProcedure(
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		return &sdmSubscription, nil
+		c.JSON(http.StatusOK, sdmSubscription)
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "USER_NOT_FOUND",
 		}
 
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
 // TS 29.503 5.2.2.7.3
 // Modification of a subscription to notifications of shared data change
-func (p *Processor) ModifyForSharedDataProcedure(sdmSubsModification *models.SdmSubsModification, supi string,
+func (p *Processor) ModifyForSharedDataProcedure(c *gin.Context,
+	sdmSubsModification *models.SdmSubsModification,
+	supi string,
 	subscriptionID string,
-) (response *models.SdmSubscription, problemDetails *models.ProblemDetails) {
+) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	var sdmSubscription models.SdmSubscription
@@ -952,12 +1001,13 @@ func (p *Processor) ModifyForSharedDataProcedure(sdmSubsModification *models.Sdm
 		} else if err.Error() != res.Status {
 			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -967,30 +1017,30 @@ func (p *Processor) ModifyForSharedDataProcedure(sdmSubsModification *models.Sdm
 	}()
 
 	if res.StatusCode == http.StatusOK {
-		return &sdmSubscription, nil
+		c.JSON(http.StatusOK, sdmSubscription)
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "USER_NOT_FOUND",
 		}
-
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) GetTraceDataProcedure(supi string, plmnID string) (
-	response *models.TraceData, problemDetails *models.ProblemDetails,
-) {
+func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	var body models.TraceData
 	var queryTraceDataParamOpts Nudr_DataRepository.QueryTraceDataParamOpts
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	udm_context.GetSelf().CreateTraceDataforUe(supi, body)
@@ -1003,13 +1053,13 @@ func (p *Processor) GetTraceDataProcedure(supi string, plmnID string) (
 		} else if err.Error() != res.Status {
 			logger.SdmLog.Warnln(err)
 		} else {
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
-
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -1026,20 +1076,18 @@ func (p *Processor) GetTraceDataProcedure(supi string, plmnID string) (
 		udmUe.TraceData = &traceDataRes
 		udmUe.TraceDataResponse.TraceData = &traceDataRes
 
-		return udmUe.TraceDataResponse.TraceData, nil
+		c.JSON(http.StatusOK, udmUe.TraceDataResponse.TraceData)
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "USER_NOT_FOUND",
 		}
 
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
-func (p *Processor) GetUeContextInSmfDataProcedure(supi string, supportedFeatures string) (
-	response *models.UeContextInSmfData, problemDetails *models.ProblemDetails,
-) {
+func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, supportedFeatures string) {
 	var body models.UeContextInSmfData
 	var ueContextInSmfData models.UeContextInSmfData
 	var pgwInfoArray []models.PgwInfo
@@ -1048,7 +1096,9 @@ func (p *Processor) GetUeContextInSmfDataProcedure(supi string, supportedFeature
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	pduSessionMap := make(map[string]models.PduSession)
@@ -1056,7 +1106,8 @@ func (p *Processor) GetUeContextInSmfDataProcedure(supi string, supportedFeature
 
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 
 	pdusess, res, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(
@@ -1068,13 +1119,14 @@ func (p *Processor) GetUeContextInSmfDataProcedure(supi string, supportedFeature
 			logger.SdmLog.Infoln(err)
 		} else {
 			logger.SdmLog.Infoln(err)
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: int32(res.StatusCode),
 				Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 				Detail: err.Error(),
 			}
 
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 	}
 	defer func() {
@@ -1107,13 +1159,13 @@ func (p *Processor) GetUeContextInSmfDataProcedure(supi string, supportedFeature
 			udmUe = udm_context.GetSelf().NewUdmUe(supi)
 		}
 		udmUe.UeCtxtInSmfData = &ueContextInSmfData
-		return udmUe.UeCtxtInSmfData, nil
+		c.JSON(http.StatusOK, udmUe.UeCtxtInSmfData)
 	} else {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/antihax/optional"
+	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/Nudr_DataRepository"
@@ -14,30 +15,32 @@ import (
 )
 
 // ue_context_managemanet_service
-func (p *Processor) GetAmf3gppAccessProcedure(ueID string, supportedFeatures string) (
-	response *models.Amf3GppAccessRegistration, problemDetails *models.ProblemDetails,
-) {
+func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, supportedFeatures string) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	var queryAmfContext3gppParamOpts Nudr_DataRepository.QueryAmfContext3gppParamOpts
 	queryAmfContext3gppParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	amf3GppAccessRegistration, resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.
 		QueryAmfContext3gpp(ctx, ueID, &queryAmfContext3gppParamOpts)
 	if err != nil {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
 			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 			Detail: err.Error(),
 		}
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 	defer func() {
 		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
@@ -45,31 +48,33 @@ func (p *Processor) GetAmf3gppAccessProcedure(ueID string, supportedFeatures str
 		}
 	}()
 
-	return &amf3GppAccessRegistration, nil
+	c.JSON(http.StatusOK, amf3GppAccessRegistration)
 }
 
-func (p *Processor) GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts Nudr_DataRepository.
-	QueryAmfContextNon3gppParamOpts, ueID string) (response *models.AmfNon3GppAccessRegistration,
-	problemDetails *models.ProblemDetails,
+func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContextNon3gppParamOpts Nudr_DataRepository.
+	QueryAmfContextNon3gppParamOpts, ueID string,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, pd
+		c.JSON(int(pd.Status), pd)
 	}
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
-		return nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	amfNon3GppAccessRegistration, resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
 		QueryAmfContextNon3gpp(ctx, ueID, &queryAmfContextNon3gppParamOpts)
 	if err != nil {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
 			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 			Detail: err.Error(),
 		}
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 	defer func() {
 		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
@@ -77,18 +82,17 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts
 		}
 	}()
 
-	return &amfNon3GppAccessRegistration, nil
+	c.JSON(http.StatusOK, amfNon3GppAccessRegistration)
 }
 
-func (p *Processor) RegistrationAmf3gppAccessProcedure(
+func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 	registerRequest models.Amf3GppAccessRegistration,
 	ueID string,
-) (
-	header http.Header, response *models.Amf3GppAccessRegistration, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	// TODO: EPS interworking with N26 is not supported yet in this stage
 	var oldAmf3GppAccessRegContext *models.Amf3GppAccessRegistration
@@ -103,7 +107,9 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
-		return nil, nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	var createAmfContext3gppParamOpts Nudr_DataRepository.CreateAmfContext3gppParamOpts
@@ -113,12 +119,13 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(
 		ueID, &createAmfContext3gppParamOpts)
 	if err != nil {
 		logger.UecmLog.Errorln("CreateAmfContext3gpp error : ", err)
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
 			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 			Detail: err.Error(),
 		}
-		return nil, nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 	defer func() {
 		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
@@ -152,24 +159,27 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(
 				}
 			}()
 		}
-		return nil, &registerRequest, nil
+
+		c.JSON(http.StatusOK, registerRequest)
 	} else {
-		header = make(http.Header)
+		header := make(http.Header)
 		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriAmf3GppAccessRegistration))
-		return header, &registerRequest, nil
+		for key, val := range header { // header response is optional
+			c.Header(key, val[0])
+		}
+		c.JSON(http.StatusCreated, registerRequest)
 	}
 }
 
-func (p *Processor) RegisterAmfNon3gppAccessProcedure(
+func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 	registerRequest models.AmfNon3GppAccessRegistration,
 	ueID string,
-) (
-	header http.Header, response *models.AmfNon3GppAccessRegistration, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	var oldAmfNon3GppAccessRegContext *models.AmfNon3GppAccessRegistration
 	if udm_context.GetSelf().UdmAmfNon3gppRegContextExists(ueID) {
@@ -181,7 +191,9 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
-		return nil, nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	var createAmfContextNon3gppParamOpts Nudr_DataRepository.CreateAmfContextNon3gppParamOpts
@@ -191,12 +203,14 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(
 	resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.CreateAmfContextNon3gpp(
 		ctx, ueID, &createAmfContextNon3gppParamOpts)
 	if err != nil {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
 			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 			Detail: err.Error(),
 		}
-		return nil, nil, problemDetails
+
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 	defer func() {
 		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
@@ -214,31 +228,37 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(
 		p.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
 			deregistData) // Deregistration Notify Triggered
 
-		return nil, nil, nil
+		return
 	} else {
-		header = make(http.Header)
+		header := make(http.Header)
 		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriAmfNon3GppAccessRegistration))
-		return header, &registerRequest, nil
+		for key, val := range header { // header response is optional
+			c.Header(key, val[0])
+		}
+		c.JSON(http.StatusCreated, registerRequest)
 	}
 }
 
-func (p *Processor) UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessRegistrationModification, ueID string) (
-	problemDetails *models.ProblemDetails,
+func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
+	request models.Amf3GppAccessRegistrationModification,
+	ueID string,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	var patchItemReqArray []models.PatchItem
 	currentContext := udm_context.GetSelf().GetAmf3gppRegContext(ueID)
 	if currentContext == nil {
 		logger.UecmLog.Errorln("[UpdateAmf3gppAccess] Empty Amf3gppRegContext")
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "CONTEXT_NOT_FOUND",
 		}
-		return problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	if request.Guami != nil {
@@ -248,11 +268,12 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessReg
 			request.PurgeFlag = true
 		} else {
 			logger.UecmLog.Errorln("INVALID_GUAMI")
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: http.StatusForbidden,
 				Cause:  "INVALID_GUAMI",
 			}
-			return problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 
 		var patchItemTmp models.PatchItem
@@ -296,19 +317,21 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessReg
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
-		return openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	resp, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.AmfContext3gpp(ctx, ueID,
 		patchItemReqArray)
 	if err != nil {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
 			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 			Detail: err.Error(),
 		}
-
-		return problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	if request.PurgeFlag {
@@ -322,28 +345,28 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(request models.Amf3GppAccessReg
 		}
 	}()
 
-	return nil
+	c.Status(http.StatusNoContent)
 }
 
-func (p *Processor) UpdateAmfNon3gppAccessProcedure(
+func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 	request models.AmfNon3GppAccessRegistrationModification,
 	ueID string,
-) (
-	problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	var patchItemReqArray []models.PatchItem
 	currentContext := udm_context.GetSelf().GetAmfNon3gppRegContext(ueID)
 	if currentContext == nil {
 		logger.UecmLog.Errorln("[UpdateAmfNon3gppAccess] Empty AmfNon3gppRegContext")
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: http.StatusNotFound,
 			Cause:  "CONTEXT_NOT_FOUND",
 		}
-		return problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	if request.Guami != nil {
@@ -353,10 +376,12 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(
 			request.PurgeFlag = true
 		} else {
 			logger.UecmLog.Errorln("INVALID_GUAMI")
-			problemDetails = &models.ProblemDetails{
+			problemDetails := &models.ProblemDetails{
 				Status: http.StatusForbidden,
 				Cause:  "INVALID_GUAMI",
 			}
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 
 		var patchItemTmp models.PatchItem
@@ -400,18 +425,21 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
-		return openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.AmfContextNon3gpp(ctx,
 		ueID, patchItemReqArray)
 	if err != nil {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
 			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 			Detail: err.Error(),
 		}
-		return problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 	defer func() {
 		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
@@ -419,30 +447,34 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(
 		}
 	}()
 
-	return problemDetails
+	c.Status(http.StatusNoContent)
 }
 
-func (p *Processor) DeregistrationSmfRegistrationsProcedure(
+func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 	ueID string,
 	pduSessionID string,
-) (problemDetails *models.ProblemDetails) {
+) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
-		return openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	resp, err := clientAPI.SMFRegistrationDocumentApi.DeleteSmfContext(ctx, ueID, pduSessionID)
 	if err != nil {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
 			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 			Detail: err.Error(),
 		}
-		return problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 	defer func() {
 		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
@@ -450,19 +482,19 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(
 		}
 	}()
 
-	return nil
+	c.Status(http.StatusNoContent)
 }
 
 func (p *Processor) RegistrationSmfRegistrationsProcedure(
+	c *gin.Context,
 	request *models.SmfRegistration,
 	ueID string,
 	pduSessionID string,
-) (
-	header http.Header, response *models.SmfRegistration, problemDetails *models.ProblemDetails,
 ) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
-		return nil, nil, pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 	contextExisted := false
 	udm_context.GetSelf().CreateSmfRegContext(ueID, pduSessionID)
@@ -482,18 +514,21 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
 	if err != nil {
-		return nil, nil, openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 
 	resp, err := clientAPI.SMFRegistrationDocumentApi.CreateSmfContextNon3gpp(ctx, ueID,
 		pduID32, &createSmfContextNon3gppParamOpts)
 	if err != nil {
-		problemDetails = &models.ProblemDetails{
+		problemDetails := &models.ProblemDetails{
 			Status: int32(resp.StatusCode),
 			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
 			Detail: err.Error(),
 		}
-		return nil, nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
 	}
 	defer func() {
 		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
@@ -502,11 +537,14 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 	}()
 
 	if contextExisted {
-		return nil, nil, nil
+		c.Status(http.StatusNoContent)
 	} else {
-		header = make(http.Header)
+		header := make(http.Header)
 		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
 		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriSmfRegistration))
-		return header, request, nil
+		for key, val := range header { // header response is optional
+			c.Header(key, val[0])
+		}
+		c.JSON(http.StatusCreated, request)
 	}
 }

@@ -3,18 +3,21 @@ package processor
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 )
 
-func (p *Processor) DataChangeNotificationProcedure(
+func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 	notifyItems []models.NotifyItem,
 	supi string,
-) *models.ProblemDetails {
+) {
 	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
 	if err != nil {
-		return pd
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 
 	ue, _ := udm_context.GetSelf().UdmUeFindBySupi(supi)
@@ -52,7 +55,7 @@ func (p *Processor) DataChangeNotificationProcedure(
 		}()
 	}
 
-	return problemDetails
+	c.JSON(int(problemDetails.Status), problemDetails)
 }
 
 func (p *Processor) SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,

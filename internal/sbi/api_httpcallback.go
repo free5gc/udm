@@ -63,14 +63,5 @@ func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
 
 	logger.CallbackLog.Infof("Handle DataChangeNotificationToNF")
 
-	problemDetails := s.Processor().DataChangeNotificationProcedure(dataChangeNotify.NotifyItems, supi)
-
-	// step 4: process the return value from step 3
-	if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().DataChangeNotificationProcedure(c, dataChangeNotify.NotifyItems, supi)
 }

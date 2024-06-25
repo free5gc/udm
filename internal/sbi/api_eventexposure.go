@@ -78,30 +78,14 @@ func (s *Server) HandleCreateEeSubscription(c *gin.Context) {
 
 	ueIdentity := c.Params.ByName("ueIdentity")
 
-	createdEESubscription, problemDetails := s.Processor().CreateEeSubscriptionProcedure(ueIdentity, eesubscription)
-	if createdEESubscription != nil {
-		c.JSON(http.StatusCreated, createdEESubscription)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusInternalServerError,
-			Cause:  "UNSPECIFIED_NF_FAILURE",
-		}
-		c.JSON(http.StatusInternalServerError, problemDetails)
-		return
-	}
+	s.Processor().CreateEeSubscriptionProcedure(c, ueIdentity, eesubscription)
 }
 
 func (s *Server) HandleDeleteEeSubscription(c *gin.Context) {
 	ueIdentity := c.Params.ByName("ueIdentity")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
-	s.Processor().DeleteEeSubscriptionProcedure(ueIdentity, subscriptionID)
-	// only return 204 no content
-	c.Status(http.StatusNoContent)
+	s.Processor().DeleteEeSubscriptionProcedure(c, ueIdentity, subscriptionID)
 }
 
 func (s *Server) HandleUpdateEeSubscription(c *gin.Context) {
@@ -139,14 +123,7 @@ func (s *Server) HandleUpdateEeSubscription(c *gin.Context) {
 	logger.EeLog.Infoln("Handle Update EE subscription")
 	logger.EeLog.Warnln("Update EE Subscription is not implemented")
 
-	problemDetails := s.Processor().UpdateEeSubscriptionProcedure(ueIdentity, subscriptionID, patchList)
-	if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().UpdateEeSubscriptionProcedure(c, ueIdentity, subscriptionID, patchList)
 }
 
 func (s *Server) HandleIndex(c *gin.Context) {

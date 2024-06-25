@@ -65,14 +65,5 @@ func (s *Server) HandleUpdate(c *gin.Context) {
 	logger.PpLog.Infoln("Handle UpdateRequest")
 
 	// step 3: handle the message
-	problemDetails := s.Processor().UpdateProcedure(ppDataReq, gpsi)
-
-	// step 4: process the return value from step 3
-	if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().UpdateProcedure(c, ppDataReq, gpsi)
 }

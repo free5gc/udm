@@ -135,24 +135,7 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 	queryAmfContextNon3gppParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	// step 3: handle the message
 
-	response, problemDetails := s.Processor().GetAmfNon3gppAccessProcedure(queryAmfContextNon3gppParamOpts, ueId)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetAmfNon3gppAccessProcedure(c, queryAmfContextNon3gppParamOpts, ueId)
 }
 
 // Register - register as AMF for non-3GPP access
@@ -193,23 +176,7 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 
 	// step 3: handle the message
-	header, response, problemDetails := s.Processor().RegisterAmfNon3gppAccessProcedure(amfNon3GppAccessRegistration, ueID)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		for key, val := range header { // header response is optional
-			c.Header(key, val[0])
-		}
-		c.JSON(http.StatusCreated, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().RegisterAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistration, ueID)
 }
 
 // RegistrationAmf3gppAccess - register as AMF for 3GPP access
@@ -251,27 +218,7 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 	logger.UecmLog.Info("UEID: ", ueID)
 
 	// step 3: handle the message
-	header, response, problemDetails := s.Processor().RegistrationAmf3gppAccessProcedure(amf3GppAccessRegistration, ueID)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		if header != nil {
-			// status code is based on SPEC, and option headers
-			for key, val := range header { // header response is optional
-				c.Header(key, val[0])
-			}
-			c.JSON(http.StatusCreated, response)
-			return
-		}
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().RegistrationAmf3gppAccessProcedure(c, amf3GppAccessRegistration, ueID)
 }
 
 // UpdateAmfNon3gppAccess - update a parameter in the AMF registration for non-3GPP access
@@ -312,16 +259,7 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 
 	// step 3: handle the message
-	problemDetails := s.Processor().UpdateAmfNon3gppAccessProcedure(amfNon3GppAccessRegistrationModification, ueID)
-
-	// step 4: process the return value from step 3
-	if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().UpdateAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistrationModification, ueID)
 }
 
 // UpdateAmf3gppAccess - Update a parameter in the AMF registration for 3GPP access
@@ -363,16 +301,7 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 
 	// step 3: handle the message
-	problemDetails := s.Processor().UpdateAmf3gppAccessProcedure(amf3GppAccessRegistrationModification, ueID)
-
-	// step 4: process the return value from step 3
-	if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().UpdateAmf3gppAccessProcedure(c, amf3GppAccessRegistrationModification, ueID)
 }
 
 // DeregistrationSmsfNon3gppAccess - delete SMSF registration for non 3GPP access
@@ -415,16 +344,7 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 	pduSessionID := c.Params.ByName("pduSessionId")
 
 	// step 3: handle the message
-	problemDetails := s.Processor().DeregistrationSmfRegistrationsProcedure(ueID, pduSessionID)
-
-	// step 4: process the return value from step 3
-	if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		c.Status(http.StatusNoContent)
-		return
-	}
+	s.Processor().DeregistrationSmfRegistrationsProcedure(c, ueID, pduSessionID)
 }
 
 // RegistrationSmfRegistrations - register as SMF
@@ -467,28 +387,12 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	pduSessionID := c.Params.ByName("pduSessionId")
 
 	// step 3: handle the message
-	header, response, problemDetails := s.Processor().RegistrationSmfRegistrationsProcedure(
+	s.Processor().RegistrationSmfRegistrationsProcedure(
+		c,
 		&smfRegistration,
 		ueID,
 		pduSessionID,
 	)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		for key, val := range header { // header response is optional
-			c.Header(key, val[0])
-		}
-		c.JSON(http.StatusCreated, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		// all nil
-		c.Status(http.StatusNoContent)
-		return
-	}
 }
 
 // GetAmf3gppAccess - retrieve the AMF registration for 3GPP access information
@@ -501,22 +405,5 @@ func (s *Server) HandleGetAmf3gppAccess(c *gin.Context) {
 	supportedFeatures := c.Query("supported-features")
 
 	// step 3: handle the message
-	response, problemDetails := s.Processor().GetAmf3gppAccessProcedure(ueID, supportedFeatures)
-
-	// step 4: process the return value from step 3
-	if response != nil {
-		// status code is based on SPEC, and option headers
-		c.JSON(http.StatusOK, response)
-		return
-	} else if problemDetails != nil {
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	} else {
-		problemDetails = &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  "UNSPECIFIED",
-		}
-		c.JSON(http.StatusForbidden, problemDetails)
-		return
-	}
+	s.Processor().GetAmf3gppAccessProcedure(c, ueID, supportedFeatures)
 }

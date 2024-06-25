@@ -5,15 +5,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 )
 
 // EE service
-func (p *Processor) CreateEeSubscriptionProcedure(ueIdentity string,
+func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity string,
 	eesubscription models.EeSubscription,
-) (*models.CreatedEeSubscription, *models.ProblemDetails) {
+) {
 	udmSelf := udm_context.GetSelf()
 	logger.EeLog.Debugf("udIdentity: %s", ueIdentity)
 	switch {
@@ -29,7 +31,8 @@ func (p *Processor) CreateEeSubscriptionProcedure(ueIdentity string,
 					Status: http.StatusInternalServerError,
 					Cause:  "UNSPECIFIED_NF_FAILURE",
 				}
-				return nil, problemDetails
+				c.JSON(int(problemDetails.Status), problemDetails)
+				return
 			}
 
 			subscriptionID := strconv.Itoa(int(id))
@@ -37,13 +40,13 @@ func (p *Processor) CreateEeSubscriptionProcedure(ueIdentity string,
 			createdEeSubscription := &models.CreatedEeSubscription{
 				EeSubscription: &eesubscription,
 			}
-			return createdEeSubscription, nil
+			c.JSON(http.StatusCreated, createdEeSubscription)
 		} else {
 			problemDetails := &models.ProblemDetails{
 				Status: http.StatusNotFound,
 				Cause:  "USER_NOT_FOUND",
 			}
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
 		}
 	// external groupID represents a group of UEs
 	case strings.HasPrefix(ueIdentity, "extgroupid-"):
@@ -53,7 +56,8 @@ func (p *Processor) CreateEeSubscriptionProcedure(ueIdentity string,
 				Status: http.StatusInternalServerError,
 				Cause:  "UNSPECIFIED_NF_FAILURE",
 			}
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 		subscriptionID := strconv.Itoa(int(id))
 		createdEeSubscription := &models.CreatedEeSubscription{
@@ -67,7 +71,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(ueIdentity string,
 			}
 			return true
 		})
-		return createdEeSubscription, nil
+		c.JSON(http.StatusCreated, createdEeSubscription)
 	// represents any UEs
 	case ueIdentity == "anyUE":
 		id, err := udmSelf.EeSubscriptionIDGenerator.Allocate()
@@ -76,7 +80,8 @@ func (p *Processor) CreateEeSubscriptionProcedure(ueIdentity string,
 				Status: http.StatusInternalServerError,
 				Cause:  "UNSPECIFIED_NF_FAILURE",
 			}
-			return nil, problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
 		}
 		subscriptionID := strconv.Itoa(int(id))
 		createdEeSubscription := &models.CreatedEeSubscription{
@@ -87,7 +92,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(ueIdentity string,
 			ue.EeSubscriptions[subscriptionID] = &eesubscription
 			return true
 		})
-		return createdEeSubscription, nil
+		c.JSON(http.StatusCreated, createdEeSubscription)
 	default:
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusBadRequest,
@@ -99,12 +104,12 @@ func (p *Processor) CreateEeSubscriptionProcedure(ueIdentity string,
 				},
 			},
 		}
-		return nil, problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
 
 // TODO: complete this procedure based on TS 29503 5.5
-func (p *Processor) DeleteEeSubscriptionProcedure(ueIdentity string, subscriptionID string) {
+func (p *Processor) DeleteEeSubscriptionProcedure(c *gin.Context, ueIdentity string, subscriptionID string) {
 	udmSelf := udm_context.GetSelf()
 
 	switch {
@@ -134,12 +139,15 @@ func (p *Processor) DeleteEeSubscriptionProcedure(ueIdentity string, subscriptio
 	} else {
 		udmSelf.EeSubscriptionIDGenerator.FreeID(id)
 	}
+
+	// only return 204 no content
+	c.Status(http.StatusNoContent)
 }
 
 // TODO: complete this procedure based on TS 29503 5.5
-func (p *Processor) UpdateEeSubscriptionProcedure(ueIdentity string, subscriptionID string,
+func (p *Processor) UpdateEeSubscriptionProcedure(c *gin.Context, ueIdentity string, subscriptionID string,
 	patchList []models.PatchItem,
-) *models.ProblemDetails {
+) {
 	udmSelf := udm_context.GetSelf()
 
 	switch {
@@ -152,20 +160,20 @@ func (p *Processor) UpdateEeSubscriptionProcedure(ueIdentity string, subscriptio
 					logger.EeLog.Debugf("patch item: %+v", patchItem)
 					// TODO: patch the Eesubscription
 				}
-				return nil
+				c.Status(http.StatusNoContent)
 			} else {
 				problemDetails := &models.ProblemDetails{
 					Status: http.StatusNotFound,
 					Cause:  "SUBSCRIPTION_NOT_FOUND",
 				}
-				return problemDetails
+				c.JSON(int(problemDetails.Status), problemDetails)
 			}
 		} else {
 			problemDetails := &models.ProblemDetails{
 				Status: http.StatusNotFound,
 				Cause:  "SUBSCRIPTION_NOT_FOUND",
 			}
-			return problemDetails
+			c.JSON(int(problemDetails.Status), problemDetails)
 		}
 	case strings.HasPrefix(ueIdentity, "extgroupid-"):
 		udmSelf.UdmUePool.Range(func(key, value interface{}) bool {
@@ -180,7 +188,7 @@ func (p *Processor) UpdateEeSubscriptionProcedure(ueIdentity string, subscriptio
 			}
 			return true
 		})
-		return nil
+		c.Status(http.StatusNoContent)
 	case ueIdentity == "anyUE":
 		udmSelf.UdmUePool.Range(func(key, value interface{}) bool {
 			ue := value.(*udm_context.UdmUeContext)
@@ -192,7 +200,7 @@ func (p *Processor) UpdateEeSubscriptionProcedure(ueIdentity string, subscriptio
 			}
 			return true
 		})
-		return nil
+		c.Status(http.StatusNoContent)
 	default:
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusBadRequest,
@@ -204,6 +212,6 @@ func (p *Processor) UpdateEeSubscriptionProcedure(ueIdentity string, subscriptio
 				},
 			},
 		}
-		return problemDetails
+		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
