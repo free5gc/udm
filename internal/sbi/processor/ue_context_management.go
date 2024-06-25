@@ -162,12 +162,8 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 
 		c.JSON(http.StatusOK, registerRequest)
 	} else {
-		header := make(http.Header)
-		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
-		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriAmf3GppAccessRegistration))
-		for key, val := range header { // header response is optional
-			c.Header(key, val[0])
-		}
+		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
+		c.Header("Location", udmUe.GetLocationURI(udm_context.LocationUriAmf3GppAccessRegistration))
 		c.JSON(http.StatusCreated, registerRequest)
 	}
 }
@@ -230,12 +226,8 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 
 		return
 	} else {
-		header := make(http.Header)
-		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
-		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriAmfNon3GppAccessRegistration))
-		for key, val := range header { // header response is optional
-			c.Header(key, val[0])
-		}
+		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
+		c.Header("Location", udmUe.GetLocationURI(udm_context.LocationUriAmfNon3GppAccessRegistration))
 		c.JSON(http.StatusCreated, registerRequest)
 	}
 }
@@ -487,7 +479,7 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 
 func (p *Processor) RegistrationSmfRegistrationsProcedure(
 	c *gin.Context,
-	request *models.SmfRegistration,
+	smfRegistration *models.SmfRegistration,
 	ueID string,
 	pduSessionID string,
 ) {
@@ -509,7 +501,7 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 	pduID32 := int32(pduID64)
 
 	var createSmfContextNon3gppParamOpts Nudr_DataRepository.CreateSmfContextNon3gppParamOpts
-	optInterface := optional.NewInterface(*request)
+	optInterface := optional.NewInterface(*smfRegistration)
 	createSmfContextNon3gppParamOpts.SmfRegistration = optInterface
 
 	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
@@ -539,12 +531,8 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 	if contextExisted {
 		c.Status(http.StatusNoContent)
 	} else {
-		header := make(http.Header)
-		udmUe, _ := udm_context.GetSelf().UdmUeFindBySupi(ueID)
-		header.Set("Location", udmUe.GetLocationURI(udm_context.LocationUriSmfRegistration))
-		for key, val := range header { // header response is optional
-			c.Header(key, val[0])
-		}
-		c.JSON(http.StatusCreated, request)
+		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
+		c.Header("Location", udmUe.GetLocationURI(udm_context.LocationUriSmfRegistration))
+		c.JSON(http.StatusCreated, smfRegistration)
 	}
 }
