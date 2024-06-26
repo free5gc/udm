@@ -124,16 +124,13 @@ func (s *Server) getUEContextManagementRoutes() []Route {
 
 // GetAmfNon3gppAccess - retrieve the AMF registration for non-3GPP access information
 func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
-	// step 1: log
 	logger.UecmLog.Infoln("Handle GetAmfNon3gppAccessRequest")
 
-	// step 2: retrieve request
 	ueId := c.Param("ueId")
 	supportedFeatures := c.Query("supported-features")
 
 	var queryAmfContextNon3gppParamOpts Nudr_DataRepository.QueryAmfContextNon3gppParamOpts
 	queryAmfContextNon3gppParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
-	// step 3: handle the message
 
 	s.Processor().GetAmfNon3gppAccessProcedure(c, queryAmfContextNon3gppParamOpts, ueId)
 }
@@ -142,7 +139,6 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 	var amfNon3GppAccessRegistration models.AmfNon3GppAccessRegistration
 
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -156,7 +152,6 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&amfNon3GppAccessRegistration, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -172,17 +167,14 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 
 	logger.UecmLog.Infof("Handle RegisterAmfNon3gppAccessRequest")
 
-	// step 2: retrieve request
 	ueID := c.Param("ueId")
 
-	// step 3: handle the message
 	s.Processor().RegisterAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistration, ueID)
 }
 
 // RegistrationAmf3gppAccess - register as AMF for 3GPP access
 func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 	var amf3GppAccessRegistration models.Amf3GppAccessRegistration
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -196,7 +188,6 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&amf3GppAccessRegistration, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -210,21 +201,17 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 		return
 	}
 
-	// step 1: log
 	logger.UecmLog.Infof("Handle RegistrationAmf3gppAccess")
 
-	// step 2: retrieve request
 	ueID := c.Param("ueId")
 	logger.UecmLog.Info("UEID: ", ueID)
 
-	// step 3: handle the message
 	s.Processor().RegistrationAmf3gppAccessProcedure(c, amf3GppAccessRegistration, ueID)
 }
 
 // UpdateAmfNon3gppAccess - update a parameter in the AMF registration for non-3GPP access
 func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 	var amfNon3GppAccessRegistrationModification models.AmfNon3GppAccessRegistrationModification
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -238,7 +225,6 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&amfNon3GppAccessRegistrationModification, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -252,13 +238,10 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 		return
 	}
 
-	// step 1: log
 	logger.UecmLog.Infof("Handle UpdateAmfNon3gppAccessRequest")
 
-	// step 2: retrieve request
 	ueID := c.Param("ueId")
 
-	// step 3: handle the message
 	s.Processor().UpdateAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistrationModification, ueID)
 }
 
@@ -266,7 +249,6 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 	var amf3GppAccessRegistrationModification models.Amf3GppAccessRegistrationModification
 
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -280,7 +262,6 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&amf3GppAccessRegistrationModification, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -294,13 +275,10 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 		return
 	}
 
-	// step 1: log
 	logger.UecmLog.Infof("Handle UpdateAmf3gppAccessRequest")
 
-	// step 2: retrieve request
 	ueID := c.Param("ueId")
 
-	// step 3: handle the message
 	s.Processor().UpdateAmf3gppAccessProcedure(c, amf3GppAccessRegistrationModification, ueID)
 }
 
@@ -336,14 +314,11 @@ func (s *Server) HandleGetSmsf3gppAccess(c *gin.Context) {
 
 // DeregistrationSmfRegistrations - delete an SMF registration
 func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
-	// step 1: log
 	logger.UecmLog.Infof("Handle DeregistrationSmfRegistrations")
 
-	// step 2: retrieve request
 	ueID := c.Params.ByName("ueId")
 	pduSessionID := c.Params.ByName("pduSessionId")
 
-	// step 3: handle the message
 	s.Processor().DeregistrationSmfRegistrationsProcedure(c, ueID, pduSessionID)
 }
 
@@ -351,7 +326,6 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	var smfRegistration models.SmfRegistration
 
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -365,7 +339,6 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&smfRegistration, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -379,14 +352,11 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 		return
 	}
 
-	// step 1: log
 	logger.UecmLog.Infof("Handle RegistrationSmfRegistrations")
 
-	// step 2: retrieve request
 	ueID := c.Params.ByName("ueId")
 	pduSessionID := c.Params.ByName("pduSessionId")
 
-	// step 3: handle the message
 	s.Processor().RegistrationSmfRegistrationsProcedure(
 		c,
 		&smfRegistration,
@@ -397,13 +367,10 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 
 // GetAmf3gppAccess - retrieve the AMF registration for 3GPP access information
 func (s *Server) HandleGetAmf3gppAccess(c *gin.Context) {
-	// step 1: log
 	logger.UecmLog.Infof("Handle HandleGetAmf3gppAccessRequest")
 
-	// step 2: retrieve request
 	ueID := c.Param("ueId")
 	supportedFeatures := c.Query("supported-features")
 
-	// step 3: handle the message
 	s.Processor().GetAmf3gppAccessProcedure(c, ueID, supportedFeatures)
 }

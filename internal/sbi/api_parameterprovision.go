@@ -61,6 +61,14 @@ func (s *Server) HandleUpdate(c *gin.Context) {
 	}
 
 	gpsi := c.Params.ByName("gpsi")
+	if gpsi == "" {
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "NO_GPSI",
+		}
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
+	}
 
 	logger.PpLog.Infoln("Handle UpdateRequest")
 

@@ -32,7 +32,6 @@ func (s *Server) getUEAuthenticationRoutes() []Route {
 // ConfirmAuth - Create a new confirmation event
 func (s *Server) HandleConfirmAuth(c *gin.Context) {
 	var authEvent models.AuthEvent
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -46,7 +45,6 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&authEvent, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -71,7 +69,6 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 	var authInfoReq models.AuthenticationInfoRequest
 
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -85,7 +82,6 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&authInfoReq, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -99,13 +95,10 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 		return
 	}
 
-	// step 1: log
 	logger.UeauLog.Infoln("Handle GenerateAuthDataRequest")
 
-	// step 2: retrieve request
 	supiOrSuci := c.Param("supiOrSuci")
 
-	// step 3: handle the message
 	s.Processor().GenerateAuthDataProcedure(c, authInfoReq, supiOrSuci)
 }
 

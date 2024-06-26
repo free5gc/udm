@@ -73,7 +73,6 @@ func (s *Server) HandleCreateEeSubscription(c *gin.Context) {
 		return
 	}
 
-	// Start
 	logger.EeLog.Infoln("Handle Create EE Subscription")
 
 	ueIdentity := c.Params.ByName("ueIdentity")

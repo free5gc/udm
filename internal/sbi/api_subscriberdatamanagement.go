@@ -30,10 +30,8 @@ func (s *Server) HandleGetAmData(c *gin.Context) {
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("supported-features", c.Query("plmn-id"))
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle GetAmData")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
@@ -44,7 +42,6 @@ func (s *Server) HandleGetAmData(c *gin.Context) {
 	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
 	supportedFeatures := query.Get("supported-features")
 
-	// step 3: handle the message
 	s.Processor().GetAmDataProcedure(c, supi, plmnID, supportedFeatures)
 }
 
@@ -71,12 +68,12 @@ func (s *Server) getPlmnIDStruct(
 
 // Info - Nudm_Sdm Info service operation
 func (s *Server) HandleInfo(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 // PutUpuAck - Nudm_Sdm Info for UPU service operation
 func (s *Server) HandlePutUpuAck(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 // GetSmfSelectData - retrieve a UE's SMF Selection Subscription Data
@@ -85,10 +82,8 @@ func (s *Server) HandleGetSmfSelectData(c *gin.Context) {
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("supported-features", c.Query("supported-features"))
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle GetSmfSelectData")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
 	if problemDetails != nil {
@@ -98,7 +93,6 @@ func (s *Server) HandleGetSmfSelectData(c *gin.Context) {
 	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
 	supportedFeatures := query.Get("supported-features")
 
-	// step 3: handle the message
 	s.Processor().GetSmfSelectDataProcedure(c, supi, plmnID, supportedFeatures)
 }
 
@@ -119,10 +113,8 @@ func (s *Server) HandleGetSupi(c *gin.Context) {
 	query.Set("dataset-names", c.Query("dataset-names"))
 	query.Set("supported-features", c.Query("supported-features"))
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle GetSupiRequest")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
 	if problemDetails != nil {
@@ -133,26 +125,23 @@ func (s *Server) HandleGetSupi(c *gin.Context) {
 	dataSetNames := strings.Split(query.Get("dataset-names"), ",")
 	supportedFeatures := query.Get("supported-features")
 
-	// step 3: handle the message
 	s.Processor().GetSupiProcedure(c, supi, plmnID, dataSetNames, supportedFeatures)
 }
 
 // GetSharedData - retrieve shared data
 func (s *Server) HandleGetSharedData(c *gin.Context) {
-	// step 1: log
 	logger.SdmLog.Infof("Handle GetSharedData")
 
-	// step 2: retrieve request
 	sharedDataIds := c.QueryArray("shared-data-ids")
 	supportedFeatures := c.QueryArray("supported-features")
-	// step 3: handle the message
+
 	s.Processor().GetSharedDataProcedure(c, sharedDataIds, supportedFeatures[0])
 }
 
 // SubscribeToSharedData - subscribe to notifications for shared data
 func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 	var sharedDataSubsReq models.SdmSubscription
-	// step 1: retrieve http request body
+
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -166,7 +155,6 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&sharedDataSubsReq, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -180,12 +168,8 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 		return
 	}
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle SubscribeToSharedData")
 
-	// step 2: retrieve request
-
-	// step 3: handle the message
 	s.Processor().SubscribeToSharedDataProcedure(c, &sharedDataSubsReq)
 }
 
@@ -193,7 +177,6 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 func (s *Server) HandleSubscribe(c *gin.Context) {
 	var sdmSubscriptionReq models.SdmSubscription
 
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -207,7 +190,6 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&sdmSubscriptionReq, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -221,13 +203,10 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 		return
 	}
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle Subscribe")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 
-	// step 3: handle the message
 	s.Processor().SubscribeProcedure(c, &sdmSubscriptionReq, supi)
 }
 
@@ -235,11 +214,9 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 func (s *Server) HandleUnsubscribe(c *gin.Context) {
 	logger.SdmLog.Infof("Handle Unsubscribe")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
-	// step 3: handle the message
 	s.Processor().UnsubscribeProcedure(c, supi, subscriptionID)
 }
 
@@ -247,16 +224,13 @@ func (s *Server) HandleUnsubscribe(c *gin.Context) {
 func (s *Server) HandleUnsubscribeForSharedData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle UnsubscribeForSharedData")
 
-	// step 2: retrieve request
 	subscriptionID := c.Params.ByName("subscriptionId")
-	// step 3: handle the message
 	s.Processor().UnsubscribeForSharedDataProcedure(c, subscriptionID)
 }
 
 // Modify - modify the subscription
 func (s *Server) HandleModify(c *gin.Context) {
 	var sdmSubsModificationReq models.SdmSubsModification
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -270,7 +244,6 @@ func (s *Server) HandleModify(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&sdmSubsModificationReq, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -284,21 +257,17 @@ func (s *Server) HandleModify(c *gin.Context) {
 		return
 	}
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle Modify")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
-	// step 3: handle the message
 	s.Processor().ModifyProcedure(c, &sdmSubsModificationReq, supi, subscriptionID)
 }
 
 // ModifyForSharedData - modify the subscription
 func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 	var sharedDataSubscriptions models.SdmSubsModification
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -312,7 +281,6 @@ func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&sharedDataSubscriptions, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
@@ -326,40 +294,31 @@ func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 		return
 	}
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle ModifyForSharedData")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
-	// step 3: handle the message
 	s.Processor().ModifyForSharedDataProcedure(c, &sharedDataSubscriptions, supi, subscriptionID)
 }
 
 // GetTraceData - retrieve a UE's Trace Configuration Data
 func (s *Server) HandleGetTraceData(c *gin.Context) {
-	// step 1: log
 	logger.SdmLog.Infof("Handle GetTraceData")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 	plmnID := c.Query("plmn-id")
 
-	// step 3: handle the message
 	s.Processor().GetTraceDataProcedure(c, supi, plmnID)
 }
 
 // GetUeContextInSmfData - retrieve a UE's UE Context In SMF Data
 func (s *Server) HandleGetUeContextInSmfData(c *gin.Context) {
-	// step 1: log
 	logger.SdmLog.Infof("Handle GetUeContextInSmfData")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 	supportedFeatures := c.Query("supported-features")
 
-	// step 3: handle the message
 	s.Processor().GetUeContextInSmfDataProcedure(c, supi, supportedFeatures)
 }
 
@@ -374,10 +333,8 @@ func (s *Server) HandleGetNssai(c *gin.Context) {
 	query.Set("plmn-id", c.Query("plmn-id"))
 	query.Set("supported-features", c.Query("supported-features"))
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle GetNssai")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
 	if problemDetails != nil {
@@ -387,7 +344,6 @@ func (s *Server) HandleGetNssai(c *gin.Context) {
 	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
 	supportedFeatures := query.Get("supported-features")
 
-	// step 3: handle the message
 	s.Processor().GetNssaiProcedure(c, supi, plmnID, supportedFeatures)
 }
 
@@ -399,10 +355,8 @@ func (s *Server) HandleGetSmData(c *gin.Context) {
 	query.Set("single-nssai", c.Query("single-nssai"))
 	query.Set("supported-features", c.Query("supported-features"))
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle GetSmData")
 
-	// step 2: retrieve request
 	supi := c.Params.ByName("supi")
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
 	if problemDetails != nil {
@@ -414,7 +368,6 @@ func (s *Server) HandleGetSmData(c *gin.Context) {
 	Snssai := query.Get("single-nssai")
 	supportedFeatures := query.Get("supported-features")
 
-	// step 3: handle the message
 	s.Processor().GetSmDataProcedure(c, supi, plmnID, Dnn, Snssai, supportedFeatures)
 }
 
@@ -422,13 +375,10 @@ func (s *Server) HandleGetSmData(c *gin.Context) {
 func (s *Server) HandleGetIdTranslationResult(c *gin.Context) {
 	// req.Query.Set("SupportedFeatures", c.Query("supported-features"))
 
-	// step 1: log
 	logger.SdmLog.Infof("Handle GetIdTranslationResultRequest")
 
-	// step 2: retrieve request
 	gpsi := c.Params.ByName("gpsi")
 
-	// step 3: handle the message
 	s.Processor().GetIdTranslationResultProcedure(c, gpsi)
 }
 

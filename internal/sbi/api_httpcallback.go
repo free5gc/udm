@@ -31,7 +31,6 @@ func (s *Server) getHttpCallBackRoutes() []Route {
 
 func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
 	var dataChangeNotify models.DataChangeNotify
-	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -45,7 +44,6 @@ func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
 		return
 	}
 
-	// step 2: convert requestBody to openapi models
 	err = openapi.Deserialize(&dataChangeNotify, requestBody, "application/json")
 	if err != nil {
 		problemDetail := "[Request Body] " + err.Error()
