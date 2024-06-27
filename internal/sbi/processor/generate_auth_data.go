@@ -89,7 +89,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 	optInterface := optional.NewInterface(authEvent)
 	createAuthParam.AuthEvent = optInterface
 
-	client, err := p.consumer.CreateUDMClientToUDR(supi)
+	client, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -147,7 +147,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 
 	logger.UeauLog.Tracef("supi conversion => [%s]", supi)
 
-	client, err := p.consumer.CreateUDMClientToUDR(supi)
+	client, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)

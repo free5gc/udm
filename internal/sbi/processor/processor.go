@@ -13,17 +13,11 @@ type ProcessorUdm interface {
 
 type Processor struct {
 	ProcessorUdm
-	consumer *consumer.Consumer
 }
 
 func NewProcessor(udm ProcessorUdm) (*Processor, error) {
 	p := &Processor{
 		ProcessorUdm: udm,
-		consumer:     udm.Consumer(),
 	}
 	return p, nil
-}
-
-func (p *Processor) Consumer() *consumer.Consumer {
-	return p.consumer
 }

@@ -23,7 +23,7 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 	var queryAmDataParamOpts Nudr_DataRepository.QueryAmDataParamOpts
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -77,7 +77,7 @@ func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string)
 	var idTranslationResult models.IdTranslationResult
 	var getIdentityDataParamOpts Nudr_DataRepository.GetIdentityDataParamOpts
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(gpsi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(gpsi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -150,7 +150,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		return
 	}
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -436,7 +436,7 @@ func (p *Processor) GetSharedDataProcedure(c *gin.Context, sharedDataIds []strin
 		c.JSON(int(pd.Status), pd)
 		return
 	}
-	clientAPI, err := p.consumer.CreateUDMClientToUDR("")
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR("")
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -498,7 +498,7 @@ func (p *Processor) GetSmDataProcedure(
 	}
 	logger.SdmLog.Infof("getSmDataProcedure: SUPI[%s] PLMNID[%s] DNN[%s] SNssai[%s]", supi, plmnID, Dnn, Snssai)
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -584,7 +584,7 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 	var queryAmDataParamOpts Nudr_DataRepository.QueryAmDataParamOpts
 	queryAmDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	var nssaiResp models.Nssai
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -644,7 +644,7 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 	querySmfSelectDataParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 	var body models.SmfSelectionSubscriptionData
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -703,7 +703,7 @@ func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscripti
 		return
 	}
 
-	udmClientAPI := p.consumer.GetSDMClient("subscribeToSharedData")
+	udmClientAPI := p.Consumer().GetSDMClient("subscribeToSharedData")
 
 	sdmSubscriptionResp, res, err := udmClientAPI.SubscriptionCreationForSharedDataApi.SubscribeToSharedData(
 		ctx, *sdmSubscription)
@@ -758,7 +758,7 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.S
 		c.JSON(int(pd.Status), pd)
 		return
 	}
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -819,7 +819,7 @@ func (p *Processor) UnsubscribeForSharedDataProcedure(c *gin.Context, subscripti
 		return
 	}
 
-	udmClientAPI := p.consumer.GetSDMClient("unsubscribeForSharedData")
+	udmClientAPI := p.Consumer().GetSDMClient("unsubscribeForSharedData")
 
 	res, err := udmClientAPI.SubscriptionDeletionForSharedDataApi.UnsubscribeForSharedData(
 		ctx, subscriptionID)
@@ -862,7 +862,7 @@ func (p *Processor) UnsubscribeProcedure(c *gin.Context, supi string, subscripti
 		c.JSON(int(pd.Status), pd)
 		return
 	}
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -913,7 +913,7 @@ func (p *Processor) ModifyProcedure(c *gin.Context,
 		c.JSON(int(pd.Status), pd)
 		return
 	}
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -972,7 +972,7 @@ func (p *Processor) ModifyForSharedDataProcedure(c *gin.Context,
 		c.JSON(int(pd.Status), pd)
 		return
 	}
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -1028,7 +1028,7 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 	var body models.TraceData
 	var queryTraceDataParamOpts Nudr_DataRepository.QueryTraceDataParamOpts
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -1086,7 +1086,7 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 	var querySmfRegListParamOpts Nudr_DataRepository.QuerySmfRegListParamOpts
 	querySmfRegListParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(supi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)

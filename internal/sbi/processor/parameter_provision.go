@@ -19,7 +19,7 @@ func (p *Processor) UpdateProcedure(c *gin.Context,
 		c.JSON(int(pd.Status), pd)
 		return
 	}
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(gpsi)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(gpsi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)

@@ -24,7 +24,7 @@ func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, suppo
 	var queryAmfContext3gppParamOpts Nudr_DataRepository.QueryAmfContext3gppParamOpts
 	queryAmfContext3gppParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -58,7 +58,7 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContext
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 	}
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -105,7 +105,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 
 	p.Context().CreateAmf3gppRegContext(ueID, registerRequest)
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -185,7 +185,7 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 
 	p.Context().CreateAmfNon3gppRegContext(ueID, registerRequest)
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -307,7 +307,7 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
 	}
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -415,7 +415,7 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 		patchItemReqArray = append(patchItemReqArray, patchItemTmp)
 	}
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -451,7 +451,7 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 		c.JSON(int(pd.Status), pd)
 		return
 	}
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
@@ -504,7 +504,7 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 	optInterface := optional.NewInterface(*smfRegistration)
 	createSmfContextNon3gppParamOpts.SmfRegistration = optInterface
 
-	clientAPI, err := p.consumer.CreateUDMClientToUDR(ueID)
+	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)

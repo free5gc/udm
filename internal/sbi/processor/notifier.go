@@ -21,7 +21,7 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 
 	ue, _ := p.Context().UdmUeFindBySupi(supi)
 
-	clientAPI := p.consumer.GetSDMClient("DataChangeNotification")
+	clientAPI := p.Consumer().GetSDMClient("DataChangeNotification")
 
 	var problemDetails *models.ProblemDetails
 	for _, subscriptionDataSubscription := range ue.UdmSubsToNotify {
@@ -65,7 +65,7 @@ func (p *Processor) SendOnDeregistrationNotification(ueId string, onDeregistrati
 		return pd
 	}
 
-	clientAPI := p.consumer.GetUECMClient("SendOnDeregistrationNotification")
+	clientAPI := p.Consumer().GetUECMClient("SendOnDeregistrationNotification")
 
 	httpResponse, err := clientAPI.DeregistrationNotificationCallbackApi.DeregistrationNotify(
 		ctx, onDeregistrationNotificationUrl, deregistData)
