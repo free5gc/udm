@@ -11,13 +11,6 @@ import (
 	"github.com/free5gc/udm/internal/util"
 )
 
-const (
-	NFDiscoveryToUDRParamNone int = iota
-	NFDiscoveryToUDRParamSupi
-	NFDiscoveryToUDRParamExtGroupId
-	NFDiscoveryToUDRParamGpsi
-)
-
 func SendNFIntances(nrfUri string, targetNfType, requestNfType models.NfType,
 	param Nnrf_NFDiscovery.SearchNFInstancesParamOpts,
 ) (result models.SearchResult, err error) {

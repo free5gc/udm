@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime/debug"
+	"syscall"
 
 	"github.com/urfave/cli"
 
@@ -13,8 +16,6 @@ import (
 	logger_util "github.com/free5gc/util/logger"
 	"github.com/free5gc/util/version"
 )
-
-var UDM *service.UdmApp
 
 func main() {
 	defer func() {
@@ -52,18 +53,27 @@ func action(cliCtx *cli.Context) error {
 
 	logger.MainLog.Infoln("UDM version: ", version.GetVersion())
 
+	ctx, cancel := context.WithCancel(context.Background())
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-sigCh  // Wait for interrupt signal to gracefully shutdown
+		cancel() // Notify each goroutine and wait them stopped
+	}()
+
 	cfg, err := factory.ReadConfig(cliCtx.String("config"))
 	if err != nil {
 		return err
 	}
 	factory.UdmConfig = cfg
-	udm, err := service.NewApp(cfg)
+
+	udm, err := service.NewApp(ctx, cfg, tlsKeyLogPath)
 	if err != nil {
 		return err
 	}
-	UDM = udm
 
-	udm.Start(tlsKeyLogPath)
+	udm.Start()
 
 	return nil
 }

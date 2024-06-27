@@ -14,6 +14,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.5
+	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.21.0
 	gopkg.in/yaml.v2 v2.4.0
 )
