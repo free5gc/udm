@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/openapi"
@@ -85,9 +84,9 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 		c.JSON(int(pd.Status), pd)
 		return
 	}
-	var createAuthParam Nudr_DataRepository.CreateAuthenticationStatusParamOpts
-	optInterface := optional.NewInterface(authEvent)
-	createAuthParam.AuthEvent = optInterface
+	var createAuthStatusRequest Nudr_DataRepository.CreateAuthenticationStatusRequest
+	createAuthStatusRequest.AuthEvent = &authEvent
+	createAuthStatusRequest.UeId = &supi
 
 	client, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
@@ -96,26 +95,16 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 		return
 	}
 
-	resp, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
-		ctx, supi, &createAuthParam)
+	createAuthStatusResponse, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
+		ctx, &createAuthStatusRequest)
 	if err != nil {
-		problemDetails := &models.ProblemDetails{
-			Status: int32(resp.StatusCode),
-			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
-			Detail: err.Error(),
-		}
-
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		logger.UeauLog.Errorln("ConfirmAuth err:", err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	defer func() {
-		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
-			logger.UeauLog.Errorf("CreateAuthenticationStatus response body cannot close: %+v", rspCloseErr)
-		}
-	}()
 
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, createAuthStatusResponse)
 }
 
 func (p *Processor) GenerateAuthDataProcedure(
@@ -153,15 +142,15 @@ func (p *Processor) GenerateAuthDataProcedure(
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	authSubs, res, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(ctx, supi, nil)
-	if err != nil {
-		problemDetails := &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  authenticationRejected,
-			Detail: err.Error(),
-		}
+	var queryAuthSubsDataRequest Nudr_DataRepository.QueryAuthSubsDataRequest
+	queryAuthSubsDataRequest.UeId = &supi
 
-		switch res.StatusCode {
+	authSubs, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(ctx, &queryAuthSubsDataRequest)
+
+	if err != nil {
+
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		switch problemDetails.Status {
 		case http.StatusNotFound:
 			logger.UeauLog.Warnf("Return from UDR QueryAuthSubsData error")
 		default:
@@ -170,11 +159,6 @@ func (p *Processor) GenerateAuthDataProcedure(
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	defer func() {
-		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
-			logger.SdmLog.Errorf("QueryAuthSubsData response body cannot close: %+v", rspCloseErr)
-		}
-	}()
 
 	/*
 		K, RAND, CK, IK: 128 bits (16 bytes) (hex len = 32)
@@ -185,7 +169,6 @@ func (p *Processor) GenerateAuthDataProcedure(
 	hasK, hasOP, hasOPC := false, false, false
 	var kStr, opStr, opcStr string
 	var k, op, opc []byte
-
 	if authSubs.PermanentKey != nil {
 		kStr = authSubs.PermanentKey.PermanentKeyValue
 		if len(kStr) == keyStrLen {
