@@ -52,7 +52,7 @@ func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, suppo
 }
 
 func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContextNon3gppParamOpts Nudr_DataRepository.
-	QueryAmfContextNon3gppParamOpts, ueID string,
+	QueryAmfContextNon3gppRequest, ueID String
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
 	if err != nil {
@@ -64,25 +64,16 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContext
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
+	amfNon3GppAccessRegistrationResponse, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
+		QueryAmfContextNon3gpp(ctx, &queryAmfContextNon3gppParamOpts)
 
-	amfNon3GppAccessRegistration, resp, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
-		QueryAmfContextNon3gpp(ctx, ueID, &queryAmfContextNon3gppParamOpts)
 	if err != nil {
-		problemDetails := &models.ProblemDetails{
-			Status: int32(resp.StatusCode),
-			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
-			Detail: err.Error(),
-		}
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	defer func() {
-		if rspCloseErr := resp.Body.Close(); rspCloseErr != nil {
-			logger.SdmLog.Errorf("QueryAmfContext3gpp response body cannot close: %+v", rspCloseErr)
-		}
-	}()
 
-	c.JSON(http.StatusOK, amfNon3GppAccessRegistration)
+	c.JSON(http.StatusOK, amfNon3GppAccessRegistrationResponse)
 }
 
 func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,

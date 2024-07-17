@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/antihax/optional"
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/openapi"
@@ -128,11 +127,10 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 
 	ueId := c.Param("ueId")
 	supportedFeatures := c.Query("supported-features")
-
-	var queryAmfContextNon3gppParamOpts Nudr_DataRepository.QueryAmfContextNon3gppParamOpts
-	queryAmfContextNon3gppParamOpts.SupportedFeatures = optional.NewString(supportedFeatures)
-
-	s.Processor().GetAmfNon3gppAccessProcedure(c, queryAmfContextNon3gppParamOpts, ueId)
+	var queryAmfContextNon3gppRequest Nudr_DataRepository.QueryAmfContextNon3gppRequest
+	queryAmfContextNon3gppRequest.SupportedFeatures = &supportedFeatures
+	queryAmfContextNon3gppRequest.UeId = &ueId
+	s.Processor().GetAmfNon3gppAccessProcedure(c, queryAmfContextNon3gppRequest, ueId)
 }
 
 // Register - register as AMF for non-3GPP access
