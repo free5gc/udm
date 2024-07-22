@@ -79,7 +79,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 	authEvent models.AuthEvent,
 	supi string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -98,9 +98,14 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 	createAuthStatusResponse, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
 		ctx, &createAuthStatusRequest)
 	if err != nil {
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		if !ok {
+			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
+		}
 		logger.UeauLog.Errorln("ConfirmAuth err:", err.Error())
-		c.JSON(int(problemDetails.Status), problemDetails)
+		c.JSON(int(problem.Status), problem)
 		return
 	}
 
@@ -112,7 +117,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 	authInfoRequest models.AuthenticationInfoRequest,
 	supiOrSuci string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -148,15 +153,19 @@ func (p *Processor) GenerateAuthDataProcedure(
 	authSubs, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(ctx, &queryAuthSubsDataRequest)
 
 	if err != nil {
-
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-		switch problemDetails.Status {
+		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		if !ok {
+			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
+		}
+		switch problem.Status {
 		case http.StatusNotFound:
 			logger.UeauLog.Warnf("Return from UDR QueryAuthSubsData error")
 		default:
 			logger.UeauLog.Errorln("Return from UDR QueryAuthSubsData error")
 		}
-		c.JSON(int(problemDetails.Status), problemDetails)
+		c.JSON(int(problem.Status), problem)
 		return
 	}
 
