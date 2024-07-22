@@ -126,11 +126,11 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 			// Based on TS 23.502 4.2.2.2.2, If the serving NF removal reason indicated by the UDM is Initial Registration,
 			// the old AMF invokes the Nsmf_PDUSession_ReleaseSMContext (SM Context ID). Thus we give different
 			// dereg cause based on registration parameter from serving AMF
-			deregReason := models.DeregistrationReason_UE_REGISTRATION_AREA_CHANGE
+			deregReason := models.UdmUecmDeregistrationReason_UE_REGISTRATION_AREA_CHANGE
 			if registerRequest.InitialRegistrationInd {
-				deregReason = models.DeregistrationReason_UE_INITIAL_REGISTRATION
+				deregReason = models.UdmUecmDeregistrationReason_UE_INITIAL_REGISTRATION
 			}
-			deregistData := models.DeregistrationData{
+			deregistData := models.UdmUecmDeregistrationData{
 				DeregReason: deregReason,
 				AccessType:  models.AccessType__3_GPP_ACCESS,
 			}
@@ -199,8 +199,8 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
 	// corresponding to the same (e.g. 3GPP) access, if one exists
 	if oldAmfNon3GppAccessRegContext != nil {
-		deregistData := models.DeregistrationData{
-			DeregReason: models.DeregistrationReason_UE_INITIAL_REGISTRATION,
+		deregistData := models.UdmUecmDeregistrationData{
+			DeregReason: models.UdmUecmDeregistrationReason_UE_INITIAL_REGISTRATION,
 			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
 		}
 		p.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
