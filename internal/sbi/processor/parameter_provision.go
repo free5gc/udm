@@ -28,9 +28,15 @@ func (p *Processor) UpdateProcedure(c *gin.Context,
 	var modifyPpDataRequest Nudr_DataRepository.ModifyPpDataRequest
 	modifyPpDataRequest.UeId = &gpsi
 	modifyPpDataRsp, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(ctx, &modifyPpDataRequest)
+
 	if err != nil {
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-		c.JSON(int(problemDetails.Status), problemDetails)
+		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		if !ok {
+			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
+		}
+		c.JSON(int(problem.Status), problem)
 		return
 	}
 
