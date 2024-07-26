@@ -178,7 +178,9 @@ func MappingSharedData(sharedDatafromUDR []models.UdmSdmSharedData) (mp map[stri
 	return sharedSubsDataMap
 }
 
-func ObtainRequiredSharedData(Sharedids []string, response []models.UdmSdmSharedData) (sharedDatas []models.UdmSdmSharedData) {
+func ObtainRequiredSharedData(Sharedids []string, response []models.UdmSdmSharedData) (
+	sharedDatas []models.UdmSdmSharedData,
+) {
 	sharedSubsDataMap := MappingSharedData(response)
 	Allkeys := make([]string, len(sharedSubsDataMap))
 	MatchedKeys := make([]string, len(Sharedids))
