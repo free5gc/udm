@@ -3,9 +3,8 @@ module github.com/free5gc/udm
 go 1.21
 
 require (
-	github.com/antihax/optional v1.0.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
-	github.com/free5gc/openapi v1.0.9-0.20240423070630-14913ab805dc
+	github.com/free5gc/openapi v1.0.9-0.20240718074746-f272c26db1c3
 	github.com/free5gc/util v1.0.6
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.3.0

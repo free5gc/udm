@@ -32,7 +32,7 @@ const (
 )
 
 func Init() {
-	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
+	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
 	GetSelf().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
 	InitUdmContext(GetSelf())
 }
@@ -50,14 +50,14 @@ type UDMContext struct {
 	RegisterIPv4                   string // IP register to NRF
 	BindingIPv4                    string
 	UriScheme                      models.UriScheme
-	NfService                      map[models.ServiceName]models.NrfNfManagementNfService
+	NfService                      map[models.ServiceName]models.NfService
 	NFDiscoveryClient              *Nnrf_NFDiscovery.APIClient
 	UdmUePool                      sync.Map // map[supi]*UdmUeContext
 	NrfUri                         string
 	NrfCertPem                     string
 	GpsiSupiList                   models.IdentityData
-	SharedSubsDataMap              map[string]models.SharedData // sharedDataIds as key
-	SubscriptionOfSharedDataChange sync.Map                     // subscriptionID as key
+	SharedSubsDataMap              map[string]models.UdmSdmSharedData // sharedDataIds as key
+	SubscriptionOfSharedDataChange sync.Map                           // subscriptionID as key
 	SuciProfiles                   []suci.SuciProfile
 	EeSubscriptionIDGenerator      *idgenerator.IDGenerator
 	OAuth2Required                 bool
@@ -170,15 +170,15 @@ func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagement
 }
 
 // HandleGetSharedData related functions
-func MappingSharedData(sharedDatafromUDR []models.SharedData) (mp map[string]models.SharedData) {
-	sharedSubsDataMap := make(map[string]models.SharedData)
+func MappingSharedData(sharedDatafromUDR []models.UdmSdmSharedData) (mp map[string]models.UdmSdmSharedData) {
+	sharedSubsDataMap := make(map[string]models.UdmSdmSharedData)
 	for i := 0; i < len(sharedDatafromUDR); i++ {
 		sharedSubsDataMap[sharedDatafromUDR[i].SharedDataId] = sharedDatafromUDR[i]
 	}
 	return sharedSubsDataMap
 }
 
-func ObtainRequiredSharedData(Sharedids []string, response []models.SharedData) (sharedDatas []models.SharedData) {
+func ObtainRequiredSharedData(Sharedids []string, response []models.UdmSdmSharedData) (sharedDatas []models.UdmSdmSharedData) {
 	sharedSubsDataMap := MappingSharedData(response)
 	Allkeys := make([]string, len(sharedSubsDataMap))
 	MatchedKeys := make([]string, len(Sharedids))
@@ -196,7 +196,7 @@ func ObtainRequiredSharedData(Sharedids []string, response []models.SharedData) 
 		counter += 1
 	}
 
-	shared_Data := make([]models.SharedData, len(MatchedKeys))
+	shared_Data := make([]models.UdmSdmSharedData, len(MatchedKeys))
 	if len(MatchedKeys) != 1 {
 		for i := 0; i < len(MatchedKeys); i++ {
 			shared_Data[i] = sharedSubsDataMap[MatchedKeys[i]]
@@ -467,7 +467,7 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	versionUri := "v" + tmpVersion[0]
 	for index, nameString := range serviceName {
 		name := models.ServiceName(nameString)
-		context.NfService[name] = models.NrfNfManagementNfService{
+		context.NfService[name] = models.NfService{
 			ServiceInstanceId: strconv.Itoa(index),
 			ServiceName:       name,
 			Versions: []models.NfServiceVersion{
