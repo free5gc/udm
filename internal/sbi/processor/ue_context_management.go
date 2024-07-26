@@ -48,7 +48,8 @@ func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, suppo
 }
 
 func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContextNon3gppParamOpts Nudr_DataRepository.
-	QueryAmfContextNon3gppRequest, ueID string) {
+	QueryAmfContextNon3gppRequest, ueID string,
+) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
@@ -61,7 +62,6 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContext
 	}
 	amfNon3GppAccessRegistrationResponse, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
 		QueryAmfContextNon3gpp(ctx, &queryAmfContextNon3gppParamOpts)
-
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {
@@ -184,7 +184,6 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 
 	_, err = clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.CreateAmfContextNon3gpp(
 		ctx, &createAmfContextNon3gppRequest)
-
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {
@@ -301,7 +300,6 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 	amfContext3gppRequest.PatchItem = patchItemReqArray
 	_, err = clientAPI.AMF3GPPAccessRegistrationDocumentApi.AmfContext3gpp(ctx,
 		&amfContext3gppRequest)
-
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {
@@ -407,7 +405,6 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 	amfContextNon3gppRequest.PatchItem = patchItemReqArray
 	_, err = clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.AmfContextNon3gpp(ctx,
 		&amfContextNon3gppRequest)
-
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {
@@ -452,7 +449,6 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 	deleteSmfRegistrationRequest.UeId = &ueID
 	deleteSmfRegistrationRequest.PduSessionId = &pduSessionIDInt32
 	_, err = clientAPI.SMFRegistrationDocumentApi.DeleteSmfRegistration(ctx, &deleteSmfRegistrationRequest)
-
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {
@@ -502,7 +498,6 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 		return
 	}
 	_, err = clientAPI.SMFRegistrationDocumentApi.CreateOrUpdateSmfRegistration(ctx, &createSmfContext3gppRequest)
-
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {
