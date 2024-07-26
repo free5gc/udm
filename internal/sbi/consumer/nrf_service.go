@@ -163,7 +163,8 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 	registerNfInstanceRequest.NfInstanceID = &udmContext.NfId
 	registerNfInstanceRequest.NrfNfManagementNfProfile = &nfProfile
 	for {
-		res, err := client.NFInstanceIDDocumentApi.RegisterNFInstance(ctx, &registerNfInstanceRequest)
+		var res *Nnrf_NFManagement.RegisterNFInstanceResponse
+		res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(ctx, &registerNfInstanceRequest)
 
 		var status int32
 		if err != nil || res == nil {
@@ -207,7 +208,9 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 	return resouceNrfUri, retrieveNfInstanceID, err
 }
 
-func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (profile models.NrfNfManagementNfProfile, err error) {
+func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (
+	profile models.NrfNfManagementNfProfile, err error,
+) {
 	profile.NfInstanceId = udmContext.NfId
 	profile.NfType = models.NrfNfManagementNfType_UDM
 	profile.NfStatus = models.NrfNfManagementNfStatus_REGISTERED
