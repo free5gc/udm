@@ -164,7 +164,7 @@ func newRouter(s *Server) *gin.Engine {
 	})
 	AddService(udmUEAUGroup, udmUEAURoutes)
 
-	genAuthDataPath := "/:supi/security-information/generate-auth-data"
+	genAuthDataPath := "/:supiOrSuci/security-information/generate-auth-data"
 	udmUEAUGroup.Any(genAuthDataPath, s.GenAuthDataHandlerFunc)
 
 	// UECM
