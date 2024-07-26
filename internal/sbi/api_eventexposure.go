@@ -21,21 +21,21 @@ func (s *Server) getEventExposureRoutes() []Route {
 		},
 
 		{
-			"HTTPCreateEeSubscription",
+			"CreateEeSubscription",
 			strings.ToUpper("Post"),
 			"/:ueIdentity/ee-subscriptions",
 			s.HandleCreateEeSubscription,
 		},
 
 		{
-			"HTTPDeleteEeSubscription",
+			"DeleteEeSubscription",
 			strings.ToUpper("Delete"),
 			"/:ueIdentity/ee-subscriptions/:subscriptionId",
 			s.HandleDeleteEeSubscription,
 		},
 
 		{
-			"HTTPUpdateEeSubscription",
+			"UpdateEeSubscription",
 			strings.ToUpper("Patch"),
 			"/:ueIdentity/ee-subscriptions/:subscriptionId",
 			s.HandleUpdateEeSubscription,

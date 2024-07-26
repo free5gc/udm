@@ -23,7 +23,7 @@ func (s *Server) getParameterProvisionRoutes() []Route {
 		{
 			"Update",
 			strings.ToUpper("Patch"),
-			"/:gpsi/pp-data",
+			"/:ueId/pp-data",
 			s.HandleUpdate,
 		},
 	}

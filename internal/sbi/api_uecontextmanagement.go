@@ -22,98 +22,98 @@ func (s *Server) getUEContextManagementRoutes() []Route {
 		},
 
 		{
-			"GetAmf3gppAccess",
+			"Get3GppRegistration",
 			strings.ToUpper("Get"),
 			"/:ueId/registrations/amf-3gpp-access",
 			s.HandleGetAmf3gppAccess,
 		},
 
 		{
-			"GetAmfNon3gppAccess",
+			"GetNon3GppRegistration",
 			strings.ToUpper("Get"),
 			"/:ueId/registrations/amf-non-3gpp-access",
 			s.HandleGetAmfNon3gppAccess,
 		},
 
 		{
-			"RegistrationAmf3gppAccess",
+			"Call3GppRegistration",
 			strings.ToUpper("Put"),
 			"/:ueId/registrations/amf-3gpp-access",
 			s.HandleRegistrationAmf3gppAccess,
 		},
 
 		{
-			"Register",
+			"Non3GppRegistration",
 			strings.ToUpper("Put"),
 			"/:ueId/registrations/amf-non-3gpp-access",
 			s.HandleRegistrationAmfNon3gppAccess,
 		},
 
 		{
-			"UpdateAmf3gppAccess",
+			"Update3GppRegistration",
 			strings.ToUpper("Patch"),
 			"/:ueId/registrations/amf-3gpp-access",
 			s.HandleUpdateAmf3gppAccess,
 		},
 
 		{
-			"UpdateAmfNon3gppAccess",
+			"UpdateNon3GppRegistration",
 			strings.ToUpper("Patch"),
 			"/:ueId/registrations/amf-non-3gpp-access",
 			s.HandleUpdateAmfNon3gppAccess,
 		},
 
 		{
-			"DeregistrationSmfRegistrations",
+			"SmfDeregistration",
 			strings.ToUpper("Delete"),
 			"/:ueId/registrations/smf-registrations/:pduSessionId",
 			s.HandleDeregistrationSmfRegistrations,
 		},
 
 		{
-			"RegistrationSmfRegistrations",
+			"Registration",
 			strings.ToUpper("Put"),
 			"/:ueId/registrations/smf-registrations/:pduSessionId",
 			s.HandleRegistrationSmfRegistrations,
 		},
 
 		{
-			"GetSmsf3gppAccess",
+			"Get3GppSmsfRegistration",
 			strings.ToUpper("Get"),
 			"/:ueId/registrations/smsf-3gpp-access",
 			s.HandleGetSmsf3gppAccess,
 		},
 
 		{
-			"DeregistrationSmsf3gppAccess",
+			"Call3GppSmsfDeregistration",
 			strings.ToUpper("Delete"),
 			"/:ueId/registrations/smsf-3gpp-access",
 			s.HandleDeregistrationSmsf3gppAccess,
 		},
 
 		{
-			"DeregistrationSmsfNon3gppAccess",
+			"Non3GppSmsfDeregistration",
 			strings.ToUpper("Delete"),
 			"/:ueId/registrations/smsf-non-3gpp-access",
 			s.HandleDeregistrationSmsfNon3gppAccess,
 		},
 
 		{
-			"GetSmsfNon3gppAccess",
+			"GetNon3GppSmsfRegistration",
 			strings.ToUpper("Get"),
 			"/:ueId/registrations/smsf-non-3gpp-access",
 			s.HandleGetSmsfNon3gppAccess,
 		},
 
 		{
-			"UpdateSMSFReg3GPP",
+			"Call3GppSmsfRegistration",
 			strings.ToUpper("Put"),
 			"/:ueId/registrations/smsf-3gpp-access",
 			s.HandleUpdateSMSFReg3GPP,
 		},
 
 		{
-			"RegistrationSmsfNon3gppAccess",
+			"Non3GppSmsfRegistration",
 			strings.ToUpper("Put"),
 			"/:ueId/registrations/smsf-non-3gpp-access",
 			s.HandleRegistrationSmsfNon3gppAccess,
