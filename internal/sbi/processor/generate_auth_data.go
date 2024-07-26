@@ -151,7 +151,6 @@ func (p *Processor) GenerateAuthDataProcedure(
 	queryAuthSubsDataRequest.UeId = &supi
 
 	authSubs, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(ctx, &queryAuthSubsDataRequest)
-
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {

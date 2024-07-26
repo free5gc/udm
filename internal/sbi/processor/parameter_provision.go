@@ -3,11 +3,11 @@ package processor
 import (
 	"net/http"
 
-	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
+	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 )
 
 func (p *Processor) UpdateProcedure(c *gin.Context,
@@ -28,7 +28,6 @@ func (p *Processor) UpdateProcedure(c *gin.Context,
 	var modifyPpDataRequest Nudr_DataRepository.ModifyPpDataRequest
 	modifyPpDataRequest.UeId = &gpsi
 	modifyPpDataRsp, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(ctx, &modifyPpDataRequest)
-
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {

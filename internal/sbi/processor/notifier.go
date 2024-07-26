@@ -57,13 +57,13 @@ func (p *Processor) SendOnDeregistrationNotification(ueId string, onDeregistrati
 	}
 
 	clientAPI := p.Consumer().GetUECMClient("SendOnDeregistrationNotification")
-	var call3GppRegistrationDeregistrationNotificationPostRequest UEContextManagement.Call3GppRegistrationDeregistrationNotificationPostRequest
+	var call3GppRegistrationDeregistrationNotificationPostRequest UEContextManagement.
+		Call3GppRegistrationDeregistrationNotificationPostRequest
 	call3GppRegistrationDeregistrationNotificationPostRequest.UdmUecmDeregistrationData = &deregistData
 	_, err = clientAPI.AMFRegistrationFor3GPPAccessApi.
 		Call3GppRegistrationDeregistrationNotificationPost(ctx,
 			onDeregistrationNotificationUrl,
 			&call3GppRegistrationDeregistrationNotificationPostRequest)
-
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {
