@@ -175,17 +175,15 @@ func (p *Processor) GenerateAuthDataProcedure(
 		AMF: 16 bits (2 bytes) (hex len = 4) TS33.102 - Annex H
 	*/
 
-	hasK, hasOP, hasOPC := false, false, false
-	var kStr, opStr, opcStr string
+	hasOPC := false
+	var kStr, opcStr string
 	var k, op, opc []byte
-	if authSubs.PermanentKey != nil {
-		kStr = authSubs.PermanentKey.PermanentKeyValue
+	if authSubs.AuthenticationSubscription.EncPermanentKey != "" {
+		kStr = authSubs.AuthenticationSubscription.EncPermanentKey
 		if len(kStr) == keyStrLen {
 			k, err = hex.DecodeString(kStr)
 			if err != nil {
 				logger.UeauLog.Errorln("err:", err)
-			} else {
-				hasK = true
 			}
 		} else {
 			problemDetails := &models.ProblemDetails{
@@ -208,35 +206,8 @@ func (p *Processor) GenerateAuthDataProcedure(
 		return
 	}
 
-	if authSubs.Milenage != nil {
-		if authSubs.Milenage.Op != nil && authSubs.Milenage.Op.OpValue != "" {
-			opStr = authSubs.Milenage.Op.OpValue
-			if len(opStr) == opStrLen {
-				op, err = hex.DecodeString(opStr)
-				if err != nil {
-					logger.UeauLog.Errorln("err:", err)
-				} else {
-					hasOP = true
-				}
-			} else {
-				logger.UeauLog.Errorln("opStr length is ", len(opStr))
-			}
-		} else {
-			logger.UeauLog.Infoln("Nil Op")
-		}
-	} else {
-		problemDetails := &models.ProblemDetails{
-			Status: http.StatusForbidden,
-			Cause:  authenticationRejected,
-		}
-
-		logger.UeauLog.Infoln("Nil Milenage")
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
-	}
-
-	if authSubs.Opc != nil && authSubs.Opc.OpcValue != "" {
-		opcStr = authSubs.Opc.OpcValue
+	if authSubs.AuthenticationSubscription.EncOpcKey != "" {
+		opcStr = authSubs.AuthenticationSubscription.EncOpcKey
 		if len(opcStr) == opcStrLen {
 			opc, err = hex.DecodeString(opcStr)
 			if err != nil {
@@ -251,7 +222,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		logger.UeauLog.Infoln("Nil Opc")
 	}
 
-	if !hasOPC && !hasOP {
+	if !hasOPC {
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusForbidden,
 			Cause:  authenticationRejected,
@@ -260,25 +231,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		return
 	}
 
-	if !hasOPC {
-		if hasK && hasOP {
-			opc, err = milenage.GenerateOPC(k, op)
-			if err != nil {
-				logger.UeauLog.Errorln("milenage GenerateOPC err:", err)
-			}
-		} else {
-			problemDetails := &models.ProblemDetails{
-				Status: http.StatusForbidden,
-				Cause:  authenticationRejected,
-			}
-
-			logger.UeauLog.Errorln("Unable to derive OPC")
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
-		}
-	}
-
-	sqnStr := p.strictHex(authSubs.SequenceNumber, 12)
+	sqnStr := p.strictHex(authSubs.AuthenticationSubscription.SequenceNumber.Sqn, 12)
 	logger.UeauLog.Traceln("sqnStr", sqnStr)
 	sqn, err := hex.DecodeString(sqnStr)
 	if err != nil {
@@ -309,7 +262,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		return
 	}
 
-	amfStr := p.strictHex(authSubs.AuthenticationManagementField, 4)
+	amfStr := p.strictHex(authSubs.AuthenticationSubscription.AuthenticationManagementField, 4)
 	logger.UeauLog.Traceln("amfStr", amfStr)
 	AMF, err := hex.DecodeString(amfStr)
 	if err != nil {
@@ -445,10 +398,11 @@ func (p *Processor) GenerateAuthDataProcedure(
 		},
 	}
 
-	var rsp *http.Response
-
-	rsp, err = client.AuthenticationDataDocumentApi.ModifyAuthentication(
-		ctx, supi, patchItemArray)
+	var modifyAuthenticationSubscriptionRequest Nudr_DataRepository.ModifyAuthenticationSubscriptionRequest
+	modifyAuthenticationSubscriptionRequest.UeId = &supi
+	modifyAuthenticationSubscriptionRequest.PatchItem = patchItemArray
+	_, err = client.AuthenticationSubscriptionDocumentApi.ModifyAuthenticationSubscription(
+		ctx, &modifyAuthenticationSubscriptionRequest)
 	if err != nil {
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusForbidden,
@@ -460,11 +414,6 @@ func (p *Processor) GenerateAuthDataProcedure(
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	defer func() {
-		if rspCloseErr := rsp.Body.Close(); rspCloseErr != nil {
-			logger.SdmLog.Errorf("ModifyAuthentication response body cannot close: %+v", rspCloseErr)
-		}
-	}()
 
 	// Run milenage
 	macA, macS := make([]byte, 8), make([]byte, 8)
@@ -498,7 +447,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 	logger.UeauLog.Tracef("AUTN=[%x]", AUTN)
 
 	var av models.AuthenticationVector
-	if authSubs.AuthenticationMethod == models.AuthMethod__5_G_AKA {
+	if authSubs.AuthenticationSubscription.AuthenticationMethod == models.AuthMethod__5_G_AKA {
 		response.AuthType = models.AuthType__5_G_AKA
 
 		// derive XRES*
