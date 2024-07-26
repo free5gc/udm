@@ -54,12 +54,12 @@ func (s *nudrService) getUdrURI(id string) string {
 		ue, ok := udm_context.GetSelf().UdmUeFindBySupi(id)
 		if ok {
 			if ue.UdrUri == "" {
-				ue.UdrUri = SendNFIntancesUDR(id, NFDiscoveryToUDRParamSupi)
+				ue.UdrUri = s.consumer.SendNFIntancesUDR(id, NFDiscoveryToUDRParamSupi)
 			}
 			return ue.UdrUri
 		} else {
 			ue = udm_context.GetSelf().NewUdmUe(id)
-			ue.UdrUri = SendNFIntancesUDR(id, NFDiscoveryToUDRParamSupi)
+			ue.UdrUri = s.consumer.SendNFIntancesUDR(id, NFDiscoveryToUDRParamSupi)
 			return ue.UdrUri
 		}
 	} else if strings.Contains(id, "pei") {
@@ -68,13 +68,13 @@ func (s *nudrService) getUdrURI(id string) string {
 			ue := value.(*udm_context.UdmUeContext)
 			if ue.Amf3GppAccessRegistration != nil && ue.Amf3GppAccessRegistration.Pei == id {
 				if ue.UdrUri == "" {
-					ue.UdrUri = SendNFIntancesUDR(ue.Supi, NFDiscoveryToUDRParamSupi)
+					ue.UdrUri = s.consumer.SendNFIntancesUDR(ue.Supi, NFDiscoveryToUDRParamSupi)
 				}
 				udrURI = ue.UdrUri
 				return false
 			} else if ue.AmfNon3GppAccessRegistration != nil && ue.AmfNon3GppAccessRegistration.Pei == id {
 				if ue.UdrUri == "" {
-					ue.UdrUri = SendNFIntancesUDR(ue.Supi, NFDiscoveryToUDRParamSupi)
+					ue.UdrUri = s.consumer.SendNFIntancesUDR(ue.Supi, NFDiscoveryToUDRParamSupi)
 				}
 				udrURI = ue.UdrUri
 				return false
@@ -84,10 +84,10 @@ func (s *nudrService) getUdrURI(id string) string {
 		return udrURI
 	} else if strings.Contains(id, "extgroupid") {
 		// extra group id
-		return SendNFIntancesUDR(id, NFDiscoveryToUDRParamExtGroupId)
+		return s.consumer.SendNFIntancesUDR(id, NFDiscoveryToUDRParamExtGroupId)
 	} else if strings.Contains(id, "msisdn") || strings.Contains(id, "extid") {
 		// gpsi
-		return SendNFIntancesUDR(id, NFDiscoveryToUDRParamGpsi)
+		return s.consumer.SendNFIntancesUDR(id, NFDiscoveryToUDRParamGpsi)
 	}
-	return SendNFIntancesUDR("", NFDiscoveryToUDRParamNone)
+	return s.consumer.SendNFIntancesUDR("", NFDiscoveryToUDRParamNone)
 }
