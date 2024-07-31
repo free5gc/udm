@@ -188,6 +188,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			problemDetails := &models.ProblemDetails{
 				Status: http.StatusForbidden,
 				Cause:  authenticationRejected,
+				Detail: "len(kStr) != keyStrLen",
 			}
 
 			logger.UeauLog.Errorln("kStr length is ", len(kStr))
@@ -198,6 +199,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusForbidden,
 			Cause:  authenticationRejected,
+			Detail: "EncPermanentKey == ''",
 		}
 
 		logger.UeauLog.Errorln("Nil PermanentKey")
@@ -315,10 +317,10 @@ func (p *Processor) GenerateAuthDataProcedure(
 				problemDetails := &models.ProblemDetails{
 					Status: http.StatusForbidden,
 					Cause:  authenticationRejected,
-					Detail: deCodeErr.Error(),
+					Detail: err.Error(),
 				}
 
-				logger.UeauLog.Errorln("err:", deCodeErr)
+				logger.UeauLog.Errorln("err:", err)
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
