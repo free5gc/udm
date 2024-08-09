@@ -205,7 +205,7 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle Subscribe")
 
-	supi := c.Params.ByName("supi")
+	supi := c.Params.ByName("ueId")
 
 	s.Processor().SubscribeProcedure(c, &sdmSubscriptionReq, supi)
 }
@@ -214,7 +214,7 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 func (s *Server) HandleUnsubscribe(c *gin.Context) {
 	logger.SdmLog.Infof("Handle Unsubscribe")
 
-	supi := c.Params.ByName("supi")
+	supi := c.Params.ByName("ueId")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	s.Processor().UnsubscribeProcedure(c, supi, subscriptionID)
@@ -259,7 +259,7 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle Modify")
 
-	supi := c.Params.ByName("supi")
+	supi := c.Params.ByName("ueId")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	s.Processor().ModifyProcedure(c, &sdmSubsModificationReq, supi, subscriptionID)
@@ -377,7 +377,7 @@ func (s *Server) HandleGetIdTranslationResult(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle GetIdTranslationResultRequest")
 
-	gpsi := c.Params.ByName("gpsi")
+	gpsi := c.Params.ByName("ueId")
 
 	s.Processor().GetIdTranslationResultProcedure(c, gpsi)
 }
@@ -417,9 +417,8 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 		return
 	}
 
-	// for "/:gpsi/id-translation-result"
+	// for "/:ueId/id-translation-result"
 	if op == "id-translation-result" && strings.ToUpper("Get") == c.Request.Method {
-		c.Params = append(c.Params, gin.Param{Key: "gpsi", Value: c.Param("supi")})
 		s.HandleGetIdTranslationResult(c)
 		return
 	}
@@ -438,10 +437,9 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 	op := c.Param("subscriptionId")
 
-	// for "/:supi/sdm-subscriptions/:subscriptionId"
+	// for "/:ueId/sdm-subscriptions/:subscriptionId"
 	if op == "sdm-subscriptions" && strings.ToUpper("Delete") == c.Request.Method {
 		var tmpParams gin.Params
-		tmpParams = append(tmpParams, gin.Param{Key: "supi", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
 		s.HandleUnsubscribe(c)
@@ -454,10 +452,9 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 		return
 	}
 
-	// for "/:supi/sdm-subscriptions/:subscriptionId"
+	// for "/:ueId/sdm-subscriptions/:subscriptionId"
 	if op == "sdm-subscriptions" && strings.ToUpper("Patch") == c.Request.Method {
 		var tmpParams gin.Params
-		tmpParams = append(tmpParams, gin.Param{Key: "supi", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
 		s.HandleModify(c)
@@ -470,7 +467,7 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 func (s *Server) getOneLayerRoutes() []Route {
 	return []Route{
 		{
-			"GetSupi",
+			"GetDataSets",
 			strings.ToUpper("Get"),
 			"/:supi",
 			s.HandleGetSupi,
@@ -502,14 +499,14 @@ func (s *Server) getTwoLayerRoutes() []Route {
 		},
 
 		{
-			"GetSmfSelectData",
+			"GetSmfSelData",
 			strings.ToUpper("Get"),
 			"/:supi/smf-select-data",
 			s.HandleGetSmfSelectData,
 		},
 
 		{
-			"GetSmsMngData",
+			"GetSmsMngtData",
 			strings.ToUpper("Get"),
 			"/:supi/sms-mng-data",
 			s.HandleGetSmsMngData,
@@ -530,7 +527,7 @@ func (s *Server) getTwoLayerRoutes() []Route {
 		},
 
 		{
-			"GetNssai",
+			"GetNSSAI",
 			strings.ToUpper("Get"),
 			"/:supi/nssai",
 			s.HandleGetNssai,
@@ -539,26 +536,26 @@ func (s *Server) getTwoLayerRoutes() []Route {
 		{
 			"Subscribe",
 			strings.ToUpper("Post"),
-			"/:supi/sdm-subscriptions",
+			"/:ueId/sdm-subscriptions",
 			s.HandleSubscribe,
 		},
 
 		{
-			"GetTraceData",
+			"GetTraceConfigData",
 			strings.ToUpper("Get"),
 			"/:supi/trace-data",
 			s.HandleGetTraceData,
 		},
 
 		{
-			"GetUeContextInSmfData",
+			"GetUeCtxInSmfData",
 			strings.ToUpper("Get"),
 			"/:supi/ue-context-in-smf-data",
 			s.HandleGetUeContextInSmfData,
 		},
 
 		{
-			"GetUeContextInSmsfData",
+			"GetUeCtxInSmsfData",
 			strings.ToUpper("Get"),
 			"/:supi/ue-context-in-smsf-data",
 			s.HandleGetUeContextInSmsfData,
