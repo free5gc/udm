@@ -124,12 +124,12 @@ func (s *nnrfService) SendNFIntancesUDR(id string, types int) string {
 	return ""
 }
 
-func (s *nnrfService) SendDeregisterNFInstance() (problemDetails *models.ProblemDetails, err error) {
+func (s *nnrfService) SendDeregisterNFInstance() (err error) {
 	logger.ConsumerLog.Infof("Send Deregister NFInstance")
 
-	ctx, pd, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NrfNfManagementNfType_NRF)
+	ctx, _, err := udm_context.GetSelf().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NrfNfManagementNfType_NRF)
 	if err != nil {
-		return pd, err
+		return err
 	}
 
 	udmContext := s.consumer.Context()
@@ -137,17 +137,9 @@ func (s *nnrfService) SendDeregisterNFInstance() (problemDetails *models.Problem
 
 	var derigisterNfInstanceRequest Nnrf_NFManagement.DeregisterNFInstanceRequest
 	derigisterNfInstanceRequest.NfInstanceID = &udmContext.NfId
-	res, err := client.NFInstanceIDDocumentApi.DeregisterNFInstance(ctx, &derigisterNfInstanceRequest)
+	_, err = client.NFInstanceIDDocumentApi.DeregisterNFInstance(ctx, &derigisterNfInstanceRequest)
 
-	if err == nil {
-		return problemDetails, err
-	} else if res != nil {
-		problem := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		problemDetails = &problem
-	} else {
-		err = openapi.ReportError("server no response")
-	}
-	return problemDetails, err
+	return err
 }
 
 func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
