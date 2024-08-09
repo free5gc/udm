@@ -60,7 +60,7 @@ func (s *Server) HandleUpdate(c *gin.Context) {
 		return
 	}
 
-	gpsi := c.Params.ByName("gpsi")
+	gpsi := c.Params.ByName("ueId")
 	if gpsi == "" {
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusBadRequest,
