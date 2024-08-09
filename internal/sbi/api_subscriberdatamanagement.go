@@ -205,7 +205,7 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle Subscribe")
 
-	supi := c.Params.ByName("supi")
+	supi := c.Params.ByName("ueId")
 
 	s.Processor().SubscribeProcedure(c, &sdmSubscriptionReq, supi)
 }
@@ -214,7 +214,7 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 func (s *Server) HandleUnsubscribe(c *gin.Context) {
 	logger.SdmLog.Infof("Handle Unsubscribe")
 
-	supi := c.Params.ByName("supi")
+	supi := c.Params.ByName("ueId")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	s.Processor().UnsubscribeProcedure(c, supi, subscriptionID)
@@ -259,7 +259,7 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle Modify")
 
-	supi := c.Params.ByName("supi")
+	supi := c.Params.ByName("ueId")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	s.Processor().ModifyProcedure(c, &sdmSubsModificationReq, supi, subscriptionID)
@@ -377,7 +377,7 @@ func (s *Server) HandleGetIdTranslationResult(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle GetIdTranslationResultRequest")
 
-	gpsi := c.Params.ByName("gpsi")
+	gpsi := c.Params.ByName("ueId")
 
 	s.Processor().GetIdTranslationResultProcedure(c, gpsi)
 }
@@ -419,7 +419,6 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 
 	// for "/:ueId/id-translation-result"
 	if op == "id-translation-result" && strings.ToUpper("Get") == c.Request.Method {
-		c.Params = append(c.Params, gin.Param{Key: "ueId", Value: c.Param("supi")})
 		s.HandleGetIdTranslationResult(c)
 		return
 	}
@@ -441,7 +440,6 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 	// for "/:ueId/sdm-subscriptions/:subscriptionId"
 	if op == "sdm-subscriptions" && strings.ToUpper("Delete") == c.Request.Method {
 		var tmpParams gin.Params
-		tmpParams = append(tmpParams, gin.Param{Key: "ueId", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
 		s.HandleUnsubscribe(c)
@@ -457,7 +455,6 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 	// for "/:ueId/sdm-subscriptions/:subscriptionId"
 	if op == "sdm-subscriptions" && strings.ToUpper("Patch") == c.Request.Method {
 		var tmpParams gin.Params
-		tmpParams = append(tmpParams, gin.Param{Key: "ueId", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
 		s.HandleModify(c)

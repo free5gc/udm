@@ -103,7 +103,6 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 }
 
 func (s *Server) GenAuthDataHandlerFunc(c *gin.Context) {
-	c.Params = append(c.Params, gin.Param{Key: "supiOrSuci", Value: c.Param("supi")})
 	if strings.ToUpper("Post") == c.Request.Method {
 		s.HandleGenerateAuthData(c)
 		return
