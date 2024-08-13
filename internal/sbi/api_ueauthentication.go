@@ -26,6 +26,41 @@ func (s *Server) getUEAuthenticationRoutes() []Route {
 			"/:supi/auth-events",
 			s.HandleConfirmAuth,
 		},
+
+		{
+			"DeleteAuth",
+			strings.ToUpper("Put"),
+			"/:supi/auth-events/:authEventId",
+			s.HandleDeleteAuth,
+		},
+
+		{
+			"GenerateAv",
+			strings.ToUpper("Post"),
+			"/:supi/hss-security-information/:hssAuthType/generate-av",
+			s.HandleGenerateAv,
+		},
+
+		{
+			"GenerateGbaAv",
+			strings.ToUpper("Post"),
+			"/:supi/gba-security-information/generate-av",
+			s.HandleGenerateGbaAv,
+		},
+
+		{
+			"GenerateProseAV",
+			strings.ToUpper("Post"),
+			"/:supiOrSuci/prose-security-information/generate-av",
+			s.HandleGenerateProseAV,
+		},
+
+		{
+			"GetRgAuthData",
+			strings.ToUpper("Get"),
+			"/:supiOrSuci/security-information-rg",
+			s.HandleGetRgAuthData,
+		},
 	}
 }
 
@@ -109,4 +144,24 @@ func (s *Server) GenAuthDataHandlerFunc(c *gin.Context) {
 	}
 
 	c.String(http.StatusNotFound, "404 page not found")
+}
+
+func (s *Server) HandleDeleteAuth(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGenerateAv(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGenerateGbaAv(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGenerateProseAV(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetRgAuthData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
