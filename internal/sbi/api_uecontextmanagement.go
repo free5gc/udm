@@ -118,6 +118,125 @@ func (s *Server) getUEContextManagementRoutes() []Route {
 			"/:ueId/registrations/smsf-non-3gpp-access",
 			s.HandleRegistrationSmsfNon3gppAccess,
 		},
+
+		{
+			"DeregAMF",
+			strings.ToUpper("Post"),
+			"/:ueId/registrations/amf-3gpp-access/dereg-amf",
+			s.HandleDeregAMF,
+		},
+
+		{
+			"GetIpSmGwRegistration",
+			strings.ToUpper("Get"),
+			"/:ueId/registrations/ip-sm-gw",
+			s.HandleGetIpSmGwRegistration,
+		},
+
+		{
+			"GetLocationInfo",
+			strings.ToUpper("Get"),
+			"/:ueId/registrations/location",
+			s.HandleGetLocationInfo,
+		},
+
+		{
+			"GetNwdafRegistration",
+			strings.ToUpper("Get"),
+			"/:ueId/registrations/nwdaf-registrations",
+			s.HandleGetNwdafRegistration,
+		},
+
+		{
+			"GetRegistrations",
+			strings.ToUpper("Get"),
+			"/:ueId/registrations",
+			s.HandleGetRegistrations,
+		},
+
+		{
+			"GetSmfRegistration",
+			strings.ToUpper("Get"),
+			"/:ueId/registrations/smf-registrations",
+			s.HandleGetSmfRegistration,
+		},
+
+		{
+			"IpSmGwDeregistration",
+			strings.ToUpper("Delete"),
+			"/:ueId/registrations/ip-sm-gw",
+			s.HandleIpSmGwDeregistration,
+		},
+
+		{
+			"IpSmGwRegistration",
+			strings.ToUpper("Put"),
+			"/:ueId/registrations/ip-sm-gw",
+			s.HandleIpSmGwRegistration,
+		},
+
+		{
+			"NwdafDeregistration",
+			strings.ToUpper("Delete"),
+			"/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
+			s.HandleNwdafDeregistration,
+		},
+
+		{
+			"NwdafRegistration",
+			strings.ToUpper("Put"),
+			"/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
+			s.HandleNwdafRegistration,
+		},
+
+		{
+			"PeiUpdate",
+			strings.ToUpper("Post"),
+			"/:ueId/registrations/amf-3gpp-access/pei-update",
+			s.HandlePeiUpdate,
+		},
+
+		{
+			"RetrieveSmfRegistration",
+			strings.ToUpper("Get"),
+			"/:ueId/registrations/smf-registrations/:pduSessionId",
+			s.HandleRetrieveSmfRegistration,
+		},
+
+		{
+			"SendRoutingInfoSm",
+			strings.ToUpper("Post"),
+			"/:ueId/registrations/send-routing-info-sm",
+			s.HandleSendRoutingInfoSm,
+		},
+
+		{
+			"TriggerPCSCFRestoration",
+			strings.ToUpper("Post"),
+			"/restore-pcscf",
+			s.HandleTriggerPCSCFRestoration,
+		},
+
+		{
+			"UpdateNwdafRegistration",
+			strings.ToUpper("Patch"),
+			"/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
+			s.HandleUpdateNwdafRegistration,
+		},
+
+		{
+			"UpdateRoamingInformation",
+			strings.ToUpper("Post"),
+			"/:ueId/registrations/amf-3gpp-access/roaming-info-update",
+			s.HandleUpdateRoamingInformation,
+		},
+
+		{
+			"UpdateSmfRegistration",
+			strings.ToUpper("Patch"),
+			"/:ueId/registrations/smf-registrations/:pduSessionId",
+			s.HandleUpdateSmfRegistration,
+		},
 	}
 }
 
@@ -371,4 +490,72 @@ func (s *Server) HandleGetAmf3gppAccess(c *gin.Context) {
 	supportedFeatures := c.Query("supported-features")
 
 	s.Processor().GetAmf3gppAccessProcedure(c, ueID, supportedFeatures)
+}
+
+func (s *Server) HandleDeregAMF(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetIpSmGwRegistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetLocationInfo(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetNwdafRegistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetRegistrations(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetSmfRegistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleIpSmGwDeregistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleIpSmGwRegistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleNwdafDeregistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleNwdafRegistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandlePeiUpdate(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleRetrieveSmfRegistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleSendRoutingInfoSm(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleTriggerPCSCFRestoration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleUpdateNwdafRegistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleUpdateRoamingInformation(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleUpdateSmfRegistration(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }

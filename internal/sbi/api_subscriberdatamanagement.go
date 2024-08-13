@@ -382,6 +382,70 @@ func (s *Server) HandleGetIdTranslationResult(c *gin.Context) {
 	s.Processor().GetIdTranslationResultProcedure(c, gpsi)
 }
 
+func (s *Server) HandleGetMultipleIdentifiers(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetGroupIdentifiers(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetLcsBcaData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetLcsMoData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetLcsPrivacyData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetMbsData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetProseData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetUcData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetUeCtxInAmfData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetV2xData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetIndividualSharedData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleCAGAck(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetEcrData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleSNSSAIsAck(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleUpdateSORInfo(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleUpuAck(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
 func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {
 	supi := c.Param("supi")
 	oneLayerPathRouter := s.getOneLayerRoutes()
@@ -419,7 +483,14 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 
 	// for "/:ueId/id-translation-result"
 	if op == "id-translation-result" && strings.ToUpper("Get") == c.Request.Method {
+		c.Params = append(c.Params, gin.Param{Key: "ueId", Value: c.Param("supi")})
 		s.HandleGetIdTranslationResult(c)
+		return
+	}
+
+	// for "/shared-data/:sharedDataId"
+	if supi == "shared-data" && strings.ToUpper("Get") == c.Request.Method {
+		s.HandleGetIndividualSharedData(c)
 		return
 	}
 
@@ -436,10 +507,12 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 
 func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 	op := c.Param("subscriptionId")
+	thirdLayer := c.Param("thirdLayer")
 
 	// for "/:ueId/sdm-subscriptions/:subscriptionId"
 	if op == "sdm-subscriptions" && strings.ToUpper("Delete") == c.Request.Method {
 		var tmpParams gin.Params
+		tmpParams = append(tmpParams, gin.Param{Key: "ueId", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
 		s.HandleUnsubscribe(c)
@@ -447,14 +520,46 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 	}
 
 	// for "/:supi/am-data/sor-ack"
-	if op == "am-data" && strings.ToUpper("Put") == c.Request.Method {
+	if op == "am-data" && strings.ToUpper("Put") == c.Request.Method && thirdLayer == "sor-ack" {
 		s.HandleInfo(c)
+		return
+	}
+
+	// for "/:supi/am-data/cag-ack"
+	if op == "am-data" && strings.ToUpper("Put") == c.Request.Method && thirdLayer == "cag-ack" {
+		s.HandleCAGAck(c)
+		return
+	}
+
+	// for "/:supi/am-data/ecr-data"
+	if op == "am-data" && strings.ToUpper("Get") == c.Request.Method && thirdLayer == "ecr-data" {
+		s.HandleGetEcrData(c)
+		return
+	}
+
+	// for "/:supi/am-data/subscribed-snssais-ack"
+	if op == "am-data" && strings.ToUpper("Put") == c.Request.Method &&
+		thirdLayer == "subscribed-snssais-ack" {
+		s.HandleSNSSAIsAck(c)
+		return
+	}
+
+	// for "/:supi/am-data/update-sor"
+	if op == "am-data" && strings.ToUpper("Post") == c.Request.Method && thirdLayer == "update-sor" {
+		s.HandleUpdateSORInfo(c)
+		return
+	}
+
+	// for "/:supi/am-data/upu-ack"
+	if op == "am-data" && strings.ToUpper("Put") == c.Request.Method && thirdLayer == "upu-ack" {
+		s.HandleUpuAck(c)
 		return
 	}
 
 	// for "/:ueId/sdm-subscriptions/:subscriptionId"
 	if op == "sdm-subscriptions" && strings.ToUpper("Patch") == c.Request.Method {
 		var tmpParams gin.Params
+		tmpParams = append(tmpParams, gin.Param{Key: "ueId", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
 		s.HandleModify(c)
@@ -485,6 +590,13 @@ func (s *Server) getOneLayerRoutes() []Route {
 			strings.ToUpper("Post"),
 			"/shared-data-subscriptions",
 			s.HandleSubscribeToSharedData,
+		},
+
+		{
+			"GetMultipleIdentifiers",
+			strings.ToUpper("Get"),
+			"/multiple-identifiers",
+			s.HandleGetMultipleIdentifiers,
 		},
 	}
 }
@@ -559,6 +671,69 @@ func (s *Server) getTwoLayerRoutes() []Route {
 			strings.ToUpper("Get"),
 			"/:supi/ue-context-in-smsf-data",
 			s.HandleGetUeContextInSmsfData,
+		},
+
+		{
+			"GetGroupIdentifiers",
+			strings.ToUpper("Get"),
+			"/group-data/group-identifiers",
+			s.HandleGetGroupIdentifiers,
+		},
+
+		{
+			"GetLcsBcaData",
+			strings.ToUpper("Get"),
+			"/:supi/lcs-bca-data",
+			s.HandleGetLcsBcaData,
+		},
+
+		{
+			"GetLcsMoData",
+			strings.ToUpper("Get"),
+			"/:supi/lcs-mo-data",
+			s.HandleGetLcsMoData,
+		},
+
+		{
+			"GetLcsPrivacyData",
+			strings.ToUpper("Get"),
+			"/:ueId/lcs-privacy-data",
+			s.HandleGetLcsPrivacyData,
+		},
+
+		{
+			"GetMbsData",
+			strings.ToUpper("Get"),
+			"/:supi/5mbs-data",
+			s.HandleGetMbsData,
+		},
+
+		{
+			"GetProseData",
+			strings.ToUpper("Get"),
+			"/:supi/prose-data",
+			s.HandleGetProseData,
+		},
+
+		{
+			"GetUcData",
+			strings.ToUpper("Get"),
+			"/:supi/uc-data",
+			s.HandleGetUcData,
+		},
+
+		{
+			"GetUeCtxInAmfData",
+			strings.ToUpper("Get"),
+			"/:supi/ue-context-in-amf-data",
+			s.HandleGetUeCtxInAmfData,
+		},
+
+		{
+			"GetV2xData",
+			strings.ToUpper("Get"),
+			"/:supi/v2x-data",
+			s.HandleGetV2xData,
 		},
 	}
 }
