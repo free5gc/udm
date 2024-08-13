@@ -35,6 +35,11 @@ const (
 	UdmUecmResUriPrefix           = "/nudm-uecm/v1"
 	UdmPpResUriPrefix             = "/nudm-pp/v1"
 	UdmUeauResUriPrefix           = "/nudm-ueau/v1"
+	UdmMtResUrdPrefix             = "/nudm-mt/v1"
+	UdmNiddauResUriPrefix         = "/nudm-niddau/v1"
+	UdmRsdsResUriPrefix           = "/nudm-rsds/v1"
+	UdmSsauResUriPrefix           = "/nudm-ssau/v1"
+	UdmUeidResUriPrefix           = "/nudm-ueid/v1"
 )
 
 type Config struct {
