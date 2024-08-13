@@ -1,0 +1,29 @@
+package sbi
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+func (s *Server) getNIDDAuthenticationRoutes() []Route {
+	return []Route{
+		{
+			"Index",
+			"GET",
+			"/",
+			s.HandleIndex,
+		},
+
+		{
+			"AuthorizeNiddData",
+			"Post",
+			"/:ueIdentity/authorize",
+			s.HandleAuthorizeNiddData,
+		},
+	}
+}
+
+func (s *Server) HandleAuthorizeNiddData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
