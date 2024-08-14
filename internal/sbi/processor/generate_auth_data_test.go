@@ -20,8 +20,8 @@ import (
 func TestGenerateAuthDataProcedure(t *testing.T) {
 	defer gock.Off() // Flush pending mocks after test execution
 
-	gock.InterceptClient(openapi.GetHttpClient())
-	defer gock.RestoreClient(openapi.GetHttpClient())
+	openapi.InterceptH2CClient()
+	defer openapi.RestoreH2CClient()
 
 	queryRes := models.AuthenticationSubscription{
 		AuthenticationMethod:          models.AuthMethod__5_G_AKA,
@@ -85,13 +85,13 @@ func TestGenerateAuthDataProcedure(t *testing.T) {
 		t.Fatalf("Failed to read response body: %+v", errReadAll)
 	}
 
-	var res models.AuthenticationInfoResult
+	var res models.UdmUeauAuthenticationInfoResult
 	err = openapi.Deserialize(&res, rawBytes, httpResp.Header.Get("Content-Type"))
 	if err != nil {
 		t.Fatalf("Failed to deserialize response body: %+v", err)
 	}
 
-	expectResponse := models.AuthenticationInfoResult{
+	expectResponse := models.UdmUeauAuthenticationInfoResult{
 		AuthType: "5G_AKA",
 		AuthenticationVector: &models.AuthenticationVector{
 			AvType: "5G_HE_AKA",

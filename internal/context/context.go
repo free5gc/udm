@@ -76,13 +76,13 @@ type UdmUeContext struct {
 	TraceDataResponse                 models.TraceDataResponse
 	TraceData                         *models.TraceData
 	SessionManagementSubsData         map[string]models.SessionManagementSubscriptionData
-	SubsDataSets                      *models.SubscriptionDataSets
+	SubsDataSets                      *models.UdmSdmSubscriptionDataSets
 	SubscribeToNotifChange            map[string]*models.SdmSubscription
 	SubscribeToNotifSharedDataChange  *models.SdmSubscription
 	PduSessionID                      string
 	UdrUri                            string
 	UdmSubsToNotify                   map[string]*models.SubscriptionDataSubscriptions
-	EeSubscriptions                   map[string]*models.EeSubscription // subscriptionID as key
+	EeSubscriptions                   map[string]*models.UdmEeEeSubscription // subscriptionID as key
 	amSubsDataLock                    sync.Mutex
 	smfSelSubsDataLock                sync.Mutex
 	SmSubsDataLock                    sync.RWMutex
@@ -90,7 +90,7 @@ type UdmUeContext struct {
 
 func (ue *UdmUeContext) Init() {
 	ue.UdmSubsToNotify = make(map[string]*models.SubscriptionDataSubscriptions)
-	ue.EeSubscriptions = make(map[string]*models.EeSubscription)
+	ue.EeSubscriptions = make(map[string]*models.UdmEeEeSubscription)
 	ue.SubscribeToNotifChange = make(map[string]*models.SdmSubscription)
 }
 
@@ -221,7 +221,7 @@ func GetCorrespondingSupi(list models.IdentityData) (id string) {
 }
 
 // functions related to Retrieval of multiple datasets(GetSupi)
-func (context *UDMContext) CreateSubsDataSetsForUe(supi string, body models.SubscriptionDataSets) {
+func (context *UDMContext) CreateSubsDataSetsForUe(supi string, body models.UdmSdmSubscriptionDataSets) {
 	ue, ok := context.UdmUeFindBySupi(supi)
 	if !ok {
 		ue = context.NewUdmUe(supi)

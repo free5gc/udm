@@ -126,7 +126,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		return
 	}
 
-	var subscriptionDataSets, subsDataSetBody models.SubscriptionDataSets
+	var subscriptionDataSets, subsDataSetBody models.UdmSdmSubscriptionDataSets
 	var ueContextInSmfDataResp models.UeContextInSmfData
 	pduSessionMap := make(map[string]models.PduSession)
 	var pgwInfoArray []models.PgwInfo
@@ -271,7 +271,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		smData, _, _, _ := p.Context().
 			ManageSmData(sessionManagementSubscriptionDataRsp.SmSubsData.IndividualSmSubsData, "", "")
 		udmUe.SetSMSubsData(smData)
-		subscriptionDataSets.SmData = sessionManagementSubscriptionDataRsp.SmSubsData.IndividualSmSubsData
+		subscriptionDataSets.SmData = &sessionManagementSubscriptionDataRsp.SmSubsData
 	}
 
 	if p.containDataSetName(dataSetNames, string(models.DataSetName_TRACE)) {
