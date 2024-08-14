@@ -124,7 +124,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 	}
 	logger.UeauLog.Traceln("In GenerateAuthDataProcedure")
 
-	response := &models.AuthenticationInfoResult{}
+	response := &models.UdmUeauAuthenticationInfoResult{}
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	supi, err := suci.ToSupi(supiOrSuci, p.Context().SuciProfiles)
 	if err != nil {
@@ -449,7 +449,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 
 	var av models.AuthenticationVector
 	if authSubs.AuthenticationSubscription.AuthenticationMethod == models.AuthMethod__5_G_AKA {
-		response.AuthType = models.AuthType__5_G_AKA
+		response.AuthType = models.UdmUeauAuthType__5_G_AKA
 
 		// derive XRES*
 		key := append(CK, IK...)
@@ -483,8 +483,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		av.Kausf = hex.EncodeToString(kdfValForKausf)
 		av.AvType = models.AvType__5_G_HE_AKA
 	} else { // EAP-AKA'
-		response.AuthType = models.AuthType_EAP_AKA_PRIME
-
+		response.AuthType = models.UdmUeauAuthType_EAP_AKA_PRIME
 		// derive CK' and IK'
 		key := append(CK, IK...)
 		FC := ueauth.FC_FOR_CK_PRIME_IK_PRIME_DERIVATION
