@@ -18,8 +18,6 @@ func TestSendRegisterNFInstance(t *testing.T) {
 
 	openapi.InterceptH2CClient()
 	defer openapi.RestoreH2CClient()
-	// gock.InterceptClient(openapi.GetHttpClient())
-	// defer gock.RestoreClient(openapi.GetHttpClient())
 
 	gock.New("http://127.0.0.10:8000").
 		Put("/nnrf-nfm/v1/nf-instances/1").
