@@ -17,7 +17,7 @@ func (s *Server) getUEIDRoutes() []Route {
 
 		{
 			"Deconceal",
-			"Post",
+			http.MethodPost,
 			"/deconceal",
 			s.HandleDeconceal,
 		},

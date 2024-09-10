@@ -17,14 +17,14 @@ func (s *Server) getMTRoutes() []Route {
 
 		{
 			"ProvideLocationInfo",
-			"Post",
+			http.MethodPost,
 			"/:supi/loc-info/provide-loc-info",
 			s.HandleProvideLocationInfo,
 		},
 
 		{
 			"QueryUeInfo",
-			"GET",
+			http.MethodGet,
 			"/:supi",
 			s.HandleQueryUeInfo,
 		},

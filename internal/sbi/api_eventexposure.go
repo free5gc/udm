@@ -2,7 +2,6 @@ package sbi
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -22,21 +21,21 @@ func (s *Server) getEventExposureRoutes() []Route {
 
 		{
 			"CreateEeSubscription",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/:ueIdentity/ee-subscriptions",
 			s.HandleCreateEeSubscription,
 		},
 
 		{
 			"DeleteEeSubscription",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/:ueIdentity/ee-subscriptions/:subscriptionId",
 			s.HandleDeleteEeSubscription,
 		},
 
 		{
 			"UpdateEeSubscription",
-			strings.ToUpper("Patch"),
+			http.MethodPatch,
 			"/:ueIdentity/ee-subscriptions/:subscriptionId",
 			s.HandleUpdateEeSubscription,
 		},

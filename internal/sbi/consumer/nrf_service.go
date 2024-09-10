@@ -2,7 +2,6 @@ package consumer
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -95,7 +94,7 @@ func (s *nnrfService) SendSearchNFInstances(
 	return &result, nil
 }
 
-func (s *nnrfService) SendNFIntancesUDR(id string, types int) string {
+func (s *nnrfService) SendNFInstancesUDR(id string, types int) string {
 	self := udm_context.GetSelf()
 	targetNfType := models.NrfNfManagementNfType_UDR
 	requestNfType := models.NrfNfManagementNfType_UDM
@@ -104,15 +103,7 @@ func (s *nnrfService) SendNFIntancesUDR(id string, types int) string {
 	}
 	searchNFinstanceRequest.RequesterNfType = &requestNfType
 	searchNFinstanceRequest.TargetNfType = &targetNfType
-	// switch types {
-	// case NFDiscoveryToUDRParamSupi:
-	// 	localVarOptionals.Supi = optional.NewString(id)
-	// case NFDiscoveryToUDRParamExtGroupId:
-	// 	localVarOptionals.ExternalGroupIdentity = optional.NewString(id)
-	// case NFDiscoveryToUDRParamGpsi:
-	// 	localVarOptionals.Gpsi = optional.NewString(id)
-	// }
-	fmt.Println(self.NrfUri)
+
 	result, err := s.SendSearchNFInstances(self.NrfUri, searchNFinstanceRequest)
 	if err != nil {
 		logger.ConsumerLog.Error(err.Error())
@@ -158,21 +149,19 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 		var res *Nnrf_NFManagement.RegisterNFInstanceResponse
 		res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(ctx, &registerNfInstanceRequest)
 
-		var status int32
 		if err != nil || res == nil {
 			problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 			if !ok {
-				logger.ConsumerLog.Errorf("UDM register to NRF Error[%v]", err)
+				logger.ConsumerLog.Errorf("UDM register to NRF Error[%v]", problem)
 				time.Sleep(2 * time.Second)
 				continue
 			}
-			status = problem.Status
 		}
 
 		if res.Location == "" {
 			// NFUpdate
 			break
-		} else if res.Location != "" {
+		} else { // http.statusCreated
 			// NFRegister
 			resourceUri := res.Location
 			resouceNrfUri = resourceUri[:strings.Index(resourceUri, "/nnrf-nfm/")]
@@ -192,9 +181,6 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 			}
 
 			break
-		} else {
-			fmt.Println(fmt.Errorf("handler returned wrong status code %d", status))
-			fmt.Println("NRF return wrong status code", status)
 		}
 	}
 	return resouceNrfUri, retrieveNfInstanceID, err
@@ -207,12 +193,8 @@ func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (
 	profile.NfType = models.NrfNfManagementNfType_UDM
 	profile.NfStatus = models.NrfNfManagementNfStatus_REGISTERED
 	profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIPv4)
-	services := []models.NrfNfManagementNfService{}
 	for _, nfService := range udmContext.NfService {
-		services = append(services, nfService)
-	}
-	if len(services) > 0 {
-		profile.NfServices = services
+		profile.NfServices = append(profile.NfServices, nfService)
 	}
 	profile.UdmInfo = &models.UdmInfo{
 		// Todo

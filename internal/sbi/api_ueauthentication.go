@@ -2,7 +2,6 @@ package sbi
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -22,42 +21,42 @@ func (s *Server) getUEAuthenticationRoutes() []Route {
 
 		{
 			"ConfirmAuth",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/:supi/auth-events",
 			s.HandleConfirmAuth,
 		},
 
 		{
 			"DeleteAuth",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/:supi/auth-events/:authEventId",
 			s.HandleDeleteAuth,
 		},
 
 		{
 			"GenerateAv",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/:supi/hss-security-information/:hssAuthType/generate-av",
 			s.HandleGenerateAv,
 		},
 
 		{
 			"GenerateGbaAv",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/:supi/gba-security-information/generate-av",
 			s.HandleGenerateGbaAv,
 		},
 
 		{
 			"GenerateProseAV",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/:supiOrSuci/prose-security-information/generate-av",
 			s.HandleGenerateProseAV,
 		},
 
 		{
 			"GetRgAuthData",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:supiOrSuci/security-information-rg",
 			s.HandleGetRgAuthData,
 		},
@@ -138,7 +137,7 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 }
 
 func (s *Server) GenAuthDataHandlerFunc(c *gin.Context) {
-	if strings.ToUpper("Post") == c.Request.Method {
+	if http.MethodPost == c.Request.Method {
 		s.HandleGenerateAuthData(c)
 		return
 	}

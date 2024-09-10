@@ -17,7 +17,7 @@ func (s *Server) getReportSMDeliveryStatusRoutes() []Route {
 
 		{
 			"ReportSMDeliveryStatus",
-			"Post",
+			http.MethodPost,
 			"/:ueIdentity/sm-delivery-status",
 			s.HandleReportSMDeliveryStatus,
 		},

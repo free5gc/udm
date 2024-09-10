@@ -2,7 +2,6 @@ package sbi
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -22,84 +21,84 @@ func (s *Server) getParameterProvisionRoutes() []Route {
 
 		{
 			"Update",
-			strings.ToUpper("Patch"),
+			http.MethodPatch,
 			"/:ueId/pp-data",
 			s.HandleUpdate,
 		},
 
 		{
 			"Create5GMBSGroup",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/mbs-group-membership/:extGroupId",
 			s.HandleCreate5GMBSGroup,
 		},
 
 		{
 			"Create5GVNGroup",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/5g-vn-groups/:extGroupId",
 			s.HandleCreate5GVNGroup,
 		},
 
 		{
 			"CreatePPDataEntry",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/:ueId/pp-data-store/:afInstanceId",
 			s.HandleCreatePPDataEntry,
 		},
 
 		{
 			"Delete5GMBSGroup",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/mbs-group-membership/:extGroupId",
 			s.HandleDelete5GMBSGroup,
 		},
 
 		{
 			"Delete5GVNGroup",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/5g-vn-groups/:extGroupId",
 			s.HandleDelete5GVNGroup,
 		},
 
 		{
 			"DeletePPDataEntry",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/:ueId/pp-data-store/:afInstanceId",
 			s.HandleDeletePPDataEntry,
 		},
 
 		{
 			"Get5GMBSGroup",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/mbs-group-membership/:extGroupId",
 			s.HandleGet5GMBSGroup,
 		},
 
 		{
 			"Get5GVNGroup",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/5g-vn-groups/:extGroupId",
 			s.HandleGet5GVNGroup,
 		},
 
 		{
 			"GetPPDataEntry",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/pp-data-store/:afInstanceId",
 			s.HandleGetPPDataEntry,
 		},
 
 		{
 			"Modify5GMBSGroup",
-			strings.ToUpper("Patch"),
+			http.MethodPatch,
 			"/mbs-group-membership/:extGroupId",
 			s.HandleModify5GMBSGroup,
 		},
 
 		{
 			"Modify5GVNGroup",
-			strings.ToUpper("Patch"),
+			http.MethodPatch,
 			"/5g-vn-groups/:extGroupId",
 			s.HandleModify5GVNGroup,
 		},
