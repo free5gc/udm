@@ -33,7 +33,7 @@ func SearchNFServiceUri(nfProfile models.NrfNfDiscoveryNfProfile, serviceName mo
 		}
 	}
 
-	return
+	return nfUri
 }
 
 func getSbiUri(scheme models.UriScheme, ipv4Address string, port int32) (uri string) {
