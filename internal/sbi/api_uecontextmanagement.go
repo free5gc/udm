@@ -2,7 +2,6 @@ package sbi
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -23,217 +22,217 @@ func (s *Server) getUEContextManagementRoutes() []Route {
 
 		{
 			"Get3GppRegistration",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations/amf-3gpp-access",
 			s.HandleGetAmf3gppAccess,
 		},
 
 		{
 			"GetNon3GppRegistration",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations/amf-non-3gpp-access",
 			s.HandleGetAmfNon3gppAccess,
 		},
 
 		{
 			"Call3GppRegistration",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/:ueId/registrations/amf-3gpp-access",
 			s.HandleRegistrationAmf3gppAccess,
 		},
 
 		{
 			"Non3GppRegistration",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/:ueId/registrations/amf-non-3gpp-access",
 			s.HandleRegistrationAmfNon3gppAccess,
 		},
 
 		{
 			"Update3GppRegistration",
-			strings.ToUpper("Patch"),
+			http.MethodPatch,
 			"/:ueId/registrations/amf-3gpp-access",
 			s.HandleUpdateAmf3gppAccess,
 		},
 
 		{
 			"UpdateNon3GppRegistration",
-			strings.ToUpper("Patch"),
+			http.MethodPatch,
 			"/:ueId/registrations/amf-non-3gpp-access",
 			s.HandleUpdateAmfNon3gppAccess,
 		},
 
 		{
 			"SmfDeregistration",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/:ueId/registrations/smf-registrations/:pduSessionId",
 			s.HandleDeregistrationSmfRegistrations,
 		},
 
 		{
 			"Registration",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/:ueId/registrations/smf-registrations/:pduSessionId",
 			s.HandleRegistrationSmfRegistrations,
 		},
 
 		{
 			"Get3GppSmsfRegistration",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations/smsf-3gpp-access",
 			s.HandleGetSmsf3gppAccess,
 		},
 
 		{
 			"Call3GppSmsfDeregistration",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/:ueId/registrations/smsf-3gpp-access",
 			s.HandleDeregistrationSmsf3gppAccess,
 		},
 
 		{
 			"Non3GppSmsfDeregistration",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/:ueId/registrations/smsf-non-3gpp-access",
 			s.HandleDeregistrationSmsfNon3gppAccess,
 		},
 
 		{
 			"GetNon3GppSmsfRegistration",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations/smsf-non-3gpp-access",
 			s.HandleGetSmsfNon3gppAccess,
 		},
 
 		{
 			"Call3GppSmsfRegistration",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/:ueId/registrations/smsf-3gpp-access",
 			s.HandleUpdateSMSFReg3GPP,
 		},
 
 		{
 			"Non3GppSmsfRegistration",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/:ueId/registrations/smsf-non-3gpp-access",
 			s.HandleRegistrationSmsfNon3gppAccess,
 		},
 
 		{
 			"DeregAMF",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/:ueId/registrations/amf-3gpp-access/dereg-amf",
 			s.HandleDeregAMF,
 		},
 
 		{
 			"GetIpSmGwRegistration",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations/ip-sm-gw",
 			s.HandleGetIpSmGwRegistration,
 		},
 
 		{
 			"GetLocationInfo",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations/location",
 			s.HandleGetLocationInfo,
 		},
 
 		{
 			"GetNwdafRegistration",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations/nwdaf-registrations",
 			s.HandleGetNwdafRegistration,
 		},
 
 		{
 			"GetRegistrations",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations",
 			s.HandleGetRegistrations,
 		},
 
 		{
 			"GetSmfRegistration",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations/smf-registrations",
 			s.HandleGetSmfRegistration,
 		},
 
 		{
 			"IpSmGwDeregistration",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/:ueId/registrations/ip-sm-gw",
 			s.HandleIpSmGwDeregistration,
 		},
 
 		{
 			"IpSmGwRegistration",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/:ueId/registrations/ip-sm-gw",
 			s.HandleIpSmGwRegistration,
 		},
 
 		{
 			"NwdafDeregistration",
-			strings.ToUpper("Delete"),
+			http.MethodDelete,
 			"/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
 			s.HandleNwdafDeregistration,
 		},
 
 		{
 			"NwdafRegistration",
-			strings.ToUpper("Put"),
+			http.MethodPut,
 			"/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
 			s.HandleNwdafRegistration,
 		},
 
 		{
 			"PeiUpdate",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/:ueId/registrations/amf-3gpp-access/pei-update",
 			s.HandlePeiUpdate,
 		},
 
 		{
 			"RetrieveSmfRegistration",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:ueId/registrations/smf-registrations/:pduSessionId",
 			s.HandleRetrieveSmfRegistration,
 		},
 
 		{
 			"SendRoutingInfoSm",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/:ueId/registrations/send-routing-info-sm",
 			s.HandleSendRoutingInfoSm,
 		},
 
 		{
 			"TriggerPCSCFRestoration",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/restore-pcscf",
 			s.HandleTriggerPCSCFRestoration,
 		},
 
 		{
 			"UpdateNwdafRegistration",
-			strings.ToUpper("Patch"),
+			http.MethodPatch,
 			"/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
 			s.HandleUpdateNwdafRegistration,
 		},
 
 		{
 			"UpdateRoamingInformation",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/:ueId/registrations/amf-3gpp-access/roaming-info-update",
 			s.HandleUpdateRoamingInformation,
 		},
 
 		{
 			"UpdateSmfRegistration",
-			strings.ToUpper("Patch"),
+			http.MethodPatch,
 			"/:ueId/registrations/smf-registrations/:pduSessionId",
 			s.HandleUpdateSmfRegistration,
 		},

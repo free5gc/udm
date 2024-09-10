@@ -2,7 +2,6 @@ package sbi
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -22,7 +21,7 @@ func (s *Server) getHttpCallBackRoutes() []Route {
 
 		{
 			"DataChangeNotificationToNF",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/sdm-subscriptions",
 			s.HandleDataChangeNotificationToNF,
 		},

@@ -17,7 +17,7 @@ func (s *Server) getNIDDAuthenticationRoutes() []Route {
 
 		{
 			"AuthorizeNiddData",
-			"Post",
+			http.MethodPost,
 			"/:ueIdentity/authorize",
 			s.HandleAuthorizeNiddData,
 		},

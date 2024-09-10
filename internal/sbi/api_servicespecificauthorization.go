@@ -17,14 +17,14 @@ func (s *Server) getServiceSpecificAuthorizationRoutes() []Route {
 
 		{
 			"ServiceSpecificAuthorization",
-			"Post",
+			http.MethodPost,
 			"/:ueIdentity/:serviceType/authorize",
 			s.HandleServiceSpecificAuthorization,
 		},
 
 		{
 			"ServiceSpecificAuthorizationRemoval",
-			"Post",
+			http.MethodPost,
 			"/:ueIdentity/:serviceType/remove",
 			s.HandleServiceSpecificAuthorizationRemoval,
 		},
