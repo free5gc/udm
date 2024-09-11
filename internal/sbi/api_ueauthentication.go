@@ -14,7 +14,7 @@ func (s *Server) getUEAuthenticationRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
 		},

@@ -10,7 +10,7 @@ func (s *Server) getReportSMDeliveryStatusRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
 		},

@@ -14,7 +14,7 @@ func (s *Server) getParameterProvisionRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
 		},

@@ -10,7 +10,7 @@ func (s *Server) getNIDDAuthenticationRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
 		},

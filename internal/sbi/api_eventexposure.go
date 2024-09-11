@@ -14,7 +14,7 @@ func (s *Server) getEventExposureRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
 		},
