@@ -15,7 +15,7 @@ func (s *Server) getUEContextManagementRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
 		},

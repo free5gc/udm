@@ -14,7 +14,7 @@ func (s *Server) getHttpCallBackRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGET,
 			"/",
 			s.HandleIndex,
 		},
