@@ -146,7 +146,6 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 	registerNfInstanceRequest.NrfNfManagementNfProfile = &nfProfile
 	var res *Nnrf_NFManagement.RegisterNFInstanceResponse
 	for {
-
 		select {
 		case <-ctx.Done():
 			return "", "", errors.Errorf("Context Cancel before RegisterNFInstance")
