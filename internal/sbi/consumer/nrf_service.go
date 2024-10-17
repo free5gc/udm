@@ -8,7 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
@@ -150,12 +149,9 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 		res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(ctx, &registerNfInstanceRequest)
 
 		if err != nil || res == nil {
-			problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-			if !ok {
-				logger.ConsumerLog.Errorf("UDM register to NRF Error[%v]", problem)
-				time.Sleep(2 * time.Second)
-				continue
-			}
+			logger.ConsumerLog.Errorf("UDM register to NRF Error[%v]", err.Error())
+			time.Sleep(2 * time.Second)
+			continue
 		}
 
 		if res.Location == "" {

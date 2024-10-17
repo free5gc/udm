@@ -163,8 +163,14 @@ func newRouter(s *Server) *gin.Engine {
 	})
 	AddService(udmUEAUGroup, udmUEAURoutes)
 
-	genAuthDataPath := "/:supiOrSuci/security-information/generate-auth-data"
-	udmUEAUGroup.Any(genAuthDataPath, s.GenAuthDataHandlerFunc)
+	ueauTwoLayerPath := "/:supi/:twoLayer"
+	udmUEAUGroup.Any(ueauTwoLayerPath, s.UEAUTwoLayerPathHandlerFunc)
+
+	ueauThreeLayerPath := "/:supi/:twoLayer/:thirdLayer"
+	udmUEAUGroup.Any(ueauThreeLayerPath, s.UEAUThreeLayerPathHandlerFunc)
+
+	generateAvPath := "/:supi/hss-security-information/:hssAuthType/generate-av"
+	udmUEAUGroup.Any(generateAvPath, s.HandleGenerateAv)
 
 	// UECM
 	udmUECMRoutes := s.getUEContextManagementRoutes()
