@@ -175,16 +175,16 @@ func (a *UdmApp) WaitRoutineStopped() {
 	logger.MainLog.Infof("UDM App is terminated")
 }
 
+func (a *UdmApp) CancelContext() context.Context {
+	return a.ctx
+}
+
 func (a *UdmApp) Config() *factory.Config {
 	return a.cfg
 }
 
 func (a *UdmApp) Context() *udm_context.UDMContext {
 	return a.udmCtx
-}
-
-func (a *UdmApp) CancelContext() context.Context {
-	return a.ctx
 }
 
 func (a *UdmApp) Consumer() *consumer.Consumer {

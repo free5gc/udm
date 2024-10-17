@@ -28,6 +28,7 @@ type ServerUdm interface {
 
 	Consumer() *consumer.Consumer
 	Processor() *processor.Processor
+	CancelContext() context.Context
 }
 
 type Server struct {
@@ -60,7 +61,7 @@ func (s *Server) Run(traceCtx context.Context, wg *sync.WaitGroup) error {
 	logger.SBILog.Info("Starting server...")
 
 	var err error
-	_, s.Context().NfId, err = s.Consumer().RegisterNFInstance(context.Background())
+	_, s.Context().NfId, err = s.Consumer().RegisterNFInstance(s.CancelContext())
 	if err != nil {
 		logger.InitLog.Errorf("UDM register to NRF Error[%s]", err.Error())
 	}
