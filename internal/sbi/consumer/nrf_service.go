@@ -144,8 +144,15 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 	var registerNfInstanceRequest Nnrf_NFManagement.RegisterNFInstanceRequest
 	registerNfInstanceRequest.NfInstanceID = &udmContext.NfId
 	registerNfInstanceRequest.NrfNfManagementNfProfile = &nfProfile
+	var res *Nnrf_NFManagement.RegisterNFInstanceResponse
 	for {
-		var res *Nnrf_NFManagement.RegisterNFInstanceResponse
+
+		select {
+		case <-ctx.Done():
+			return "", "", errors.Errorf("Context Cancel before RegisterNFInstance")
+		default:
+		}
+
 		res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(ctx, &registerNfInstanceRequest)
 
 		if err != nil || res == nil {
