@@ -290,15 +290,16 @@ func profileB(input, supiType, privateKey string) (string, error) {
 	}
 
 	// x-coordinate is the shared key
-	decryptSharedKey, _ := elliptic.P256().ScalarMult(xUncompressed, yUncompressed, bHNPriv)
-	// fmt.Printf("deShared: %x\n", decryptSharedKey.Bytes())
+	decryptSharedKeyTmp, _ := elliptic.P256().ScalarMult(xUncompressed, yUncompressed, bHNPriv)
+	decryptSharedKey := FillFrontZero(decryptSharedKeyTmp, len(xUncompressed.Bytes()))
+	// fmt.Printf("deShared: %x\n", decryptSharedKey)
 
 	decryptPublicKeyForKDF := decryptPublicKey
 	if uncompressed {
 		decryptPublicKeyForKDF = CompressKey(decryptPublicKey, yUncompressed)
 	}
 
-	kdfKey := AnsiX963KDF(decryptSharedKey.Bytes(), decryptPublicKeyForKDF, ProfileBEncKeyLen, ProfileBMacKeyLen,
+	kdfKey := AnsiX963KDF(decryptSharedKey, decryptPublicKeyForKDF, ProfileBEncKeyLen, ProfileBMacKeyLen,
 		ProfileBHashLen)
 	// fmt.Printf("kdfKey: %x\n", kdfKey)
 	decryptEncKey := kdfKey[:ProfileBEncKeyLen]
@@ -318,6 +319,16 @@ func profileB(input, supiType, privateKey string) (string, error) {
 	decryptPlainText := Aes128ctr(decryptCipherText, decryptEncKey, decryptIcb)
 
 	return calcSchemeResult(decryptPlainText, supiType), nil
+}
+
+func FillFrontZero(input *big.Int, length int) []byte {
+	if len(input.Bytes()) >= length {
+		return input.Bytes()
+	}
+	result := make([]byte, length)
+	inputBytes := input.Bytes()
+	copy(result[length-len(inputBytes):], input.Bytes())
+	return result
 }
 
 // suci-0(SUPI type: IMSI)-mcc-mnc-routingIndicator-protectionScheme-homeNetworkPublicKeyID-schemeOutput.

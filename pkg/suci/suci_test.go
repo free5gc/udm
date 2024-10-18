@@ -47,6 +47,11 @@ func TestToSupi(t *testing.T) {
 			expectedSupi: "",
 			expectedErr:  fmt.Errorf("crypto/elliptic: attempted operation on invalid point"),
 		},
+		{
+			suci:         "suci-0-001-01-0-2-2-03a7b1db2a9db9d44112b59d03d8243dc6089fd91d2ecb78f5d16298634682e94373888b22bdc9293d1681922e17",
+			expectedSupi: "imsi-001010123456789",
+			expectedErr:  nil,
+		},
 	}
 	for i, tc := range testCases {
 		supi, err := ToSupi(tc.suci, suciProfiles)
