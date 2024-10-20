@@ -136,7 +136,7 @@ func (s *Server) UEAUTwoLayerPathHandlerFunc(c *gin.Context) {
 }
 
 func (s *Server) UEAUThreeLayerPathHandlerFunc(c *gin.Context) {
-	twoLayer := c.Param("subscriptionId")
+	twoLayer := c.Param("twoLayer")
 
 	// for "/:supi/auth-events/:authEventId"
 	if twoLayer == "auth-events" && http.MethodPut == c.Request.Method {

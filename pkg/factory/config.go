@@ -29,7 +29,7 @@ const (
 	UdmAuthResUriPrefix           = "/nudm-auth/v1"
 	UdmfUpuprotectionResUriPrefix = "/nudm-upuprotection/v1"
 	UdmEcmResUriPrefix            = "/nudm-ecm/v1"
-	UdmSdmResUriPrefix            = "/nudm-sdm/v1"
+	UdmSdmResUriPrefix            = "/nudm-sdm/v2"
 	UdmEeResUriPrefix             = "/nudm-ee/v1"
 	UdmDrResUriPrefix             = "/nudr-dr/v1"
 	UdmUecmResUriPrefix           = "/nudm-uecm/v1"
