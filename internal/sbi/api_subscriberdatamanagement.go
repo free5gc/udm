@@ -205,8 +205,7 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle Subscribe")
 
-	supi := c.Params.ByName("ueId")
-
+	supi := c.Params.ByName("supi")
 	s.Processor().SubscribeProcedure(c, &sdmSubscriptionReq, supi)
 }
 
@@ -468,6 +467,8 @@ func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {
 func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 	supi := c.Param("supi")
 	op := c.Param("subscriptionId")
+
+	logger.ConsumerLog.Errorln("TwoLayerPathHandlerFunc, ", supi, op)
 
 	// for "/shared-data-subscriptions/:subscriptionId"
 	if supi == "shared-data-subscriptions" && http.MethodDelete == c.Request.Method {
