@@ -554,6 +554,7 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.S
 	}
 	var createSdmSubscriptionsRequest Nudr_DataRepository.CreateSdmSubscriptionsRequest
 	createSdmSubscriptionsRequest.SdmSubscription = sdmSubscription
+	createSdmSubscriptionsRequest.UeId = &supi
 	sdmSubscriptionResp, err := clientAPI.SDMSubscriptionsCollectionApi.CreateSdmSubscriptions(
 		ctx, &createSdmSubscriptionsRequest)
 	if err != nil {
