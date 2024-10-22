@@ -253,7 +253,6 @@ func profileB(input, supiType, privateKey string) (string, error) {
 		return "", fmt.Errorf("suci input error\n")
 	}
 
-	// fmt.Printf("len:%d %d\n", len(s), ProfileBPubKeyLen + ProfileBMacLen)
 	if len(s) < ProfileBPubKeyLen+ProfileBMacLen {
 		logger.SuciLog.Errorln("len of input data is too short!")
 		return "", fmt.Errorf("suci input too short\n")
@@ -261,7 +260,6 @@ func profileB(input, supiType, privateKey string) (string, error) {
 	decryptPublicKey := s[:ProfileBPubKeyLen]
 	decryptMac := s[len(s)-ProfileBMacLen:]
 	decryptCipherText := s[ProfileBPubKeyLen : len(s)-ProfileBMacLen]
-	// fmt.Printf("dePub: %x\ndeCiph: %x\ndeMac: %x\n", decryptPublicKey, decryptCipherText, decryptMac)
 
 	// test data from TS33.501 Annex C.4
 	// bHNPriv, _ := hex.DecodeString("F1AB1074477EBCC7F554EA1C5FC368B1616730155E0041AC447D6301975FECDA")
@@ -283,7 +281,6 @@ func profileB(input, supiType, privateKey string) (string, error) {
 			return "", fmt.Errorf("Key uncompression error\n")
 		}
 	}
-	// fmt.Printf("xUncom: %x\nyUncom: %x\n", xUncompressed, yUncompressed)
 
 	if err := checkOnCurve(elliptic.P256(), xUncompressed, yUncompressed); err != nil {
 		return "", err
@@ -292,7 +289,6 @@ func profileB(input, supiType, privateKey string) (string, error) {
 	// x-coordinate is the shared key
 	decryptSharedKeyTmp, _ := elliptic.P256().ScalarMult(xUncompressed, yUncompressed, bHNPriv)
 	decryptSharedKey := FillFrontZero(decryptSharedKeyTmp, len(xUncompressed.Bytes()))
-	// fmt.Printf("deShared: %x\n", decryptSharedKey)
 
 	decryptPublicKeyForKDF := decryptPublicKey
 	if uncompressed {
@@ -301,12 +297,9 @@ func profileB(input, supiType, privateKey string) (string, error) {
 
 	kdfKey := AnsiX963KDF(decryptSharedKey, decryptPublicKeyForKDF, ProfileBEncKeyLen, ProfileBMacKeyLen,
 		ProfileBHashLen)
-	// fmt.Printf("kdfKey: %x\n", kdfKey)
 	decryptEncKey := kdfKey[:ProfileBEncKeyLen]
 	decryptIcb := kdfKey[ProfileBEncKeyLen : ProfileBEncKeyLen+ProfileBIcbLen]
 	decryptMacKey := kdfKey[len(kdfKey)-ProfileBMacKeyLen:]
-	// fmt.Printf("\ndeEncKey(size%d): %x\ndeMacKey: %x\ndeIcb: %x\n", len(decryptEncKey), decryptEncKey, decryptMacKey,
-	// decryptIcb)
 
 	decryptMacTag := HmacSha256(decryptCipherText, decryptMacKey, ProfileBMacLen)
 	if bytes.Equal(decryptMacTag, decryptMac) {
