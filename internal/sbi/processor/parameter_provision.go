@@ -40,7 +40,7 @@ func (p *Processor) UpdateProcedure(c *gin.Context,
 	}
 
 	if modifyPpDataRsp.PatchResult.Report != nil {
-		c.JSON(http.StatusOK, modifyPpDataRsp)
+		c.JSON(http.StatusOK, modifyPpDataRsp.PatchResult)
 		return
 	}
 
