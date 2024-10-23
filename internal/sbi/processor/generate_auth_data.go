@@ -95,7 +95,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 		return
 	}
 
-	createAuthStatusResponse, err := client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
+	_, err = client.AuthenticationStatusDocumentApi.CreateAuthenticationStatus(
 		ctx, &createAuthStatusRequest)
 	if err != nil {
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
@@ -109,7 +109,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 		return
 	}
 
-	c.JSON(http.StatusCreated, createAuthStatusResponse)
+	c.Status(http.StatusCreated)
 }
 
 func (p *Processor) GenerateAuthDataProcedure(

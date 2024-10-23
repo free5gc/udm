@@ -44,7 +44,7 @@ func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, suppo
 		return
 	}
 
-	c.JSON(http.StatusOK, amf3GppAccessRegistration)
+	c.JSON(http.StatusOK, amf3GppAccessRegistration.Amf3GppAccessRegistration)
 }
 
 func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContextNon3gppParamOpts Nudr_DataRepository.
@@ -73,7 +73,7 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContext
 		return
 	}
 
-	c.JSON(http.StatusOK, amfNon3GppAccessRegistrationResponse)
+	c.JSON(http.StatusOK, amfNon3GppAccessRegistrationResponse.AmfNon3GppAccessRegistration)
 }
 
 func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
