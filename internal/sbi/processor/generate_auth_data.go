@@ -109,7 +109,8 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	// AuthEvent in response body is optional
+	c.JSON(http.StatusCreated, gin.H{})
 }
 
 func (p *Processor) GenerateAuthDataProcedure(
