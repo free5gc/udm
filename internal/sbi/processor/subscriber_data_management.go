@@ -51,8 +51,10 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 			udmUe = p.Context().NewUdmUe(supi)
 		}
 		udmUe.SetAMSubsriptionData(&accessAndMobilitySubscriptionDataResp.AccessAndMobilitySubscriptionData)
-		c.JSON(http.StatusOK, accessAndMobilitySubscriptionDataResp)
+		c.JSON(http.StatusOK, accessAndMobilitySubscriptionDataResp.AccessAndMobilitySubscriptionData)
+		return
 	}
+	c.String(http.StatusInternalServerError, "accessAndMobilitySubscriptionDataResp is nil")
 }
 
 func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string) {
