@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -355,30 +356,35 @@ func (p *Processor) GetSmDataProcedure(
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
+		return
 	}
 	logger.SdmLog.Infof("getSmDataProcedure: SUPI[%s] PLMNID[%s] DNN[%s] SNssai[%s]", supi, plmnID, Dnn, Snssai)
 
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
+		logger.ProcLog.Errorf("CreateUDMClientToUDR Error: %+v", err)
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
-	var querySmDataRequest Nudr_DataRepository.QuerySmDataRequest
-	modelSnassai, err := openapi.SnssaiHexToModels(Snssai)
-	if err != nil {
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+	var modelSnassai models.Snssai
+	if errUnmarshal := json.Unmarshal([]byte(Snssai), &modelSnassai); errUnmarshal != nil {
+		logger.ProcLog.Errorf("modelSnassai Unmarshal Error: %+v", errUnmarshal)
+		problemDetails := openapi.ProblemDetailsSystemFailure(errUnmarshal.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	querySmDataRequest.SingleNssai = modelSnassai
+
+	var querySmDataRequest Nudr_DataRepository.QuerySmDataRequest
+	querySmDataRequest.SingleNssai = &modelSnassai
 	querySmDataRequest.UeId = &supi
 	querySmDataRequest.ServingPlmnId = &plmnID
 
 	sessionManagementSubscriptionDataResp, err := clientAPI.SessionManagementSubscriptionDataApi.
 		QuerySmData(ctx, &querySmDataRequest)
 	if err != nil {
+		logger.ProcLog.Errorf("QuerySmData Error: %+v", err)
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
