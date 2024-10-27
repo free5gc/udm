@@ -153,6 +153,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 
 	authSubs, err := client.AuthenticationDataDocumentApi.QueryAuthSubsData(ctx, &queryAuthSubsDataRequest)
 	if err != nil {
+		logger.ProcLog.Errorf("Error on QueryAuthSubsData: %+v", err)
 		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -394,11 +395,15 @@ func (p *Processor) GenerateAuthDataProcedure(
 	SQNheStr = p.strictHex(SQNheStr, 12)
 	patchItemArray := []models.PatchItem{
 		{
-			Op:    models.PatchOperation_REPLACE,
-			Path:  "/sequenceNumber",
-			Value: SQNheStr,
+			Op:   models.PatchOperation_REPLACE,
+			Path: "/sequenceNumber",
+			Value: models.SequenceNumber{
+				Sqn: SQNheStr,
+			},
 		},
 	}
+
+	logger.ProcLog.Infoln("ModifyAuthenticationSubscriptionRequest: ", patchItemArray)
 
 	var modifyAuthenticationSubscriptionRequest Nudr_DataRepository.ModifyAuthenticationSubscriptionRequest
 	modifyAuthenticationSubscriptionRequest.UeId = &supi
