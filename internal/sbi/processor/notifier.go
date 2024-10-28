@@ -34,13 +34,15 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 		_, err = clientAPI.SubscriptionCreationApi.SubscribeDatachangeNotificationPost(
 			ctx, onDataChangeNotificationurl, &subDataChangeNotificationPostRequest)
 		if err != nil {
-			problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-			if !ok {
+			if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+				// API error
+				if subDataChangeNoti_err, ok2 := apiErr.
+					Model().(SubscriberDataManagement.SubscribeDatachangeNotificationPostError); ok2 {
+					problemDetails = &subDataChangeNoti_err.ProblemDetails
+				}
+			} else {
 				logger.HttpLog.Error(err.Error())
 				problemDetails = openapi.ProblemDetailsSystemFailure(err.Error())
-			} else {
-				logger.HttpLog.Errorln(err.Error())
-				problemDetails = &problem
 			}
 		}
 	}
@@ -65,12 +67,13 @@ func (p *Processor) SendOnDeregistrationNotification(ueId string, onDeregistrati
 			onDeregistrationNotificationUrl,
 			&call3GppRegistrationDeregistrationNotificationPostRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			return problemDetails
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			// API error
+			if deregisterNoti_err, ok2 := apiErr.
+				Model().(UEContextManagement.Call3GppRegistrationDeregistrationNotificationPostError); ok2 {
+				return &deregisterNoti_err.ProblemDetails
+			}
 		}
-		return &problem
 	}
 
 	return nil

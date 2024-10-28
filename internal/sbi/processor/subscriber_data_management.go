@@ -35,13 +35,13 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 	accessAndMobilitySubscriptionDataResp, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.
 		QueryAmData(ctx, &queryAmDataRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -77,13 +77,15 @@ func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string)
 	idTranslationResultResp, err := clientAPI.QueryIdentityDataBySUPIOrGPSIDocumentApi.GetIdentityData(
 		ctx, &getIdentityDataRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if getIdTransError, ok2 := apiErr.Model().(Nudr_DataRepository.GetIdentityDataError); ok2 {
+				problem := getIdTransError.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
-		c.JSON(int(problem.Status), problem)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -155,13 +157,13 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		amDataRsp, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.QueryAmData(
 			ctx, &queryAmDataRequest)
 		if err != nil {
-			problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if !ok {
 				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
-			c.JSON(int(problem.Status), problem)
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 
@@ -180,13 +182,13 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		smfSelDataRsp, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.QuerySmfSelectData(ctx,
 			&querySmfSelectDataRequest)
 		if err != nil {
-			problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if !ok {
 				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
-			c.JSON(int(problem.Status), problem)
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 
@@ -207,13 +209,13 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		pdusess, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(
 			ctx, &querySmfRegListRequest)
 		if err != nil {
-			problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if !ok {
 				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
-			c.JSON(int(problem.Status), problem)
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 
@@ -257,13 +259,13 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		sessionManagementSubscriptionDataRsp, err := clientAPI.SessionManagementSubscriptionDataApi.
 			QuerySmData(ctx, &querySmDataRequest)
 		if err != nil {
-			problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if !ok {
 				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
-			c.JSON(int(problem.Status), problem)
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 
@@ -286,13 +288,13 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		traceDataRsp, err := clientAPI.TraceDataDocumentApi.QueryTraceData(
 			ctx, &queryTraceDataRequest)
 		if err != nil {
-			problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if !ok {
 				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
-			c.JSON(int(problem.Status), problem)
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 
@@ -332,13 +334,15 @@ func (p *Processor) GetSharedDataProcedure(c *gin.Context, sharedDataIds []strin
 	sharedDataResp, err := clientAPI.RetrievalOfSharedDataApi.GetSharedData(ctx,
 		&getSharedDataRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if getShareDataError, ok2 := apiErr.Model().(Nudr_DataRepository.GetSharedDataError); ok2 {
+				problem := getShareDataError.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
-		c.JSON(int(problem.Status), problem)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -387,13 +391,13 @@ func (p *Processor) GetSmDataProcedure(
 		QuerySmData(ctx, &querySmDataRequest)
 	if err != nil {
 		logger.ProcLog.Errorf("QuerySmData Error: %+v", err)
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -453,13 +457,13 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 	accessAndMobilitySubscriptionDataResp, err := clientAPI.AccessAndMobilitySubscriptionDataDocumentApi.
 		QueryAmData(ctx, &queryAmDataRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -498,13 +502,13 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 	smfSelectionSubscriptionDataResp, err := clientAPI.SMFSelectionSubscriptionDataDocumentApi.
 		QuerySmfSelectData(ctx, &querySmfSelectDataRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -529,13 +533,15 @@ func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscripti
 	sdmSubscriptionResp, err := udmClientAPI.SubscriptionCreationForSharedDataApi.SubscribeToSharedData(
 		ctx, &subscibeToShareDataRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if subToShareDataErr, ok2 := apiErr.Model().(SubscriberDataManagement.SubscribeToSharedDataError); ok2 {
+				problem := subToShareDataErr.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
-		c.JSON(int(problem.Status), problem)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -566,13 +572,13 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.S
 	sdmSubscriptionResp, err := clientAPI.SDMSubscriptionsCollectionApi.CreateSdmSubscriptions(
 		ctx, &createSdmSubscriptionsRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -599,13 +605,15 @@ func (p *Processor) UnsubscribeForSharedDataProcedure(c *gin.Context, subscripti
 	_, err = udmClientAPI.SubscriptionDeletionForSharedDataApi.UnsubscribeForSharedData(
 		ctx, &unsubscribeForSharedDataRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if subToShareDataErr, ok2 := apiErr.Model().(SubscriberDataManagement.UnsubscribeForSharedDataError); ok2 {
+				problem := subToShareDataErr.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
-		c.JSON(int(problem.Status), problem)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -629,13 +637,15 @@ func (p *Processor) UnsubscribeProcedure(c *gin.Context, supi string, subscripti
 	removesdmSubscriptionRequest.SubsId = &subscriptionID
 	_, err = clientAPI.SDMSubscriptionDocumentApi.RemovesdmSubscriptions(ctx, &removesdmSubscriptionRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if removeSubErr, ok2 := apiErr.Model().(Nudr_DataRepository.RemovesdmSubscriptionsError); ok2 {
+				problem := removeSubErr.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
-		c.JSON(int(problem.Status), problem)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -668,13 +678,15 @@ func (p *Processor) ModifyProcedure(c *gin.Context,
 	_, err = clientAPI.SDMSubscriptionDocumentApi.Updatesdmsubscriptions(
 		ctx, &updatesdmsubscriptionsRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if updateSubErr, ok2 := apiErr.Model().(Nudr_DataRepository.UpdatesdmsubscriptionsError); ok2 {
+				problem := updateSubErr.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
-		c.JSON(int(problem.Status), problem)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -710,13 +722,15 @@ func (p *Processor) ModifyForSharedDataProcedure(c *gin.Context,
 	_, err = clientAPI.SDMSubscriptionDocumentApi.Updatesdmsubscriptions(
 		ctx, &updatesdmsubscriptionsRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if updateShareSubErr, ok2 := apiErr.Model().(Nudr_DataRepository.UpdatesdmsubscriptionsError); ok2 {
+				problem := updateShareSubErr.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
-		c.JSON(int(problem.Status), problem)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -746,13 +760,13 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 	traceDataRes, err := clientAPI.TraceDataDocumentApi.QueryTraceData(
 		ctx, &queryTraceDataRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -793,13 +807,13 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 	pdusessRes, err := clientAPI.SMFRegistrationsCollectionApi.QuerySmfRegList(
 		ctx, &querySmfRegListRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
