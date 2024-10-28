@@ -34,13 +34,13 @@ func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, suppo
 	amf3GppAccessRegistration, err := clientAPI.AMF3GPPAccessRegistrationDocumentApi.
 		QueryAmfContext3gpp(ctx, &queryAmfContext3gppRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -63,13 +63,13 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContext
 	amfNon3GppAccessRegistrationResponse, err := clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.
 		QueryAmfContextNon3gpp(ctx, &queryAmfContextNon3gppParamOpts)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -109,13 +109,13 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 	_, err = clientAPI.AMF3GPPAccessRegistrationDocumentApi.CreateAmfContext3gpp(ctx,
 		&createAmfContext3gppRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -185,13 +185,13 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 	_, err = clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.CreateAmfContextNon3gpp(
 		ctx, &createAmfContextNon3gppRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -301,13 +301,15 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 	_, err = clientAPI.AMF3GPPAccessRegistrationDocumentApi.AmfContext3gpp(ctx,
 		&amfContext3gppRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if amfContext3gppErr, ok2 := apiErr.Model().(Nudr_DataRepository.AmfContext3gppError); ok2 {
+				problem := amfContext3gppErr.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
-		c.JSON(int(problem.Status), problem)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -406,13 +408,15 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 	_, err = clientAPI.AMFNon3GPPAccessRegistrationDocumentApi.AmfContextNon3gpp(ctx,
 		&amfContextNon3gppRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
-			return
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if amfContextNon3gppErr, ok2 := apiErr.Model().(Nudr_DataRepository.AmfContextNon3gppError); ok2 {
+				problem := amfContextNon3gppErr.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
-		c.JSON(int(problem.Status), problem)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -450,13 +454,13 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 	deleteSmfRegistrationRequest.PduSessionId = &pduSessionIDInt32
 	_, err = clientAPI.SMFRegistrationDocumentApi.DeleteSmfRegistration(ctx, &deleteSmfRegistrationRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
@@ -499,13 +503,13 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 	}
 	_, err = clientAPI.SMFRegistrationDocumentApi.CreateOrUpdateSmfRegistration(ctx, &createSmfContext3gppRequest)
 	if err != nil {
-		problem, ok := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if !ok {
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
-		c.JSON(int(problem.Status), problem)
+		c.JSON(apiError.ErrorStatus, apiError.RawBody)
 		return
 	}
 
