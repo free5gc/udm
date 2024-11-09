@@ -2,7 +2,6 @@ package sbi
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -15,16 +14,93 @@ func (s *Server) getParameterProvisionRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
 		},
 
 		{
 			"Update",
-			strings.ToUpper("Patch"),
-			"/:gpsi/pp-data",
+			http.MethodPatch,
+			"/:ueId/pp-data",
 			s.HandleUpdate,
+		},
+
+		{
+			"Create5GMBSGroup",
+			http.MethodPut,
+			"/mbs-group-membership/:extGroupId",
+			s.HandleCreate5GMBSGroup,
+		},
+
+		{
+			"Create5GVNGroup",
+			http.MethodPut,
+			"/5g-vn-groups/:extGroupId",
+			s.HandleCreate5GVNGroup,
+		},
+
+		{
+			"CreatePPDataEntry",
+			http.MethodPut,
+			"/:ueId/pp-data-store/:afInstanceId",
+			s.HandleCreatePPDataEntry,
+		},
+
+		{
+			"Delete5GMBSGroup",
+			http.MethodDelete,
+			"/mbs-group-membership/:extGroupId",
+			s.HandleDelete5GMBSGroup,
+		},
+
+		{
+			"Delete5GVNGroup",
+			http.MethodDelete,
+			"/5g-vn-groups/:extGroupId",
+			s.HandleDelete5GVNGroup,
+		},
+
+		{
+			"DeletePPDataEntry",
+			http.MethodDelete,
+			"/:ueId/pp-data-store/:afInstanceId",
+			s.HandleDeletePPDataEntry,
+		},
+
+		{
+			"Get5GMBSGroup",
+			http.MethodGet,
+			"/mbs-group-membership/:extGroupId",
+			s.HandleGet5GMBSGroup,
+		},
+
+		{
+			"Get5GVNGroup",
+			http.MethodGet,
+			"/5g-vn-groups/:extGroupId",
+			s.HandleGet5GVNGroup,
+		},
+
+		{
+			"GetPPDataEntry",
+			http.MethodGet,
+			"/:ueId/pp-data-store/:afInstanceId",
+			s.HandleGetPPDataEntry,
+		},
+
+		{
+			"Modify5GMBSGroup",
+			http.MethodPatch,
+			"/mbs-group-membership/:extGroupId",
+			s.HandleModify5GMBSGroup,
+		},
+
+		{
+			"Modify5GVNGroup",
+			http.MethodPatch,
+			"/5g-vn-groups/:extGroupId",
+			s.HandleModify5GVNGroup,
 		},
 	}
 }
@@ -60,7 +136,7 @@ func (s *Server) HandleUpdate(c *gin.Context) {
 		return
 	}
 
-	gpsi := c.Params.ByName("gpsi")
+	gpsi := c.Params.ByName("ueId")
 	if gpsi == "" {
 		problemDetails := &models.ProblemDetails{
 			Status: http.StatusBadRequest,
@@ -74,4 +150,48 @@ func (s *Server) HandleUpdate(c *gin.Context) {
 
 	// step 3: handle the message
 	s.Processor().UpdateProcedure(c, ppDataReq, gpsi)
+}
+
+func (s *Server) HandleCreate5GMBSGroup(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleCreate5GVNGroup(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleCreatePPDataEntry(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleDelete5GMBSGroup(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleDelete5GVNGroup(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleDeletePPDataEntry(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGet5GMBSGroup(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGet5GVNGroup(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetPPDataEntry(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleModify5GMBSGroup(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleModify5GVNGroup(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }

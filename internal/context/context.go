@@ -12,8 +12,8 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
 	"github.com/free5gc/openapi/models"
+	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	"github.com/free5gc/openapi/oauth"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/pkg/factory"
@@ -32,7 +32,7 @@ const (
 )
 
 func Init() {
-	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
+	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
 	GetSelf().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
 	InitUdmContext(GetSelf())
 }
@@ -50,14 +50,14 @@ type UDMContext struct {
 	RegisterIPv4                   string // IP register to NRF
 	BindingIPv4                    string
 	UriScheme                      models.UriScheme
-	NfService                      map[models.ServiceName]models.NfService
+	NfService                      map[models.ServiceName]models.NrfNfManagementNfService
 	NFDiscoveryClient              *Nnrf_NFDiscovery.APIClient
 	UdmUePool                      sync.Map // map[supi]*UdmUeContext
 	NrfUri                         string
 	NrfCertPem                     string
 	GpsiSupiList                   models.IdentityData
-	SharedSubsDataMap              map[string]models.SharedData // sharedDataIds as key
-	SubscriptionOfSharedDataChange sync.Map                     // subscriptionID as key
+	SharedSubsDataMap              map[string]models.UdmSdmSharedData // sharedDataIds as key
+	SubscriptionOfSharedDataChange sync.Map                           // subscriptionID as key
 	SuciProfiles                   []suci.SuciProfile
 	EeSubscriptionIDGenerator      *idgenerator.IDGenerator
 	OAuth2Required                 bool
@@ -76,13 +76,13 @@ type UdmUeContext struct {
 	TraceDataResponse                 models.TraceDataResponse
 	TraceData                         *models.TraceData
 	SessionManagementSubsData         map[string]models.SessionManagementSubscriptionData
-	SubsDataSets                      *models.SubscriptionDataSets
+	SubsDataSets                      *models.UdmSdmSubscriptionDataSets
 	SubscribeToNotifChange            map[string]*models.SdmSubscription
 	SubscribeToNotifSharedDataChange  *models.SdmSubscription
 	PduSessionID                      string
 	UdrUri                            string
 	UdmSubsToNotify                   map[string]*models.SubscriptionDataSubscriptions
-	EeSubscriptions                   map[string]*models.EeSubscription // subscriptionID as key
+	EeSubscriptions                   map[string]*models.UdmEeEeSubscription // subscriptionID as key
 	amSubsDataLock                    sync.Mutex
 	smfSelSubsDataLock                sync.Mutex
 	SmSubsDataLock                    sync.RWMutex
@@ -90,7 +90,7 @@ type UdmUeContext struct {
 
 func (ue *UdmUeContext) Init() {
 	ue.UdmSubsToNotify = make(map[string]*models.SubscriptionDataSubscriptions)
-	ue.EeSubscriptions = make(map[string]*models.EeSubscription)
+	ue.EeSubscriptions = make(map[string]*models.UdmEeEeSubscription)
 	ue.SubscribeToNotifChange = make(map[string]*models.SdmSubscription)
 }
 
@@ -170,15 +170,17 @@ func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagement
 }
 
 // HandleGetSharedData related functions
-func MappingSharedData(sharedDatafromUDR []models.SharedData) (mp map[string]models.SharedData) {
-	sharedSubsDataMap := make(map[string]models.SharedData)
+func MappingSharedData(sharedDatafromUDR []models.UdmSdmSharedData) (mp map[string]models.UdmSdmSharedData) {
+	sharedSubsDataMap := make(map[string]models.UdmSdmSharedData)
 	for i := 0; i < len(sharedDatafromUDR); i++ {
 		sharedSubsDataMap[sharedDatafromUDR[i].SharedDataId] = sharedDatafromUDR[i]
 	}
 	return sharedSubsDataMap
 }
 
-func ObtainRequiredSharedData(Sharedids []string, response []models.SharedData) (sharedDatas []models.SharedData) {
+func ObtainRequiredSharedData(Sharedids []string, response []models.UdmSdmSharedData) (
+	sharedDatas []models.UdmSdmSharedData,
+) {
 	sharedSubsDataMap := MappingSharedData(response)
 	Allkeys := make([]string, len(sharedSubsDataMap))
 	MatchedKeys := make([]string, len(Sharedids))
@@ -196,7 +198,7 @@ func ObtainRequiredSharedData(Sharedids []string, response []models.SharedData) 
 		counter += 1
 	}
 
-	shared_Data := make([]models.SharedData, len(MatchedKeys))
+	shared_Data := make([]models.UdmSdmSharedData, len(MatchedKeys))
 	if len(MatchedKeys) != 1 {
 		for i := 0; i < len(MatchedKeys); i++ {
 			shared_Data[i] = sharedSubsDataMap[MatchedKeys[i]]
@@ -219,7 +221,7 @@ func GetCorrespondingSupi(list models.IdentityData) (id string) {
 }
 
 // functions related to Retrieval of multiple datasets(GetSupi)
-func (context *UDMContext) CreateSubsDataSetsForUe(supi string, body models.SubscriptionDataSets) {
+func (context *UDMContext) CreateSubsDataSetsForUe(supi string, body models.UdmSdmSubscriptionDataSets) {
 	ue, ok := context.UdmUeFindBySupi(supi)
 	if !ok {
 		ue = context.NewUdmUe(supi)
@@ -467,10 +469,10 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	versionUri := "v" + tmpVersion[0]
 	for index, nameString := range serviceName {
 		name := models.ServiceName(nameString)
-		context.NfService[name] = models.NfService{
+		context.NfService[name] = models.NrfNfManagementNfService{
 			ServiceInstanceId: strconv.Itoa(index),
 			ServiceName:       name,
-			Versions: &[]models.NfServiceVersion{
+			Versions: []models.NfServiceVersion{
 				{
 					ApiFullVersion:  version,
 					ApiVersionInUri: versionUri,
@@ -479,10 +481,10 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 			Scheme:          context.UriScheme,
 			NfServiceStatus: models.NfServiceStatus_REGISTERED,
 			ApiPrefix:       context.GetIPv4Uri(),
-			IpEndPoints: &[]models.IpEndPoint{
+			IpEndPoints: []models.IpEndPoint{
 				{
 					Ipv4Address: context.RegisterIPv4,
-					Transport:   models.TransportProtocol_TCP,
+					Transport:   models.NrfNfManagementTransportProtocol_TCP,
 					Port:        int32(context.SBIPort),
 				},
 			},
@@ -490,13 +492,13 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	}
 }
 
-func (c *UDMContext) GetTokenCtx(serviceName models.ServiceName, targetNF models.NfType) (
+func (c *UDMContext) GetTokenCtx(serviceName models.ServiceName, targetNF models.NrfNfManagementNfType) (
 	context.Context, *models.ProblemDetails, error,
 ) {
 	if !c.OAuth2Required {
 		return context.TODO(), nil, nil
 	}
-	return oauth.GetTokenCtx(models.NfType_UDM, targetNF,
+	return oauth.GetTokenCtx(models.NrfNfManagementNfType_UDM, targetNF,
 		c.NfId, c.NrfUri, string(serviceName))
 }
 

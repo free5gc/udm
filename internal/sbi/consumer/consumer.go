@@ -1,11 +1,11 @@
 package consumer
 
 import (
-	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
-	"github.com/free5gc/openapi/Nnrf_NFManagement"
-	"github.com/free5gc/openapi/Nudm_SubscriberDataManagement"
-	"github.com/free5gc/openapi/Nudm_UEContextManagement"
-	"github.com/free5gc/openapi/Nudr_DataRepository"
+	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
+	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
+	Nudm_SubscriberDataManagement "github.com/free5gc/openapi/udm/SubscriberDataManagement"
+	Nudm_UEContextManagement "github.com/free5gc/openapi/udm/UEContextManagement"
+	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/free5gc/udm/pkg/app"
 )
 

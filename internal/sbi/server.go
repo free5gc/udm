@@ -13,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/free5gc/openapi/models"
-	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/sbi/consumer"
 	"github.com/free5gc/udm/internal/sbi/processor"
@@ -29,6 +28,7 @@ type ServerUdm interface {
 
 	Consumer() *consumer.Consumer
 	Processor() *processor.Processor
+	CancelContext() context.Context
 }
 
 type Server struct {
@@ -61,7 +61,7 @@ func (s *Server) Run(traceCtx context.Context, wg *sync.WaitGroup) error {
 	logger.SBILog.Info("Starting server...")
 
 	var err error
-	_, s.Context().NfId, err = s.Consumer().RegisterNFInstance(context.Background())
+	_, s.Context().NfId, err = s.Consumer().RegisterNFInstance(s.CancelContext())
 	if err != nil {
 		logger.InitLog.Errorf("UDM register to NRF Error[%s]", err.Error())
 	}
@@ -160,19 +160,25 @@ func newRouter(s *Server) *gin.Engine {
 	udmUEAUGroup := s.router.Group(factory.UdmUeauResUriPrefix)
 	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_UEAU)
 	udmUEAUGroup.Use(func(c *gin.Context) {
-		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
+		routerAuthorizationCheck.Check(c, s.Context())
 	})
 	AddService(udmUEAUGroup, udmUEAURoutes)
 
-	genAuthDataPath := "/:supi/security-information/generate-auth-data"
-	udmUEAUGroup.Any(genAuthDataPath, s.GenAuthDataHandlerFunc)
+	ueauTwoLayerPath := "/:supi/:twoLayer"
+	udmUEAUGroup.Any(ueauTwoLayerPath, s.UEAUTwoLayerPathHandlerFunc)
+
+	ueauThreeLayerPath := "/:supi/:twoLayer/:thirdLayer"
+	udmUEAUGroup.Any(ueauThreeLayerPath, s.UEAUThreeLayerPathHandlerFunc)
+
+	generateAvPath := "/:supi/hss-security-information/:hssAuthType/generate-av"
+	udmUEAUGroup.Any(generateAvPath, s.HandleGenerateAv)
 
 	// UECM
 	udmUECMRoutes := s.getUEContextManagementRoutes()
 	udmUECMGroup := s.router.Group(factory.UdmUecmResUriPrefix)
 	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_UECM)
 	udmUECMGroup.Use(func(c *gin.Context) {
-		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
+		routerAuthorizationCheck.Check(c, s.Context())
 	})
 	AddService(udmUECMGroup, udmUECMRoutes)
 
@@ -181,7 +187,7 @@ func newRouter(s *Server) *gin.Engine {
 	udmSDMGroup := s.router.Group(factory.UdmSdmResUriPrefix)
 	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_SDM)
 	udmSDMGroup.Use(func(c *gin.Context) {
-		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
+		routerAuthorizationCheck.Check(c, s.Context())
 	})
 	AddService(udmSDMGroup, udmSDMRoutes)
 
@@ -199,9 +205,54 @@ func newRouter(s *Server) *gin.Engine {
 	udmPPGroup := s.router.Group(factory.UdmPpResUriPrefix)
 	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_PP)
 	udmPPGroup.Use(func(c *gin.Context) {
-		routerAuthorizationCheck.Check(c, udm_context.GetSelf())
+		routerAuthorizationCheck.Check(c, s.Context())
 	})
 	AddService(udmPPGroup, udmPPRoutes)
+
+	// MT
+	udmMTRoutes := s.getMTRoutes()
+	udmMTGroup := s.router.Group(factory.UdmMtResUrdPrefix)
+	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_MT)
+	udmMTGroup.Use(func(c *gin.Context) {
+		routerAuthorizationCheck.Check(c, s.Context())
+	})
+	AddService(udmMTGroup, udmMTRoutes)
+
+	// NIDDAU
+	udmNIDDAURoutes := s.getNIDDAuthenticationRoutes()
+	udmNIDDAUGroup := s.router.Group(factory.UdmNiddauResUriPrefix)
+	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_NIDDAU)
+	udmNIDDAUGroup.Use(func(c *gin.Context) {
+		routerAuthorizationCheck.Check(c, s.Context())
+	})
+	AddService(udmNIDDAUGroup, udmNIDDAURoutes)
+
+	// RSDS
+	udmRSDSRoutes := s.getReportSMDeliveryStatusRoutes()
+	udmRSDSGroup := s.router.Group(factory.UdmRsdsResUriPrefix)
+	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_RSDS)
+	udmRSDSGroup.Use(func(c *gin.Context) {
+		routerAuthorizationCheck.Check(c, s.Context())
+	})
+	AddService(udmRSDSGroup, udmRSDSRoutes)
+
+	// SSAU
+	udmSSAURoutes := s.getServiceSpecificAuthorizationRoutes()
+	udmSSAUGroup := s.router.Group(factory.UdmSsauResUriPrefix)
+	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_SSAU)
+	udmSSAUGroup.Use(func(c *gin.Context) {
+		routerAuthorizationCheck.Check(c, s.Context())
+	})
+	AddService(udmSSAUGroup, udmSSAURoutes)
+
+	// UEID
+	udmUEIDRoutes := s.getUEIDRoutes()
+	udmUEIDGroup := s.router.Group(factory.UdmUeidResUriPrefix)
+	routerAuthorizationCheck = util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_UEID)
+	udmUEIDGroup.Use(func(c *gin.Context) {
+		routerAuthorizationCheck.Check(c, s.Context())
+	})
+	AddService(udmUEIDGroup, udmUEIDRoutes)
 
 	return router
 }

@@ -14,7 +14,7 @@ import (
 
 // EE service
 func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity string,
-	eesubscription models.EeSubscription,
+	eesubscription models.UdmEeEeSubscription,
 ) {
 	udmSelf := p.Context()
 	logger.EeLog.Debugf("udIdentity: %s", ueIdentity)
@@ -34,10 +34,9 @@ func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
-
 			subscriptionID := strconv.Itoa(int(id))
 			ue.EeSubscriptions[subscriptionID] = &eesubscription
-			createdEeSubscription := &models.CreatedEeSubscription{
+			createdEeSubscription := &models.UdmEeCreatedEeSubscription{
 				EeSubscription: &eesubscription,
 			}
 			c.JSON(http.StatusCreated, createdEeSubscription)
@@ -60,7 +59,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 			return
 		}
 		subscriptionID := strconv.Itoa(int(id))
-		createdEeSubscription := &models.CreatedEeSubscription{
+		createdEeSubscription := &models.UdmEeCreatedEeSubscription{
 			EeSubscription: &eesubscription,
 		}
 
@@ -84,7 +83,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 			return
 		}
 		subscriptionID := strconv.Itoa(int(id))
-		createdEeSubscription := &models.CreatedEeSubscription{
+		createdEeSubscription := &models.UdmEeCreatedEeSubscription{
 			EeSubscription: &eesubscription,
 		}
 		udmSelf.UdmUePool.Range(func(key, value interface{}) bool {

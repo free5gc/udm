@@ -17,7 +17,7 @@ func (s *Server) getSubscriberDataManagementRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
 		},
@@ -206,7 +206,6 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 	logger.SdmLog.Infof("Handle Subscribe")
 
 	supi := c.Params.ByName("supi")
-
 	s.Processor().SubscribeProcedure(c, &sdmSubscriptionReq, supi)
 }
 
@@ -214,7 +213,7 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 func (s *Server) HandleUnsubscribe(c *gin.Context) {
 	logger.SdmLog.Infof("Handle Unsubscribe")
 
-	supi := c.Params.ByName("supi")
+	supi := c.Params.ByName("ueId")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	s.Processor().UnsubscribeProcedure(c, supi, subscriptionID)
@@ -259,7 +258,7 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle Modify")
 
-	supi := c.Params.ByName("supi")
+	supi := c.Params.ByName("ueId")
 	subscriptionID := c.Params.ByName("subscriptionId")
 
 	s.Processor().ModifyProcedure(c, &sdmSubsModificationReq, supi, subscriptionID)
@@ -377,9 +376,73 @@ func (s *Server) HandleGetIdTranslationResult(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle GetIdTranslationResultRequest")
 
-	gpsi := c.Params.ByName("gpsi")
+	gpsi := c.Params.ByName("ueId")
 
 	s.Processor().GetIdTranslationResultProcedure(c, gpsi)
+}
+
+func (s *Server) HandleGetMultipleIdentifiers(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetGroupIdentifiers(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetLcsBcaData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetLcsMoData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetLcsPrivacyData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetMbsData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetProseData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetUcData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetUeCtxInAmfData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetV2xData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetIndividualSharedData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleCAGAck(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetEcrData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleSNSSAIsAck(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleUpdateSORInfo(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleUpuAck(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {
@@ -393,7 +456,7 @@ func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {
 	}
 
 	// special case for :supi
-	if c.Request.Method == strings.ToUpper("Get") {
+	if c.Request.Method == http.MethodGet {
 		s.HandleGetSupi(c)
 		return
 	}
@@ -405,22 +468,30 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 	supi := c.Param("supi")
 	op := c.Param("subscriptionId")
 
+	logger.ConsumerLog.Infoln("TwoLayerPathHandlerFunc, ", supi, op)
+
 	// for "/shared-data-subscriptions/:subscriptionId"
-	if supi == "shared-data-subscriptions" && strings.ToUpper("Delete") == c.Request.Method {
+	if supi == "shared-data-subscriptions" && http.MethodDelete == c.Request.Method {
 		s.HandleUnsubscribeForSharedData(c)
 		return
 	}
 
 	// for "/shared-data-subscriptions/:subscriptionId"
-	if supi == "shared-data-subscriptions" && strings.ToUpper("Patch") == c.Request.Method {
+	if supi == "shared-data-subscriptions" && http.MethodPatch == c.Request.Method {
 		s.HandleModifyForSharedData(c)
 		return
 	}
 
-	// for "/:gpsi/id-translation-result"
-	if op == "id-translation-result" && strings.ToUpper("Get") == c.Request.Method {
-		c.Params = append(c.Params, gin.Param{Key: "gpsi", Value: c.Param("supi")})
+	// for "/:ueId/id-translation-result"
+	if op == "id-translation-result" && http.MethodGet == c.Request.Method {
+		c.Params = append(c.Params, gin.Param{Key: "ueId", Value: c.Param("supi")})
 		s.HandleGetIdTranslationResult(c)
+		return
+	}
+
+	// for "/shared-data/:sharedDataId"
+	if supi == "shared-data" && http.MethodGet == c.Request.Method {
+		s.HandleGetIndividualSharedData(c)
 		return
 	}
 
@@ -437,11 +508,12 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 
 func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 	op := c.Param("subscriptionId")
+	thirdLayer := c.Param("thirdLayer")
 
-	// for "/:supi/sdm-subscriptions/:subscriptionId"
-	if op == "sdm-subscriptions" && strings.ToUpper("Delete") == c.Request.Method {
+	// for "/:ueId/sdm-subscriptions/:subscriptionId"
+	if op == "sdm-subscriptions" && http.MethodDelete == c.Request.Method {
 		var tmpParams gin.Params
-		tmpParams = append(tmpParams, gin.Param{Key: "supi", Value: c.Param("supi")})
+		tmpParams = append(tmpParams, gin.Param{Key: "ueId", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
 		s.HandleUnsubscribe(c)
@@ -449,15 +521,46 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 	}
 
 	// for "/:supi/am-data/sor-ack"
-	if op == "am-data" && strings.ToUpper("Put") == c.Request.Method {
+	if op == "am-data" && http.MethodPut == c.Request.Method && thirdLayer == "sor-ack" {
 		s.HandleInfo(c)
 		return
 	}
 
-	// for "/:supi/sdm-subscriptions/:subscriptionId"
-	if op == "sdm-subscriptions" && strings.ToUpper("Patch") == c.Request.Method {
+	// for "/:supi/am-data/cag-ack"
+	if op == "am-data" && http.MethodPut == c.Request.Method && thirdLayer == "cag-ack" {
+		s.HandleCAGAck(c)
+		return
+	}
+
+	// for "/:supi/am-data/ecr-data"
+	if op == "am-data" && http.MethodGet == c.Request.Method && thirdLayer == "ecr-data" {
+		s.HandleGetEcrData(c)
+		return
+	}
+
+	// for "/:supi/am-data/subscribed-snssais-ack"
+	if op == "am-data" && http.MethodPut == c.Request.Method &&
+		thirdLayer == "subscribed-snssais-ack" {
+		s.HandleSNSSAIsAck(c)
+		return
+	}
+
+	// for "/:supi/am-data/update-sor"
+	if op == "am-data" && http.MethodPost == c.Request.Method && thirdLayer == "update-sor" {
+		s.HandleUpdateSORInfo(c)
+		return
+	}
+
+	// for "/:supi/am-data/upu-ack"
+	if op == "am-data" && http.MethodPut == c.Request.Method && thirdLayer == "upu-ack" {
+		s.HandleUpuAck(c)
+		return
+	}
+
+	// for "/:ueId/sdm-subscriptions/:subscriptionId"
+	if op == "sdm-subscriptions" && http.MethodPatch == c.Request.Method {
 		var tmpParams gin.Params
-		tmpParams = append(tmpParams, gin.Param{Key: "supi", Value: c.Param("supi")})
+		tmpParams = append(tmpParams, gin.Param{Key: "ueId", Value: c.Param("supi")})
 		tmpParams = append(tmpParams, gin.Param{Key: "subscriptionId", Value: c.Param("thirdLayer")})
 		c.Params = tmpParams
 		s.HandleModify(c)
@@ -470,24 +573,31 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 func (s *Server) getOneLayerRoutes() []Route {
 	return []Route{
 		{
-			"GetSupi",
-			strings.ToUpper("Get"),
+			"GetDataSets",
+			http.MethodGet,
 			"/:supi",
 			s.HandleGetSupi,
 		},
 
 		{
 			"GetSharedData",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/shared-data",
 			s.HandleGetSharedData,
 		},
 
 		{
 			"SubscribeToSharedData",
-			strings.ToUpper("Post"),
+			http.MethodPost,
 			"/shared-data-subscriptions",
 			s.HandleSubscribeToSharedData,
+		},
+
+		{
+			"GetMultipleIdentifiers",
+			http.MethodGet,
+			"/multiple-identifiers",
+			s.HandleGetMultipleIdentifiers,
 		},
 	}
 }
@@ -496,72 +606,135 @@ func (s *Server) getTwoLayerRoutes() []Route {
 	return []Route{
 		{
 			"GetAmData",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:supi/am-data",
 			s.HandleGetAmData,
 		},
 
 		{
-			"GetSmfSelectData",
-			strings.ToUpper("Get"),
+			"GetSmfSelData",
+			http.MethodGet,
 			"/:supi/smf-select-data",
 			s.HandleGetSmfSelectData,
 		},
 
 		{
-			"GetSmsMngData",
-			strings.ToUpper("Get"),
+			"GetSmsMngtData",
+			http.MethodGet,
 			"/:supi/sms-mng-data",
 			s.HandleGetSmsMngData,
 		},
 
 		{
 			"GetSmsData",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:supi/sms-data",
 			s.HandleGetSmsData,
 		},
 
 		{
 			"GetSmData",
-			strings.ToUpper("Get"),
+			http.MethodGet,
 			"/:supi/sm-data",
 			s.HandleGetSmData,
 		},
 
 		{
-			"GetNssai",
-			strings.ToUpper("Get"),
+			"GetNSSAI",
+			http.MethodGet,
 			"/:supi/nssai",
 			s.HandleGetNssai,
 		},
 
 		{
 			"Subscribe",
-			strings.ToUpper("Post"),
-			"/:supi/sdm-subscriptions",
+			http.MethodPost,
+			"/:ueId/sdm-subscriptions",
 			s.HandleSubscribe,
 		},
 
 		{
-			"GetTraceData",
-			strings.ToUpper("Get"),
+			"GetTraceConfigData",
+			http.MethodGet,
 			"/:supi/trace-data",
 			s.HandleGetTraceData,
 		},
 
 		{
-			"GetUeContextInSmfData",
-			strings.ToUpper("Get"),
+			"GetUeCtxInSmfData",
+			http.MethodGet,
 			"/:supi/ue-context-in-smf-data",
 			s.HandleGetUeContextInSmfData,
 		},
 
 		{
-			"GetUeContextInSmsfData",
-			strings.ToUpper("Get"),
+			"GetUeCtxInSmsfData",
+			http.MethodGet,
 			"/:supi/ue-context-in-smsf-data",
 			s.HandleGetUeContextInSmsfData,
+		},
+
+		{
+			"GetGroupIdentifiers",
+			http.MethodGet,
+			"/group-data/group-identifiers",
+			s.HandleGetGroupIdentifiers,
+		},
+
+		{
+			"GetLcsBcaData",
+			http.MethodGet,
+			"/:supi/lcs-bca-data",
+			s.HandleGetLcsBcaData,
+		},
+
+		{
+			"GetLcsMoData",
+			http.MethodGet,
+			"/:supi/lcs-mo-data",
+			s.HandleGetLcsMoData,
+		},
+
+		{
+			"GetLcsPrivacyData",
+			http.MethodGet,
+			"/:ueId/lcs-privacy-data",
+			s.HandleGetLcsPrivacyData,
+		},
+
+		{
+			"GetMbsData",
+			http.MethodGet,
+			"/:supi/5mbs-data",
+			s.HandleGetMbsData,
+		},
+
+		{
+			"GetProseData",
+			http.MethodGet,
+			"/:supi/prose-data",
+			s.HandleGetProseData,
+		},
+
+		{
+			"GetUcData",
+			http.MethodGet,
+			"/:supi/uc-data",
+			s.HandleGetUcData,
+		},
+
+		{
+			"GetUeCtxInAmfData",
+			http.MethodGet,
+			"/:supi/ue-context-in-amf-data",
+			s.HandleGetUeCtxInAmfData,
+		},
+
+		{
+			"GetV2xData",
+			http.MethodGet,
+			"/:supi/v2x-data",
+			s.HandleGetV2xData,
 		},
 	}
 }
