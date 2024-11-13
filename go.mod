@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
-	github.com/free5gc/openapi v1.0.9-0.20241030114155-51c7fcd04b72
+	github.com/free5gc/openapi v1.0.9-0.20241112160830-092c679ef6cd
 	github.com/free5gc/util v1.0.6
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.3.0
