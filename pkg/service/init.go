@@ -163,9 +163,9 @@ func (a *UdmApp) terminateProcedure() {
 		case error:
 			logger.InitLog.Errorf("Deregister NF instance Error[%+v]", err)
 		}
+	} else {
+		logger.InitLog.Infof("Deregister from NRF successfully")
 	}
-
-	logger.InitLog.Infof("Deregister from NRF successfully")
 
 	logger.MainLog.Infof("UDM SBI Server terminated")
 }

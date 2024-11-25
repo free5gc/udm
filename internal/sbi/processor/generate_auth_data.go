@@ -99,13 +99,13 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 		ctx, &createAuthStatusRequest)
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
+		if ok {
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		logger.UeauLog.Errorln("ConfirmAuth err:", err.Error())
-		c.JSON(apiError.ErrorStatus, apiError.RawBody)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -155,18 +155,18 @@ func (p *Processor) GenerateAuthDataProcedure(
 	if err != nil {
 		logger.ProcLog.Errorf("Error on QueryAuthSubsData: %+v", err)
 		apiError, ok := err.(openapi.GenericOpenAPIError)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
+		if ok {
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			switch apiError.ErrorStatus {
+			case http.StatusNotFound:
+				logger.UeauLog.Warnf("Return from UDR QueryAuthSubsData error")
+			default:
+				logger.UeauLog.Errorln("Return from UDR QueryAuthSubsData error")
+			}
 			return
 		}
-		switch apiError.ErrorStatus {
-		case http.StatusNotFound:
-			logger.UeauLog.Warnf("Return from UDR QueryAuthSubsData error")
-		default:
-			logger.UeauLog.Errorln("Return from UDR QueryAuthSubsData error")
-		}
-		c.JSON(apiError.ErrorStatus, apiError.RawBody)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
