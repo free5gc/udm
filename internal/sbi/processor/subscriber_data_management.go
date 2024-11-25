@@ -36,12 +36,12 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 		QueryAmData(ctx, &queryAmDataRequest)
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
+		if ok {
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
-		c.JSON(apiError.ErrorStatus, apiError.RawBody)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -158,12 +158,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			ctx, &queryAmDataRequest)
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
-			if !ok {
-				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-				c.JSON(int(problemDetails.Status), problemDetails)
+			if ok {
+				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
 
@@ -183,12 +183,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			&querySmfSelectDataRequest)
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
-			if !ok {
-				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-				c.JSON(int(problemDetails.Status), problemDetails)
+			if ok {
+				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
 
@@ -210,12 +210,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			ctx, &querySmfRegListRequest)
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
-			if !ok {
-				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-				c.JSON(int(problemDetails.Status), problemDetails)
+			if ok {
+				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
 
@@ -260,12 +260,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			QuerySmData(ctx, &querySmDataRequest)
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
-			if !ok {
-				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-				c.JSON(int(problemDetails.Status), problemDetails)
+			if ok {
+				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
 
@@ -289,12 +289,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			ctx, &queryTraceDataRequest)
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
-			if !ok {
-				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-				c.JSON(int(problemDetails.Status), problemDetails)
+			if ok {
+				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
 
@@ -392,12 +392,12 @@ func (p *Processor) GetSmDataProcedure(
 	if err != nil {
 		logger.ProcLog.Errorf("QuerySmData Error: %+v", err)
 		apiError, ok := err.(openapi.GenericOpenAPIError)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
+		if ok {
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
-		c.JSON(apiError.ErrorStatus, apiError.RawBody)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -458,12 +458,12 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 		QueryAmData(ctx, &queryAmDataRequest)
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
+		if ok {
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
-		c.JSON(apiError.ErrorStatus, apiError.RawBody)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -503,12 +503,12 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 		QuerySmfSelectData(ctx, &querySmfSelectDataRequest)
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
+		if ok {
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
-		c.JSON(apiError.ErrorStatus, apiError.RawBody)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -573,12 +573,12 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.S
 		ctx, &createSdmSubscriptionsRequest)
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
+		if ok {
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
-		c.JSON(apiError.ErrorStatus, apiError.RawBody)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -761,12 +761,12 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 		ctx, &queryTraceDataRequest)
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
+		if ok {
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
-		c.JSON(apiError.ErrorStatus, apiError.RawBody)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
@@ -808,12 +808,12 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 		ctx, &querySmfRegListRequest)
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
-		if !ok {
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
-			c.JSON(int(problemDetails.Status), problemDetails)
+		if ok {
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
-		c.JSON(apiError.ErrorStatus, apiError.RawBody)
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
