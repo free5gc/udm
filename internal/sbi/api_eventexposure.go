@@ -2,7 +2,6 @@ package sbi
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -15,28 +14,28 @@ func (s *Server) getEventExposureRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
 		},
 
 		{
-			"HTTPCreateEeSubscription",
-			strings.ToUpper("Post"),
+			"CreateEeSubscription",
+			http.MethodPost,
 			"/:ueIdentity/ee-subscriptions",
 			s.HandleCreateEeSubscription,
 		},
 
 		{
-			"HTTPDeleteEeSubscription",
-			strings.ToUpper("Delete"),
+			"DeleteEeSubscription",
+			http.MethodDelete,
 			"/:ueIdentity/ee-subscriptions/:subscriptionId",
 			s.HandleDeleteEeSubscription,
 		},
 
 		{
-			"HTTPUpdateEeSubscription",
-			strings.ToUpper("Patch"),
+			"UpdateEeSubscription",
+			http.MethodPatch,
 			"/:ueIdentity/ee-subscriptions/:subscriptionId",
 			s.HandleUpdateEeSubscription,
 		},
@@ -45,7 +44,7 @@ func (s *Server) getEventExposureRoutes() []Route {
 
 // HTTPCreateEeSubscription - Subscribe
 func (s *Server) HandleCreateEeSubscription(c *gin.Context) {
-	var eesubscription models.EeSubscription
+	var eesubscription models.UdmEeEeSubscription
 
 	requestBody, err := c.GetRawData()
 	if err != nil {

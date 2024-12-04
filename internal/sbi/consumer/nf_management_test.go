@@ -16,8 +16,8 @@ import (
 func TestSendRegisterNFInstance(t *testing.T) {
 	defer gock.Off() // Flush pending mocks after test execution
 
-	gock.InterceptClient(openapi.GetHttpClient())
-	defer gock.RestoreClient(openapi.GetHttpClient())
+	openapi.InterceptH2CClient()
+	defer openapi.RestoreH2CClient()
 
 	gock.New("http://127.0.0.10:8000").
 		Put("/nnrf-nfm/v1/nf-instances/1").

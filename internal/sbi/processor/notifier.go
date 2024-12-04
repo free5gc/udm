@@ -1,11 +1,12 @@
 package processor
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi/udm/SubscriberDataManagement"
+	"github.com/free5gc/openapi/udm/UEContextManagement"
 	"github.com/free5gc/udm/internal/logger"
 )
 
@@ -13,7 +14,7 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 	notifyItems []models.NotifyItem,
 	supi string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NfType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NrfNfManagementNfType_UDM)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -28,73 +29,52 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 		onDataChangeNotificationurl := subscriptionDataSubscription.OriginalCallbackReference
 		dataChangeNotification := models.ModificationNotification{}
 		dataChangeNotification.NotifyItems = notifyItems
-
-		httpResponse, err := clientAPI.DataChangeNotificationCallbackDocumentApi.OnDataChangeNotification(
-			ctx, onDataChangeNotificationurl, dataChangeNotification)
+		var subDataChangeNotificationPostRequest SubscriberDataManagement.SubscribeDatachangeNotificationPostRequest
+		subDataChangeNotificationPostRequest.ModificationNotification = &dataChangeNotification
+		_, err = clientAPI.SubscriptionCreationApi.SubscribeDatachangeNotificationPost(
+			ctx, onDataChangeNotificationurl, &subDataChangeNotificationPostRequest)
 		if err != nil {
-			if httpResponse == nil {
-				logger.HttpLog.Error(err.Error())
-				problemDetails = &models.ProblemDetails{
-					Status: http.StatusForbidden,
-					Detail: err.Error(),
+			if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+				// API error
+				if subDataChangeNoti_err, ok2 := apiErr.
+					Model().(SubscriberDataManagement.SubscribeDatachangeNotificationPostError); ok2 {
+					problemDetails = &subDataChangeNoti_err.ProblemDetails
 				}
 			} else {
-				logger.HttpLog.Errorln(err.Error())
-
-				problemDetails = &models.ProblemDetails{
-					Status: int32(httpResponse.StatusCode),
-					Detail: err.Error(),
-				}
+				logger.HttpLog.Error(err.Error())
+				problemDetails = openapi.ProblemDetailsSystemFailure(err.Error())
 			}
 		}
-		defer func() {
-			if rspCloseErr := httpResponse.Body.Close(); rspCloseErr != nil {
-				logger.HttpLog.Errorf("OnDataChangeNotification response body cannot close: %+v", rspCloseErr)
-			}
-		}()
 	}
 
 	c.JSON(int(problemDetails.Status), problemDetails)
 }
 
 func (p *Processor) SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
-	deregistData models.DeregistrationData,
+	deregistData models.UdmUecmDeregistrationData,
 ) *models.ProblemDetails {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_UECM, models.NfType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_UECM, models.NrfNfManagementNfType_UDM)
 	if err != nil {
 		return pd
 	}
 
 	clientAPI := p.Consumer().GetUECMClient("SendOnDeregistrationNotification")
-
-	httpResponse, err := clientAPI.DeregistrationNotificationCallbackApi.DeregistrationNotify(
-		ctx, onDeregistrationNotificationUrl, deregistData)
+	var call3GppRegistrationDeregistrationNotificationPostRequest UEContextManagement.
+		Call3GppRegistrationDeregistrationNotificationPostRequest
+	call3GppRegistrationDeregistrationNotificationPostRequest.UdmUecmDeregistrationData = &deregistData
+	_, err = clientAPI.AMFRegistrationFor3GPPAccessApi.
+		Call3GppRegistrationDeregistrationNotificationPost(ctx,
+			onDeregistrationNotificationUrl,
+			&call3GppRegistrationDeregistrationNotificationPostRequest)
 	if err != nil {
-		if httpResponse == nil {
-			logger.HttpLog.Error(err.Error())
-			problemDetails := &models.ProblemDetails{
-				Status: http.StatusInternalServerError,
-				Cause:  "DEREGISTRATION_NOTIFICATION_ERROR",
-				Detail: err.Error(),
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			// API error
+			if deregisterNoti_err, ok2 := apiErr.
+				Model().(UEContextManagement.Call3GppRegistrationDeregistrationNotificationPostError); ok2 {
+				return &deregisterNoti_err.ProblemDetails
 			}
-
-			return problemDetails
-		} else {
-			logger.HttpLog.Errorln(err.Error())
-			problemDetails := &models.ProblemDetails{
-				Status: int32(httpResponse.StatusCode),
-				Cause:  "DEREGISTRATION_NOTIFICATION_ERROR",
-				Detail: err.Error(),
-			}
-
-			return problemDetails
 		}
 	}
-	defer func() {
-		if rspCloseErr := httpResponse.Body.Close(); rspCloseErr != nil {
-			logger.HttpLog.Errorf("DeregistrationNotify response body cannot close: %+v", rspCloseErr)
-		}
-	}()
 
 	return nil
 }

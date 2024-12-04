@@ -7,14 +7,14 @@ import (
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/udm/internal/logger"
+	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 )
 
 func (p *Processor) UpdateProcedure(c *gin.Context,
 	updateRequest models.PpData,
 	gpsi string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		c.JSON(int(pd.Status), pd)
 		return
@@ -25,21 +25,26 @@ func (p *Processor) UpdateProcedure(c *gin.Context,
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-
-	res, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(ctx, gpsi, nil)
+	var modifyPpDataRequest Nudr_DataRepository.ModifyPpDataRequest
+	modifyPpDataRequest.UeId = &gpsi
+	modifyPpDataRsp, err := clientAPI.ProvisionedParameterDataDocumentApi.ModifyPpData(ctx, &modifyPpDataRequest)
 	if err != nil {
-		problemDetails := &models.ProblemDetails{
-			Status: int32(res.StatusCode),
-			Cause:  err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails).Cause,
-			Detail: err.Error(),
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if modification_err, ok2 := apiErr.Model().(Nudr_DataRepository.ModifyPpDataError); ok2 {
+				problem := modification_err.ProblemDetails
+				c.JSON(int(problem.Status), problem)
+				return
+			}
 		}
+		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	defer func() {
-		if rspCloseErr := res.Body.Close(); rspCloseErr != nil {
-			logger.PpLog.Errorf("ModifyPpData response body cannot close: %+v", rspCloseErr)
-		}
-	}()
+
+	if modifyPpDataRsp.PatchResult.Report != nil {
+		c.JSON(http.StatusOK, modifyPpDataRsp.PatchResult)
+		return
+	}
+
 	c.Status(http.StatusNoContent)
 }
