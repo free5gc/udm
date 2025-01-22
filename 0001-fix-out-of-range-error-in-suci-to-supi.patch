@@ -1,0 +1,25 @@
+From c2de80957d82b491962d668414a684350585d6f1 Mon Sep 17 00:00:00 2001
+From: reki9185 <decimo9185@gmail.com>
+Date: Tue, 21 Jan 2025 13:30:12 +0800
+Subject: [PATCH] fix: out of range error in suci to supi
+
+---
+ pkg/suci/suci.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pkg/suci/suci.go b/pkg/suci/suci.go
+index 8c22f37..506f2c0 100644
+--- a/pkg/suci/suci.go
++++ b/pkg/suci/suci.go
+@@ -382,7 +382,7 @@ func ToSupi(suci string, suciProfiles []SuciProfile) (string, error) {
+ 	if err != nil {
+ 		return "", fmt.Errorf("Parse HNPublicKeyID error: %+v", err)
+ 	}
+-	if keyIndex > len(suciProfiles) {
++	if keyIndex < 1 || keyIndex > len(suciProfiles) {
+ 		return "", fmt.Errorf("keyIndex(%d) out of range(%d)", keyIndex, len(suciProfiles))
+ 	}
+ 
+-- 
+2.34.1
+
