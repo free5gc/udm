@@ -241,6 +241,10 @@ func profileA(input, supiType, privateKey string) (string, error) {
 	return calcSchemeResult(decryptPlainText, supiType), nil
 }
 
+var (
+	InvalidPointError = fmt.Errorf("crypto/elliptic: attempted operation on invalid point")
+)
+
 func checkOnCurve(curve elliptic.Curve, x, y *big.Int) error {
 	// (0, 0) is the point at infinity by convention. It's ok to operate on it,
 	// although IsOnCurve is documented to return false for it. See Issue 37294.
@@ -249,7 +253,7 @@ func checkOnCurve(curve elliptic.Curve, x, y *big.Int) error {
 	}
 
 	if !curve.IsOnCurve(x, y) {
-		return fmt.Errorf("crypto/elliptic: attempted operation on invalid point")
+		return InvalidPointError
 	}
 
 	return nil
