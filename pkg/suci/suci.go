@@ -14,6 +14,7 @@ import (
 	"math"
 	"math/big"
 	"math/bits"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -21,6 +22,76 @@ import (
 
 	"github.com/free5gc/udm/internal/logger"
 )
+
+// suci-0(SUPI type: IMSI)-mcc-mnc-routingIndicator-protectionScheme-homeNetworkPublicKeyID-schemeOutput.
+// TODO: suci-1(SUPI type: NAI)-homeNetworkID-routingIndicator-protectionScheme-homeNetworkPublicKeyID-schemeOutput.
+
+const (
+	PrefixIMSI     = "imsi-"
+	PrefixSUCI     = "suci"
+	SupiTypeIMSI   = "0"
+	NullScheme     = "0"
+	ProfileAScheme = "1"
+	ProfileBScheme = "2"
+)
+
+var (
+	// Network and identification patterns.
+	mccRegex      = `(?P<mcc>\d{3})`                                         // Mobile Country Code; 3 digits
+	mncRegex      = `(?P<mnc>\d{2,3})`                                       // Mobile Network Code; 2 or 3 digits
+	imsiTypeRegex = fmt.Sprintf("(?P<imsiType>0-%s-%s)", mccRegex, mncRegex) // MCC-MNC
+
+	// The Home Network Identifier consists of a string of
+	// characters with a variable length representing a domain name
+	// as specified in Section 2.2 of RFC 7542
+	naiTypeRegex = "(?P<naiType>1-.*)"
+
+	supiTypeRegex = fmt.Sprintf("(?P<supi_type>%s|%s)", // SUPI type; 0 = IMSI, 1 = NAI (for n3gpp)
+		imsiTypeRegex,
+		naiTypeRegex)
+
+	routingIndicatorRegex = `(?P<routing_indicator>\d{1,4})`                         // Routing Indicator, used by the AUSF to find the appropriate UDM when SUCI is encrypted 1-4 digits
+	protectionSchemeRegex = `(?P<protection_scheme_id>(?:[0-2]))`                    // Protection Scheme ID; 0 = NULL Scheme (unencrypted), 1 = Profile A, 2 = Profile B
+	publicKeyIDRegex      = `(?P<public_key_id>(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))` // Public Key ID; 1-255
+	schemeOutputRegex     = `(?P<scheme_output>[A-Fa-f0-9]+)`                        // Scheme Output; unbounded hex string (safe from ReDoS due to bounded length of SUCI)
+	suciRegex             = regexp.MustCompile(fmt.Sprintf("^suci-%s-%s-%s-%s-%s$",  // Subscription Concealed Identifier (SUCI) Encrypted SUPI as sent by the UE to the AMF; 3GPP TS 29.503 - Annex C
+		supiTypeRegex,
+		routingIndicatorRegex,
+		protectionSchemeRegex,
+		publicKeyIDRegex,
+		schemeOutputRegex,
+	))
+)
+
+type Suci struct {
+	SupiType         string // 0 for IMSI, 1 for NAI
+	Mcc              string // 3 digits
+	Mnc              string // 2-3 digits
+	HomeNetworkId    string // variable-length string
+	RoutingIndicator string // 1-4 digits
+	ProtectionScheme string // 0-2
+	PublicKeyID      string // 1-255
+	SchemeOutput     string // hex string
+}
+
+func ParseSuci(input string) *Suci {
+	matches := suciRegex.FindStringSubmatch(input)
+	if matches == nil {
+		return nil
+	}
+
+	// The indices correspond to the order of the regex groups in the pattern
+	return &Suci{
+		SupiType:         matches[1], // First capture group
+		Mcc:              matches[3], // Third capture group
+		Mnc:              matches[4], // Fourth capture group
+		HomeNetworkId:    matches[5], // Fifth capture group
+		RoutingIndicator: matches[6], // Sixth capture group
+		ProtectionScheme: matches[7], // Seventh capture group
+		PublicKeyID:      matches[8], // Eigth capture group
+		SchemeOutput:     matches[9], // Nineth capture group
+	}
+}
 
 type SuciProfile struct {
 	ProtectionScheme string `yaml:"ProtectionScheme,omitempty"`
@@ -45,60 +116,6 @@ const (
 	ProfileBMacLen    = 8  // octets
 	ProfileBHashLen   = 32 // octets
 )
-
-func CompressKey(uncompressed []byte, y *big.Int) []byte {
-	compressed := uncompressed[0:33]
-	if y.Bit(0) == 1 { // 0x03
-		compressed[0] = 0x03
-	} else { // 0x02
-		compressed[0] = 0x02
-	}
-	// fmt.Printf("compressed: %x\n", compressed)
-	return compressed
-}
-
-// modified from https://stackoverflow.com/questions/46283760/
-// how-to-uncompress-a-single-x9-62-compressed-point-on-an-ecdh-p256-curve-in-go.
-func uncompressKey(compressedBytes []byte, priv []byte) (*big.Int, *big.Int) {
-	// Split the sign byte from the rest
-	signByte := uint(compressedBytes[0])
-	xBytes := compressedBytes[1:]
-
-	x := new(big.Int).SetBytes(xBytes)
-	three := big.NewInt(3)
-
-	// The params for P256
-	c := elliptic.P256().Params()
-
-	// The equation is y^2 = x^3 - 3x + b
-	// x^3, mod P
-	xCubed := new(big.Int).Exp(x, three, c.P)
-
-	// 3x, mod P
-	threeX := new(big.Int).Mul(x, three)
-	threeX.Mod(threeX, c.P)
-
-	// x^3 - 3x + b mod P
-	ySquared := new(big.Int).Sub(xCubed, threeX)
-	ySquared.Add(ySquared, c.B)
-	ySquared.Mod(ySquared, c.P)
-
-	// find the square root mod P
-	y := new(big.Int).ModSqrt(ySquared, c.P)
-	if y == nil {
-		// If this happens then you're dealing with an invalid point.
-		logger.SuciLog.Errorln("Uncompressed key with invalid point")
-		return nil, nil
-	}
-
-	// Finally, check if you have the correct root. If not you want -y mod P
-	if y.Bit(0) != signByte&1 {
-		y.Neg(y)
-		y.Mod(y, c.P)
-	}
-	// fmt.Printf("xUncom: %x\nyUncon: %x\n", x, y)
-	return x, y
-}
 
 func HmacSha256(input, macKey []byte, macLen int) []byte {
 	h := hmac.New(sha256.New, macKey)
@@ -275,7 +292,7 @@ func profileB(input, supiType, privateKey string) (string, error) {
 		xUncompressed = new(big.Int).SetBytes(decryptPublicKey[1:(ProfileBPubKeyLen/2 + 1)])
 		yUncompressed = new(big.Int).SetBytes(decryptPublicKey[(ProfileBPubKeyLen/2 + 1):])
 	} else {
-		xUncompressed, yUncompressed = uncompressKey(decryptPublicKey, bHNPriv)
+		xUncompressed, yUncompressed = elliptic.UnmarshalCompressed(elliptic.P256(), decryptPublicKey)
 		if xUncompressed == nil || yUncompressed == nil {
 			logger.SuciLog.Errorln("Uncompressed key has invalid point")
 			return "", fmt.Errorf("Key uncompression error\n")
@@ -292,7 +309,8 @@ func profileB(input, supiType, privateKey string) (string, error) {
 
 	decryptPublicKeyForKDF := decryptPublicKey
 	if uncompressed {
-		decryptPublicKeyForKDF = CompressKey(decryptPublicKey, yUncompressed)
+		decryptPublicKeyForKDF = elliptic.MarshalCompressed(elliptic.P256(), xUncompressed, yUncompressed)
+		//decryptPublicKeyForKDF = CompressKey(decryptPublicKey, yUncompressed)
 	}
 
 	kdfKey := AnsiX963KDF(decryptSharedKey, decryptPublicKeyForKDF, ProfileBEncKeyLen, ProfileBMacKeyLen,
@@ -324,63 +342,32 @@ func FillFrontZero(input *big.Int, length int) []byte {
 	return result
 }
 
-// suci-0(SUPI type: IMSI)-mcc-mnc-routingIndicator-protectionScheme-homeNetworkPublicKeyID-schemeOutput.
-// TODO:
-// suci-1(SUPI type: NAI)-homeNetworkID-routingIndicator-protectionScheme-homeNetworkPublicKeyID-schemeOutput.
-const (
-	PrefixPlace = iota
-	SupiTypePlace
-	MccPlace
-	MncPlace
-	RoutingIndicatorPlace
-	SchemePlace
-	HNPublicKeyIDPlace
-	SchemeOuputPlace
-	MaxPlace
-)
-
-const (
-	PrefixIMSI     = "imsi-"
-	PrefixSUCI     = "suci"
-	SupiTypeIMSI   = "0"
-	NullScheme     = "0"
-	ProfileAScheme = "1"
-	ProfileBScheme = "2"
-)
-
 func ToSupi(suci string, suciProfiles []SuciProfile) (string, error) {
-	suciPart := strings.Split(suci, "-")
-	logger.SuciLog.Infof("suciPart: %+v", suciPart)
-
-	suciPrefix := suciPart[0]
-	if suciPrefix == "imsi" || suciPrefix == "nai" {
-		logger.SuciLog.Infof("Got supi\n")
-		return suci, nil
-	} else if suciPrefix == PrefixSUCI {
-		if len(suciPart) < 6 {
-			return "", fmt.Errorf("Suci with wrong format\n")
-		}
-	} else {
-		return "", fmt.Errorf("Unknown suciPrefix [%s]", suciPrefix)
+	parsedSuci := ParseSuci(suci)
+	if parsedSuci == nil {
+		return "", fmt.Errorf("unknown suciPrefix [%+v]", parsedSuci)
 	}
 
-	logger.SuciLog.Infof("scheme %s\n", suciPart[SchemePlace])
-	scheme := suciPart[SchemePlace]
-	mccMnc := suciPart[MccPlace] + suciPart[MncPlace]
+	logger.SuciLog.Infof("scheme %s\n", parsedSuci.ProtectionScheme)
+	scheme := parsedSuci.ProtectionScheme
+	mccMnc := parsedSuci.Mcc + parsedSuci.Mnc
 
 	supiPrefix := PrefixIMSI
-	if suciPrefix == PrefixSUCI && suciPart[SupiTypePlace] == SupiTypeIMSI {
+	if strings.HasPrefix(parsedSuci.SupiType, SupiTypeIMSI) {
 		logger.SuciLog.Infof("SUPI type is IMSI\n")
+	} else {
+		logger.SuciLog.Infof("SUPI type is NAI\n")
+		return "", fmt.Errorf("unsupported suciType NAI")
 	}
 
 	if scheme == NullScheme { // NULL scheme
-		return supiPrefix + mccMnc + suciPart[len(suciPart)-1], nil
+		return supiPrefix + mccMnc + parsedSuci.SchemeOutput, nil
 	}
 
 	// (HNPublicKeyID-1) is the index of "suciProfiles" slices
-	keyIndex, err := strconv.Atoi(suciPart[HNPublicKeyIDPlace])
+	keyIndex, err := strconv.Atoi(parsedSuci.PublicKeyID)
 	if err != nil {
-		return "", fmt.Errorf("Parse HNPublicKeyID error: %+v", err)
+		return "", fmt.Errorf("parse HNPublicKeyID error: %+v", err)
 	}
 	if keyIndex < 1 || keyIndex > len(suciProfiles) {
 		return "", fmt.Errorf("keyIndex(%d) out of range(%d)", keyIndex, len(suciProfiles))
@@ -390,22 +377,22 @@ func ToSupi(suci string, suciProfiles []SuciProfile) (string, error) {
 	privateKey := suciProfiles[keyIndex-1].PrivateKey
 
 	if scheme != protectScheme {
-		return "", fmt.Errorf("Protect Scheme mismatch [%s:%s]", scheme, protectScheme)
+		return "", fmt.Errorf("protect Scheme mismatch [%s:%s]", scheme, protectScheme)
 	}
 
 	if scheme == ProfileAScheme {
-		if profileAResult, err := profileA(suciPart[len(suciPart)-1], suciPart[SupiTypePlace], privateKey); err != nil {
+		if profileAResult, err := profileA(parsedSuci.SchemeOutput, SupiTypeIMSI, privateKey); err != nil {
 			return "", err
 		} else {
 			return supiPrefix + mccMnc + profileAResult, nil
 		}
 	} else if scheme == ProfileBScheme {
-		if profileBResult, err := profileB(suciPart[len(suciPart)-1], suciPart[SupiTypePlace], privateKey); err != nil {
+		if profileBResult, err := profileB(parsedSuci.SchemeOutput, SupiTypeIMSI, privateKey); err != nil {
 			return "", err
 		} else {
 			return supiPrefix + mccMnc + profileBResult, nil
 		}
 	} else {
-		return "", fmt.Errorf("Protect Scheme (%s) is not supported", scheme)
+		return "", fmt.Errorf("protect Scheme (%s) is not supported", scheme)
 	}
 }
