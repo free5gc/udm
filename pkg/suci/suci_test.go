@@ -52,7 +52,7 @@ func TestToSupi(t *testing.T) {
 			suci: "suci-0-208-93-0-2-2-0434a66778799d52fedd9326db4b690d092e05c9ba0ace5b413da" +
 				"fc0a40aa28ee00a79f790fa4da6a2ece892423adb130dc1b30e270b7d0088bdd716b93894891d5221a74c810d6b9350cc067c76",
 			expectedSupi: "",
-			expectedErr:  InvalidPointError,
+			expectedErr:  ErrorPublicKeyUnmarshalling,
 		},
 		{
 			suci: "suci-0-001-01-0-2-2-03a7b1db2a9db9d44112b59d03d8243dc6089fd91d2ecb" +
@@ -75,7 +75,7 @@ func TestToSupi(t *testing.T) {
 			suci: "suci-0-208-93-0-2-3-0434a66778799d52fedd9326db4b690d092e05c9ba0ace5b413da" +
 				"fc0a40aa28ee00a79f790fa4da6a2ece892423adb130dc1b30e270b7d0088bdd716b93894891d5221a74c810d6b9350cc067c76",
 			expectedSupi: "",
-			expectedErr:  InvalidPointError,
+			expectedErr:  ErrorPublicKeyUnmarshalling,
 		},
 		{
 			suci: "suci-0-001-01-0-2-3-03a7b1db2a9db9d44112b59d03d8243dc6089fd91d2ecb" +
