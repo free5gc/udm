@@ -1,7 +1,6 @@
 package suci
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/elliptic"
@@ -10,7 +9,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"math"
 	"math/big"
 	"math/bits"
@@ -117,27 +115,27 @@ const (
 	ProfileBHashLen   = 32 // octets
 )
 
-func HmacSha256(input, macKey []byte, macLen int) []byte {
+func HmacSha256(input, macKey []byte, macLen int) ([]byte, error) {
 	h := hmac.New(sha256.New, macKey)
 	if _, err := h.Write(input); err != nil {
-		log.Printf("HMAC SHA256 error %+v", err)
+		return nil, fmt.Errorf("HMAC SHA256 error %+v", err)
 	}
 	macVal := h.Sum(nil)
 	macTag := macVal[:macLen]
 	// fmt.Printf("macVal: %x\nmacTag: %x\n", macVal, macTag)
-	return macTag
+	return macTag, nil
 }
 
-func Aes128ctr(input, encKey, icb []byte) []byte {
+func Aes128ctr(input, encKey, icb []byte) ([]byte, error) {
 	output := make([]byte, len(input))
 	block, err := aes.NewCipher(encKey)
 	if err != nil {
-		log.Printf("AES128 CTR error %+v", err)
+		return nil, fmt.Errorf("AES128 CTR error %+v", err)
 	}
 	stream := cipher.NewCTR(block, icb)
 	stream.XORKeyStream(output, input)
 	// fmt.Printf("aes input: %x %x %x\naes output: %x\n", input, encKey, icb, output)
-	return output
+	return output, nil
 }
 
 func AnsiX963KDF(sharedKey, publicKey []byte, profileEncKeyLen, profileMacKeyLen, profileHashLen int) []byte {
@@ -203,13 +201,13 @@ func profileA(input, supiType, privateKey string) (string, error) {
 	// aHNPriv, _ := hex.DecodeString("c53c2208b61860b06c62e5406a7b330c2b577aa5558981510d128247d38bd1d")
 	var aHNPriv []byte
 	if aHNPrivTmp, err := hex.DecodeString(privateKey); err != nil {
-		log.Printf("Decode error: %+v", err)
+		return "", err
 	} else {
 		aHNPriv = aHNPrivTmp
 	}
 	var decryptSharedKey []byte
 	if decryptSharedKeyTmp, err := curve25519.X25519(aHNPriv, decryptPublicKey); err != nil {
-		log.Printf("X25519 error: %+v", err)
+		return "", err
 	} else {
 		decryptSharedKey = decryptSharedKeyTmp
 	}
@@ -222,15 +220,23 @@ func profileA(input, supiType, privateKey string) (string, error) {
 	// fmt.Printf("\ndeEncKey(size%d): %x\ndeMacKey: %x\ndeIcb: %x\n", len(decryptEncKey), decryptEncKey, decryptMacKey,
 	// decryptIcb)
 
-	decryptMacTag := HmacSha256(decryptCipherText, decryptMacKey, ProfileAMacLen)
-	if bytes.Equal(decryptMacTag, decryptMac) {
+	decryptMacTag, err := HmacSha256(decryptCipherText, decryptMacKey, ProfileAMacLen)
+	if err != nil {
+		logger.SuciLog.Errorln("decryption MAC error")
+		return "", err
+	}
+	if hmac.Equal(decryptMacTag, decryptMac) {
 		logger.SuciLog.Infoln("decryption MAC match")
 	} else {
 		logger.SuciLog.Errorln("decryption MAC failed")
 		return "", fmt.Errorf("decryption MAC failed\n")
 	}
 
-	decryptPlainText := Aes128ctr(decryptCipherText, decryptEncKey, decryptIcb)
+	decryptPlainText, err := Aes128ctr(decryptCipherText, decryptEncKey, decryptIcb)
+	if err != nil {
+		logger.SuciLog.Errorln("decryptPlainText error")
+		return "", err
+	}
 
 	return calcSchemeResult(decryptPlainText, supiType), nil
 }
@@ -252,7 +258,7 @@ func checkOnCurve(curve elliptic.Curve, x, y *big.Int) error {
 func profileB(input, supiType, privateKey string) (string, error) {
 	logger.SuciLog.Infoln("SuciToSupi Profile B")
 	s, hexDecodeErr := hex.DecodeString(input)
-	if hexDecodeErr != nil {
+	if hexDecodeErr != nil || len(s) < 1 {
 		logger.SuciLog.Errorln("hex DecodeString error")
 		return "", hexDecodeErr
 	}
@@ -282,7 +288,7 @@ func profileB(input, supiType, privateKey string) (string, error) {
 	// bHNPriv, _ := hex.DecodeString("F1AB1074477EBCC7F554EA1C5FC368B1616730155E0041AC447D6301975FECDA")
 	var bHNPriv []byte
 	if bHNPrivTmp, err := hex.DecodeString(privateKey); err != nil {
-		log.Printf("Decode error: %+v", err)
+		return "", err
 	} else {
 		bHNPriv = bHNPrivTmp
 	}
@@ -310,7 +316,6 @@ func profileB(input, supiType, privateKey string) (string, error) {
 	decryptPublicKeyForKDF := decryptPublicKey
 	if uncompressed {
 		decryptPublicKeyForKDF = elliptic.MarshalCompressed(elliptic.P256(), xUncompressed, yUncompressed)
-		//decryptPublicKeyForKDF = CompressKey(decryptPublicKey, yUncompressed)
 	}
 
 	kdfKey := AnsiX963KDF(decryptSharedKey, decryptPublicKeyForKDF, ProfileBEncKeyLen, ProfileBMacKeyLen,
@@ -319,15 +324,24 @@ func profileB(input, supiType, privateKey string) (string, error) {
 	decryptIcb := kdfKey[ProfileBEncKeyLen : ProfileBEncKeyLen+ProfileBIcbLen]
 	decryptMacKey := kdfKey[len(kdfKey)-ProfileBMacKeyLen:]
 
-	decryptMacTag := HmacSha256(decryptCipherText, decryptMacKey, ProfileBMacLen)
-	if bytes.Equal(decryptMacTag, decryptMac) {
+	decryptMacTag, err := HmacSha256(decryptCipherText, decryptMacKey, ProfileBMacLen)
+	if err != nil {
+		logger.SuciLog.Errorln("decryption MAC error")
+		return "", err
+	}
+
+	if hmac.Equal(decryptMacTag, decryptMac) {
 		logger.SuciLog.Infoln("decryption MAC match")
 	} else {
 		logger.SuciLog.Errorln("decryption MAC failed")
 		return "", fmt.Errorf("decryption MAC failed\n")
 	}
 
-	decryptPlainText := Aes128ctr(decryptCipherText, decryptEncKey, decryptIcb)
+	decryptPlainText, err := Aes128ctr(decryptCipherText, decryptEncKey, decryptIcb)
+	if err != nil {
+		logger.SuciLog.Errorln("decryptPlainText MAC error")
+		return "", err
+	}
 
 	return calcSchemeResult(decryptPlainText, supiType), nil
 }
