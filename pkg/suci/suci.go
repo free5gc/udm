@@ -33,24 +33,34 @@ const (
 
 var (
 	// Network and identification patterns.
-	mccRegex      = `(?P<mcc>\d{3})`                                         // Mobile Country Code; 3 digits
-	mncRegex      = `(?P<mnc>\d{2,3})`                                       // Mobile Network Code; 2 or 3 digits
-	imsiTypeRegex = fmt.Sprintf("(?P<imsiType>0-%s-%s)", mccRegex, mncRegex) // MCC-MNC
+	// Mobile Country Code; 3 digits
+	mccRegex = `(?P<mcc>\d{3})`
+	// Mobile Network Code; 2 or 3 digits
+	mncRegex = `(?P<mnc>\d{2,3})`
+
+	// MCC-MNC
+	imsiTypeRegex = fmt.Sprintf("(?P<imsiType>0-%s-%s)", mccRegex, mncRegex)
 
 	// The Home Network Identifier consists of a string of
 	// characters with a variable length representing a domain name
 	// as specified in Section 2.2 of RFC 7542
 	naiTypeRegex = "(?P<naiType>1-.*)"
 
-	supiTypeRegex = fmt.Sprintf("(?P<supi_type>%s|%s)", // SUPI type; 0 = IMSI, 1 = NAI (for n3gpp)
+	// SUPI type; 0 = IMSI, 1 = NAI (for n3gpp)
+	supiTypeRegex = fmt.Sprintf("(?P<supi_type>%s|%s)",
 		imsiTypeRegex,
 		naiTypeRegex)
 
-	routingIndicatorRegex = `(?P<routing_indicator>\d{1,4})`                         // Routing Indicator, used by the AUSF to find the appropriate UDM when SUCI is encrypted 1-4 digits
-	protectionSchemeRegex = `(?P<protection_scheme_id>(?:[0-2]))`                    // Protection Scheme ID; 0 = NULL Scheme (unencrypted), 1 = Profile A, 2 = Profile B
-	publicKeyIDRegex      = `(?P<public_key_id>(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))` // Public Key ID; 1-255
-	schemeOutputRegex     = `(?P<scheme_output>[A-Fa-f0-9]+)`                        // Scheme Output; unbounded hex string (safe from ReDoS due to bounded length of SUCI)
-	suciRegex             = regexp.MustCompile(fmt.Sprintf("^suci-%s-%s-%s-%s-%s$",  // Subscription Concealed Identifier (SUCI) Encrypted SUPI as sent by the UE to the AMF; 3GPP TS 29.503 - Annex C
+	// Routing Indicator, used by the AUSF to find the appropriate UDM when SUCI is encrypted 1-4 digits
+	routingIndicatorRegex = `(?P<routing_indicator>\d{1,4})`
+	// Protection Scheme ID; 0 = NULL Scheme (unencrypted), 1 = Profile A, 2 = Profile B
+	protectionSchemeRegex = `(?P<protection_scheme_id>(?:[0-2]))`
+	// Public Key ID; 1-255
+	publicKeyIDRegex = `(?P<public_key_id>(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))`
+	// Scheme Output; unbounded hex string (safe from ReDoS due to bounded length of SUCI)
+	schemeOutputRegex = `(?P<scheme_output>[A-Fa-f0-9]+)`
+	// Subscription Concealed Identifier (SUCI) Encrypted SUPI as sent by the UE to the AMF; 3GPP TS 29.503 - Annex C
+	suciRegex = regexp.MustCompile(fmt.Sprintf("^suci-%s-%s-%s-%s-%s$",
 		supiTypeRegex,
 		routingIndicatorRegex,
 		protectionSchemeRegex,
@@ -84,8 +94,8 @@ func ParseSuci(input string) *Suci {
 		HomeNetworkId:    matches[5], // Fifth capture group
 		RoutingIndicator: matches[6], // Sixth capture group
 		ProtectionScheme: matches[7], // Seventh capture group
-		PublicKeyID:      matches[8], // Eigth capture group
-		SchemeOutput:     matches[9], // Nineth capture group
+		PublicKeyID:      matches[8], // Eighth capture group
+		SchemeOutput:     matches[9], // Ninth capture group
 	}
 }
 
@@ -169,8 +179,8 @@ func calcSchemeResult(decryptPlainText []byte, supiType string) string {
 }
 
 func decryptWithKdf(sharedKey, kdfPubKey, cipherText, providedMac []byte,
-	encKeyLen, macKeyLen, hashLen, icbLen, macLen int) ([]byte, error) {
-
+	encKeyLen, macKeyLen, hashLen, icbLen, macLen int,
+) ([]byte, error) {
 	kdfKey := AnsiX963KDF(sharedKey, kdfPubKey, encKeyLen, macKeyLen, hashLen)
 	encKey := kdfKey[:encKeyLen]
 	icb := kdfKey[encKeyLen : encKeyLen+icbLen]
@@ -205,9 +215,7 @@ func ecdhX25519(privateKeyHex string, peerPubKey []byte) ([]byte, error) {
 	return priv.ECDH(pub)
 }
 
-var (
-	ErrorPublicKeyUnmarshalling = fmt.Errorf("failed to unmarshal uncompressed public key")
-)
+var ErrorPublicKeyUnmarshalling = fmt.Errorf("failed to unmarshal uncompressed public key")
 
 func ecdhP256(privateKeyHex string, transmittedPubKey []byte) (sharedKey, kdfPubKey []byte, err error) {
 	bHNPrivBytes, err := hex.DecodeString(privateKeyHex)

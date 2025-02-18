@@ -59,13 +59,15 @@ func TestToSupi(t *testing.T) {
 				"78f5d16298634682e94373888b22bdc9293d1681922e17",
 			expectedSupi: "imsi-001010123456789",
 			expectedErr:  nil,
-		}, {
+		},
+		{
 			// Uncompressed Ephemeral Public Key + Compressed Home Public Key
 			suci: "suci-0-001-01-0-2-2-049AAB8376597021E855679A9778EA0B67396E68C66DF32C0F41E9ACCA2DA9B9D1D1F44EA1C" +
 				"87AA7478B954537BDE79951E748A43294A4F4CF86EAFF1789C9C81F46A33FC2716AC7DAE96AA30A4D",
 			expectedSupi: "imsi-00101001002086",
 			expectedErr:  nil,
-		}, {
+		},
+		{
 			suci: "suci-0-208-93-0-2-3-039aab8376597021e855679a9778ea0b67396e68c66d" +
 				"f32c0f41e9acca2da9b9d146a33fc2716ac7dae96aa30a4d",
 			expectedSupi: "imsi-20893001002086",
