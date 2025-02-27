@@ -113,9 +113,11 @@ func InitUdmContext(context *UDMContext) {
 	udmContext.UriScheme = models.UriScheme(sbi.Scheme)
 
 	if bindingIP := os.Getenv(sbi.BindingIP); bindingIP != "" {
+		logger.UtilLog.Info("Parsing BindingIP address from ENV Variable.")
 		sbi.BindingIP = bindingIP
 	}
 	if registerIP := os.Getenv(sbi.RegisterIP); registerIP != "" {
+		logger.UtilLog.Info("Parsing RegisterIP address from ENV Variable.")
 		sbi.RegisterIP = registerIP
 	}
 	udmContext.BindingIP = resolveIP(sbi.BindingIP)
