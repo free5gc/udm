@@ -6,14 +6,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/util"
+	"github.com/pkg/errors"
 )
 
 type nnrfService struct {
@@ -194,7 +193,11 @@ func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (
 	profile.NfInstanceId = udmContext.NfId
 	profile.NfType = models.NrfNfManagementNfType_UDM
 	profile.NfStatus = models.NrfNfManagementNfStatus_REGISTERED
-	profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIPv4)
+	if udmContext.RegisterIP.Is6() {
+		profile.Ipv6Addresses = append(profile.Ipv6Addresses, udmContext.RegisterIP.String())
+	} else if udmContext.RegisterIP.Is4() {
+		profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIP.String())
+	}
 	for _, nfService := range udmContext.NfService {
 		profile.NfServices = append(profile.NfServices, nfService)
 	}
