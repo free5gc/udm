@@ -55,7 +55,7 @@ func TestInitUdmContextWithConfigIPv6(t *testing.T) {
 	}
 	factory.UdmConfig = cfg
 
-	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
+	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8313)
@@ -91,7 +91,7 @@ func TestInitUdmContextWithConfigIPv4(t *testing.T) {
 	}
 	factory.UdmConfig = cfg
 
-	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
+	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8131)
@@ -127,7 +127,7 @@ func TestInitUdmContextWithConfigDeprecated(t *testing.T) {
 	}
 	factory.UdmConfig = cfg
 
-	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
+	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8003)
@@ -158,7 +158,7 @@ func TestInitUdmContextWithConfigEmptySBI(t *testing.T) {
 	}
 	factory.UdmConfig = cfg
 
-	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
+	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8000)
@@ -191,7 +191,7 @@ func TestInitUdmContextWithConfigMissingRegisterIP(t *testing.T) {
 	}
 	factory.UdmConfig = cfg
 
-	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
+	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8000)
@@ -224,7 +224,7 @@ func TestInitUdmContextWithConfigMissingBindingIP(t *testing.T) {
 	}
 	factory.UdmConfig = cfg
 
-	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
+	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8000)
@@ -263,7 +263,7 @@ func TestInitUdmContextWithConfigIPv6FromEnv(t *testing.T) {
 	}
 	factory.UdmConfig = cfg
 
-	GetSelf().NfService = make(map[models.ServiceName]models.NfService)
+	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8313)
