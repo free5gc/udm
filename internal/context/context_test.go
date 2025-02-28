@@ -253,8 +253,12 @@ func TestInitUdmContextWithConfigIPv6FromEnv(t *testing.T) {
 
 	configFile := createConfigFile(t, postContent)
 
-	os.Setenv("MY_REGISTER_IP", "2001:db8::1:0:0:130")
-	os.Setenv("MY_BINDING_IP", "2001:db8::1:0:0:130")
+	if err := os.Setenv("MY_REGISTER_IP", "2001:db8::1:0:0:130"); err != nil {
+		t.Errorf("Can't set MY_BINDING_IP variable environnement: %+v", err)
+	}
+	if err := os.Setenv("MY_BINDING_IP", "2001:db8::1:0:0:130"); err != nil {
+		t.Errorf("Can't set MY_BINDING_IP variable environnement: %+v", err)
+	}
 
 	// Test the initialization with the config file
 	cfg, err := factory.ReadConfig(configFile.Name())
