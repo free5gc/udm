@@ -77,7 +77,7 @@ type Logger struct {
 
 func (c *Configuration) validate() (bool, error) {
 	if sbi := c.Sbi; sbi != nil {
-		sbi.validate()
+		return sbi.validate()
 	} else {
 		sbi := Sbi{}
 		result, err := sbi.validate()
