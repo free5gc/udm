@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/asaskevich/govalidator"
+
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/pkg/suci"
 )

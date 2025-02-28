@@ -10,6 +10,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/sbi/consumer"
@@ -19,8 +22,6 @@ import (
 	"github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type ServerUdm interface {
