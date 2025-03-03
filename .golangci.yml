@@ -207,6 +207,10 @@ linters-settings:
   misspell:
     #locale: US
     ignore-words:
+  staticcheck:
+    checks:
+      - all
+      - '-SA1019' # https://github.com/golang/go/issues/71807
   wsl:
     # If true append is only allowed to be cuddled if appending value is
     # matching variables, fields or types on line above. Default is true.

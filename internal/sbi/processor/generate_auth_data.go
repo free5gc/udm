@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -341,24 +340,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			sqnStr = fmt.Sprintf("%x", bigSQN)
 			sqnStr = p.strictHex(sqnStr, 12)
 		} else {
-			logger.UeauLog.Errorln("Re-Sync MAC failed ", supiOrSuci)
-			// Check if suci
-			suciPart := strings.Split(supiOrSuci, "-")
-			if suciPart[suci.PrefixPlace] == suci.PrefixSUCI &&
-				suciPart[suci.SupiTypePlace] == suci.SupiTypeIMSI &&
-				suciPart[suci.SchemePlace] != suci.NullScheme {
-				// Get SuciProfile index and write public key
-				keyIndex, err1 := strconv.Atoi(suciPart[suci.HNPublicKeyIDPlace])
-				if err1 != nil {
-					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key HNPublicKeyIDPlace parse Error")
-				} else if keyIndex < 1 {
-					logger.UeauLog.Errorf("Re-Sync Failed UDM Public Key HNPublicKeyIDPlace keyIndex[%d] < 1",
-						keyIndex)
-				} else {
-					logger.UeauLog.Errorln("Re-Sync Failed UDM Public Key ",
-						p.Context().SuciProfiles[keyIndex-1].PublicKey)
-				}
-			}
+			logger.UeauLog.Errorln("Re-Sync MAC failed ", supi)
 			logger.UeauLog.Errorln("MACS ", macS)
 			logger.UeauLog.Errorln("Auts[6:] ", Auts[6:])
 			logger.UeauLog.Errorln("Sqn ", SQNms)
