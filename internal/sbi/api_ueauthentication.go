@@ -2,7 +2,6 @@ package sbi
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -15,16 +14,9 @@ func (s *Server) getUEAuthenticationRoutes() []Route {
 	return []Route{
 		{
 			"Index",
-			"GET",
+			http.MethodGet,
 			"/",
 			s.HandleIndex,
-		},
-
-		{
-			"ConfirmAuth",
-			strings.ToUpper("Post"),
-			"/:supi/auth-events",
-			s.HandleConfirmAuth,
 		},
 	}
 }
@@ -102,9 +94,76 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 	s.Processor().GenerateAuthDataProcedure(c, authInfoReq, supiOrSuci)
 }
 
-func (s *Server) GenAuthDataHandlerFunc(c *gin.Context) {
-	c.Params = append(c.Params, gin.Param{Key: "supiOrSuci", Value: c.Param("supi")})
-	if strings.ToUpper("Post") == c.Request.Method {
+func (s *Server) HandleDeleteAuth(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGenerateAv(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGenerateGbaAv(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGenerateProseAV(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) HandleGetRgAuthData(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{})
+}
+
+func (s *Server) UEAUTwoLayerPathHandlerFunc(c *gin.Context) {
+	twoLayer := c.Param("twoLayer")
+
+	// for "/:supi/auth-events"
+	if twoLayer == "auth-events" && http.MethodPost == c.Request.Method {
+		s.HandleConfirmAuth(c)
+		return
+	}
+
+	// for "/:supiOrSuci/security-information-rg"
+	if twoLayer == "security-information-rg" && http.MethodGet == c.Request.Method {
+		var tmpParams gin.Params
+		tmpParams = append(tmpParams, gin.Param{Key: "supiOrSuci", Value: c.Param("supi")})
+		c.Params = tmpParams
+		s.HandleGetRgAuthData(c)
+		return
+	}
+
+	c.String(http.StatusNotFound, "404 page not found")
+}
+
+func (s *Server) UEAUThreeLayerPathHandlerFunc(c *gin.Context) {
+	twoLayer := c.Param("twoLayer")
+
+	// for "/:supi/auth-events/:authEventId"
+	if twoLayer == "auth-events" && http.MethodPut == c.Request.Method {
+		s.HandleDeleteAuth(c)
+		return
+	}
+
+	// for "/:supi/gba-security-information/generate-av"
+	if twoLayer == "gba-security-information" && http.MethodPost == c.Request.Method {
+		s.HandleGenerateGbaAv(c)
+		return
+	}
+
+	// for "/:supiOrSuci/prose-security-information/generate-av"
+	if twoLayer == "prose-security-information" && http.MethodPost == c.Request.Method {
+		var tmpParams gin.Params
+		tmpParams = append(tmpParams, gin.Param{Key: "supiOrSuci", Value: c.Param("supi")})
+		c.Params = tmpParams
+		s.HandleGenerateProseAV(c)
+		return
+	}
+
+	// for "/:supiOrSuci/security-information/generate-auth-data"
+	if twoLayer == "security-information" && http.MethodPost == c.Request.Method {
+		var tmpParams gin.Params
+		tmpParams = append(tmpParams, gin.Param{Key: "supiOrSuci", Value: c.Param("supi")})
+		c.Params = tmpParams
 		s.HandleGenerateAuthData(c)
 		return
 	}
