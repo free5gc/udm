@@ -96,8 +96,8 @@ func TestInitUdmContextWithConfigIPv4(t *testing.T) {
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8131)
-	assert.Equal(t, udmContext.RegisterIP.String(), "::ffff:127.0.0.13")
-	assert.Equal(t, udmContext.BindingIP.String(), "::ffff:127.0.0.13")
+	assert.Equal(t, udmContext.RegisterIP.String(), "127.0.0.13")
+	assert.Equal(t, udmContext.BindingIP.String(), "127.0.0.13")
 	assert.Equal(t, udmContext.UriScheme, models.UriScheme("http"))
 
 	// Close the config file
@@ -132,8 +132,8 @@ func TestInitUdmContextWithConfigDeprecated(t *testing.T) {
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8003)
-	assert.Equal(t, udmContext.RegisterIP.String(), "::ffff:127.0.0.30")
-	assert.Equal(t, udmContext.BindingIP.String(), "::ffff:127.0.0.30")
+	assert.Equal(t, udmContext.RegisterIP.String(), "127.0.0.30")
+	assert.Equal(t, udmContext.BindingIP.String(), "127.0.0.30")
 	assert.Equal(t, udmContext.UriScheme, models.UriScheme("http"))
 
 	// Close the config file
@@ -163,8 +163,8 @@ func TestInitUdmContextWithConfigEmptySBI(t *testing.T) {
 	InitUdmContext(GetSelf())
 
 	assert.Equal(t, udmContext.SBIPort, 8000)
-	assert.Equal(t, udmContext.RegisterIP.String(), "::ffff:127.0.0.3")
-	assert.Equal(t, udmContext.BindingIP.String(), "::ffff:127.0.0.3")
+	assert.Equal(t, udmContext.RegisterIP.String(), "127.0.0.3")
+	assert.Equal(t, udmContext.BindingIP.String(), "127.0.0.3")
 	assert.Equal(t, udmContext.UriScheme, models.UriScheme("https"))
 
 	// Close the config file
@@ -298,7 +298,7 @@ func TestResolveIPLocalhost(t *testing.T) {
 }
 
 func TestResolveIPv4(t *testing.T) {
-	expectedAddr, err := netip.ParseAddr("::ffff:127.0.0.1")
+	expectedAddr, err := netip.ParseAddr("127.0.0.1")
 	if err != nil {
 		t.Errorf("invalid expected IP: %+v", expectedAddr)
 	}

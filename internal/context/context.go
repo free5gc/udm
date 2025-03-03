@@ -460,7 +460,7 @@ func resolveIP(ip string) netip.Addr {
 	if err != nil {
 		logger.InitLog.Errorf("Lookup failed with %s: %+v", ip, err)
 	}
-	resolvedIP := resolvedIPs[0]
+	resolvedIP := resolvedIPs[0].Unmap()
 	if resolvedIP := resolvedIP.String(); resolvedIP != ip {
 		logger.UtilLog.Infof("Lookup revolved %s into %s", ip, resolvedIP)
 	}
