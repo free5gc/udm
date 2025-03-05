@@ -64,7 +64,7 @@ type Info struct {
 }
 
 type Configuration struct {
-	Sbi             *Sbi               `yaml:"sbi" valid:"optional"`
+	Sbi             *Sbi               `yaml:"sbi,omitempty" valid:"required"`
 	ServiceNameList []string           `yaml:"serviceNameList,omitempty"  valid:"required"`
 	NrfUri          string             `yaml:"nrfUri,omitempty"  valid:"required, url"`
 	NrfCertPem      string             `yaml:"nrfCertPem,omitempty" valid:"optional"`
@@ -79,14 +79,6 @@ type Logger struct {
 func (c *Configuration) validate() (bool, error) {
 	if sbi := c.Sbi; sbi != nil {
 		return sbi.validate()
-	} else {
-		sbi := Sbi{}
-		result, err := sbi.validate()
-		if err != nil {
-			return result, err
-		} else {
-			c.Sbi = &sbi
-		}
 	}
 
 	if c.ServiceNameList != nil {

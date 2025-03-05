@@ -1,6 +1,7 @@
 package context
 
 import (
+	"errors"
 	"net/netip"
 	"os"
 	"testing"
@@ -16,7 +17,7 @@ func createConfigFile(t *testing.T, postContent []byte) *os.File {
   version: "1.0.4"
 
 logger:
-  level: info
+  level: debug
 `)
 
 	configFile, err := os.CreateTemp("", "")
@@ -152,20 +153,9 @@ func TestInitUdmContextWithConfigEmptySBI(t *testing.T) {
 
 	configFile := createConfigFile(t, postContent)
 
-	// Test the initialization with the config file
-	cfg, err := factory.ReadConfig(configFile.Name())
-	if err != nil {
-		t.Errorf("invalid read config: %+v %+v", err, cfg)
-	}
-	factory.UdmConfig = cfg
-
-	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
-	InitUdmContext(GetSelf())
-
-	assert.Equal(t, udmContext.SBIPort, 8000)
-	assert.Equal(t, udmContext.RegisterIP.String(), "127.0.0.3")
-	assert.Equal(t, udmContext.BindingIP.String(), "127.0.0.3")
-	assert.Equal(t, udmContext.UriScheme, models.UriScheme("https"))
+	// Test the initialization with the config file fails
+	_, err := factory.ReadConfig(configFile.Name())
+	assert.Equal(t, err, errors.New("Config validate Error"))
 
 	// Close the config file
 	t.Cleanup(func() {
