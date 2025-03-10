@@ -340,7 +340,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			sqnStr = fmt.Sprintf("%x", bigSQN)
 			sqnStr = p.strictHex(sqnStr, 12)
 		} else {
-			logger.UeauLog.Errorln("Re-Sync MAC failed ", supi)
+			logger.UeauLog.Errorf("Re-Sync MAC failed for UE with identity supiOrSuci=[%s], resolvedSupi=[%s]", supiOrSuci, supi)
 			logger.UeauLog.Errorln("MACS ", macS)
 			logger.UeauLog.Errorln("Auts[6:] ", Auts[6:])
 			logger.UeauLog.Errorln("Sqn ", SQNms)
