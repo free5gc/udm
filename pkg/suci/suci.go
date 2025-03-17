@@ -80,9 +80,9 @@ type Suci struct {
 	SchemeOutput     string // hex string
 }
 
-func ParseSuci(input string) *Suci {
+func parseSuci(input string) *Suci {
 	matches := suciRegex.FindStringSubmatch(input)
-	if matches == nil {
+	if matches == nil || len(matches) != 10 {
 		return nil
 	}
 
@@ -337,7 +337,7 @@ func profileB(input, supiType, privateKey string) (string, error) {
 }
 
 func ToSupi(suci string, suciProfiles []SuciProfile) (string, error) {
-	parsedSuci := ParseSuci(suci)
+	parsedSuci := parseSuci(suci)
 	if parsedSuci == nil {
 		if strings.HasPrefix(suci, "imsi-") || strings.HasPrefix(suci, "nai-") {
 			logger.SuciLog.Infof("Got supi\n")
