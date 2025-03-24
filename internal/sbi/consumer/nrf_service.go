@@ -194,7 +194,11 @@ func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (
 	profile.NfInstanceId = udmContext.NfId
 	profile.NfType = models.NrfNfManagementNfType_UDM
 	profile.NfStatus = models.NrfNfManagementNfStatus_REGISTERED
-	profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIPv4)
+	if udmContext.RegisterIP.Is6() {
+		profile.Ipv6Addresses = append(profile.Ipv6Addresses, udmContext.RegisterIP.String())
+	} else if udmContext.RegisterIP.Is4() {
+		profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIP.String())
+	}
 	for _, nfService := range udmContext.NfService {
 		profile.NfServices = append(profile.NfServices, nfService)
 	}
