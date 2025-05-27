@@ -7,10 +7,14 @@ import (
 )
 
 func MilenageF1(opc, k, rand, sqn, amf []byte, macA, macS []byte) error {
-	_, _, _, autn, err := milenage.GenerateAKAParameters(opc, k, rand, sqn, amf)
+	ik, ck, xres, autn, err := milenage.GenerateAKAParameters(opc, k, rand, sqn, amf)
 	if err != nil {
 		return err
 	}
+	// Suppress unused variable warnings
+	_ = ik
+	_ = ck
+	_ = xres
 
 	// AUTN = (SQN xor AK) || AMF || MAC-A
 	// MAC-A is the last 8 bytes of AUTN
@@ -20,11 +24,19 @@ func MilenageF1(opc, k, rand, sqn, amf []byte, macA, macS []byte) error {
 
 	// For MAC-S, use resync AMF (0000)
 	if macS != nil {
-		resyncAMFBytes, _ := hex.DecodeString("0000")
-		_, _, _, autnS, err := milenage.GenerateAKAParameters(opc, k, rand, sqn, resyncAMFBytes)
+		resyncAMFBytes, err := hex.DecodeString("0000")
 		if err != nil {
 			return err
 		}
+		ikS, ckS, xresS, autnS, err := milenage.GenerateAKAParameters(opc, k, rand, sqn, resyncAMFBytes)
+		if err != nil {
+			return err
+		}
+		// Suppress unused variable warnings
+		_ = ikS
+		_ = ckS
+		_ = xresS
+
 		if len(autnS) >= 8 {
 			copy(macS, autnS[len(autnS)-8:])
 		}
@@ -41,10 +53,15 @@ func MilenageF2345(opc, k, rand []byte, res, ck, ik, ak, akstar []byte) error {
 	}
 
 	// Use GenerateKeysWithAUTN to get AK
-	_, akOut, _, _, _, err := milenage.GenerateKeysWithAUTN(opc, k, rand, autn)
+	sqnhe, akOut, ikOut2, ckOut2, resOut2, err := milenage.GenerateKeysWithAUTN(opc, k, rand, autn)
 	if err != nil {
 		return err
 	}
+	// Suppress unused variable warnings
+	_ = sqnhe
+	_ = ikOut2
+	_ = ckOut2
+	_ = resOut2
 
 	// Copy results to output parameters
 	if res != nil {
