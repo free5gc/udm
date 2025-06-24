@@ -8,6 +8,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (s *Server) getHttpCallBackRoutes() []Route {
@@ -39,6 +40,7 @@ func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.CallbackLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -52,7 +54,8 @@ func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.CallbackLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 // EE service
@@ -31,6 +32,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 					Status: http.StatusInternalServerError,
 					Cause:  "UNSPECIFIED_NF_FAILURE",
 				}
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
@@ -45,6 +47,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 				Status: http.StatusNotFound,
 				Cause:  "USER_NOT_FOUND",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 		}
 	// external groupID represents a group of UEs
@@ -55,6 +58,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 				Status: http.StatusInternalServerError,
 				Cause:  "UNSPECIFIED_NF_FAILURE",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -79,6 +83,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 				Status: http.StatusInternalServerError,
 				Cause:  "UNSPECIFIED_NF_FAILURE",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -103,6 +108,7 @@ func (p *Processor) CreateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 				},
 			},
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
@@ -165,6 +171,7 @@ func (p *Processor) UpdateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 					Status: http.StatusNotFound,
 					Cause:  "SUBSCRIPTION_NOT_FOUND",
 				}
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 				c.JSON(int(problemDetails.Status), problemDetails)
 			}
 		} else {
@@ -172,6 +179,7 @@ func (p *Processor) UpdateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 				Status: http.StatusNotFound,
 				Cause:  "SUBSCRIPTION_NOT_FOUND",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 		}
 	case strings.HasPrefix(ueIdentity, "extgroupid-"):
@@ -211,6 +219,7 @@ func (p *Processor) UpdateEeSubscriptionProcedure(c *gin.Context, ueIdentity str
 				},
 			},
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }

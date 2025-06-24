@@ -21,6 +21,7 @@ import (
 	"github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
+	"github.com/free5gc/util/metrics"
 )
 
 type ServerUdm interface {
@@ -139,6 +140,7 @@ func (s *Server) shutdownHttpServer() {
 
 func newRouter(s *Server) *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
+	router.Use(metrics.InboundMetrics())
 
 	// EE
 	udmEERoutes := s.getEventExposureRoutes()

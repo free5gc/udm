@@ -8,6 +8,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (s *Server) getEventExposureRoutes() []Route {
@@ -55,6 +56,7 @@ func (s *Server) HandleCreateEeSubscription(c *gin.Context) {
 			Detail: err.Error(),
 			Cause:  "SYSTEM_FAILURE",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -68,7 +70,8 @@ func (s *Server) HandleCreateEeSubscription(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.EeLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -98,6 +101,7 @@ func (s *Server) HandleUpdateEeSubscription(c *gin.Context) {
 			Detail: err.Error(),
 			Cause:  "SYSTEM_FAILURE",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -111,7 +115,8 @@ func (s *Server) HandleUpdateEeSubscription(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.EeLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
