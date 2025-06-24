@@ -8,6 +8,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (s *Server) getUEAuthenticationRoutes() []Route {
@@ -33,6 +34,7 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.UeauLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -46,7 +48,8 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.UeauLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -70,6 +73,7 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.UeauLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -83,7 +87,8 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.UeauLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
