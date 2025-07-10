@@ -28,7 +28,7 @@ func (s *Server) getSubscriberDataManagementRoutes() []Route {
 func (s *Server) HandleGetAmData(c *gin.Context) {
 	query := url.Values{}
 	query.Set("plmn-id", c.Query("plmn-id"))
-	query.Set("supported-features", c.Query("plmn-id"))
+	query.Set("supported-features", c.Query("supported-features"))
 
 	logger.SdmLog.Infof("Handle GetAmData")
 
