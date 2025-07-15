@@ -6,8 +6,6 @@ package factory
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"sync"
 
 	"github.com/asaskevich/govalidator"
@@ -21,7 +19,7 @@ const (
 	UdmDefaultCertPemPath         = "./cert/udm.pem"
 	UdmDefaultPrivateKeyPath      = "./cert/udm.key"
 	UdmDefaultConfigPath          = "./config/udmcfg.yaml"
-	UdmSbiDefaultIPv4             = "127.0.0.3"
+	UdmSbiDefaultIP               = "127.0.0.3"
 	UdmSbiDefaultPort             = 8000
 	UdmSbiDefaultScheme           = "https"
 	UdmDefaultNrfUri              = "https://127.0.0.10:8000"
@@ -61,12 +59,12 @@ func (c *Config) Validate() (bool, error) {
 }
 
 type Info struct {
-	Version     string `yaml:"version,omitempty" valid:"required,in(1.0.3)"`
+	Version     string `yaml:"version,omitempty" valid:"required,in(1.0.4)"`
 	Description string `yaml:"description,omitempty" valid:"type(string)"`
 }
 
 type Configuration struct {
-	Sbi             *Sbi               `yaml:"sbi,omitempty"  valid:"required"`
+	Sbi             *Sbi               `yaml:"sbi,omitempty" valid:"required"`
 	ServiceNameList []string           `yaml:"serviceNameList,omitempty"  valid:"required"`
 	NrfUri          string             `yaml:"nrfUri,omitempty"  valid:"required, url"`
 	NrfCertPem      string             `yaml:"nrfCertPem,omitempty" valid:"optional"`
@@ -80,9 +78,7 @@ type Logger struct {
 
 func (c *Configuration) validate() (bool, error) {
 	if sbi := c.Sbi; sbi != nil {
-		if result, err := sbi.validate(); err != nil {
-			return result, err
-		}
+		return sbi.validate()
 	}
 
 	if c.ServiceNameList != nil {
@@ -143,18 +139,46 @@ func (c *Config) GetCertKeyPath() string {
 }
 
 type Sbi struct {
-	Scheme       string `yaml:"scheme" valid:"scheme"`
-	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,required"` // IP that is registered at NRF.
-	// IPv6Addr string `yaml:"ipv6Addr,omitempty"`
-	BindingIPv4 string `yaml:"bindingIPv4,omitempty" valid:"host,required"` // IP used to run the server in the node.
-	Port        int    `yaml:"port,omitempty" valid:"port,required"`
-	Tls         *Tls   `yaml:"tls,omitempty" valid:"optional"`
+	Scheme       string `yaml:"scheme" valid:"in(http|https),optional"`
+	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,optional"` // IP that is registered at NRF.
+	RegisterIP   string `yaml:"registerIP,omitempty" valid:"host,optional"`   // IP that is registered at NRF.
+	BindingIPv4  string `yaml:"bindingIPv4,omitempty" valid:"host,optional"`  // IP used to run the server in the node.
+	BindingIP    string `yaml:"bindingIP,omitempty" valid:"host,optional"`    // IP used to run the server in the node.
+	Port         int    `yaml:"port,omitempty" valid:"port,optional"`
+	Tls          *Tls   `yaml:"tls,omitempty" valid:"optional"`
 }
 
 func (s *Sbi) validate() (bool, error) {
-	govalidator.TagMap["scheme"] = govalidator.Validator(func(str string) bool {
-		return str == "https" || str == "http"
-	})
+	// Set a default Schme if the Configuration does not provides one
+	if s.Scheme == "" {
+		s.Scheme = UdmSbiDefaultScheme
+	}
+
+	// Set BindingIP/RegisterIP from deprecated BindingIPv4/RegisterIPv4
+	if s.BindingIP == "" && s.BindingIPv4 != "" {
+		s.BindingIP = s.BindingIPv4
+	}
+	if s.RegisterIP == "" && s.RegisterIPv4 != "" {
+		s.RegisterIP = s.RegisterIPv4
+	}
+
+	// Set a default BindingIP/RegisterIP if the Configuration does not provides them
+	if s.BindingIP == "" && s.RegisterIP == "" {
+		s.BindingIP = UdmSbiDefaultIP
+		s.RegisterIP = UdmSbiDefaultIP
+	} else {
+		// Complete any missing BindingIP/RegisterIP from RegisterIP/BindingIP
+		if s.BindingIP == "" {
+			s.BindingIP = s.RegisterIP
+		} else if s.RegisterIP == "" {
+			s.RegisterIP = s.BindingIP
+		}
+	}
+
+	// Set a default Port if the Configuration does not provides one
+	if s.Port == 0 {
+		s.Port = UdmSbiDefaultPort
+	}
 
 	if tls := s.Tls; tls != nil {
 		if result, err := tls.validate(); err != nil {
@@ -273,29 +297,6 @@ func (c *Config) GetLogReportCaller() bool {
 		return false
 	}
 	return c.Logger.ReportCaller
-}
-
-func (c *Config) GetSbiBindingAddr() string {
-	c.RLock()
-	defer c.RUnlock()
-	return c.GetSbiBindingIP() + ":" + strconv.Itoa(c.GetSbiPort())
-}
-
-func (c *Config) GetSbiBindingIP() string {
-	c.RLock()
-	defer c.RUnlock()
-	bindIP := "0.0.0.0"
-	if c.Configuration == nil || c.Configuration.Sbi == nil {
-		return bindIP
-	}
-	if c.Configuration.Sbi.BindingIPv4 != "" {
-		if bindIP = os.Getenv(c.Configuration.Sbi.BindingIPv4); bindIP != "" {
-			logger.CfgLog.Infof("Parsing ServerIPv4 [%s] from ENV Variable", bindIP)
-		} else {
-			bindIP = c.Configuration.Sbi.BindingIPv4
-		}
-	}
-	return bindIP
 }
 
 func (c *Config) GetSbiPort() int {

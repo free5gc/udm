@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/netip"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -39,15 +40,17 @@ type Server struct {
 }
 
 func NewServer(udm ServerUdm, tlsKeyLogPath string) (*Server, error) {
+	var err error
 	s := &Server{
 		ServerUdm: udm,
 		router:    logger_util.NewGinWithLogrus(logger.GinLog),
 	}
 
-	cfg := s.Config()
-	bindAddr := cfg.GetSbiBindingAddr()
+	port := udm.Context().SBIPort
+	addr := udm.Context().BindingIP
+	bindAddr := netip.AddrPortFrom(addr, uint16(port)).String()
+
 	logger.SBILog.Infof("Binding addr: [%s]", bindAddr)
-	var err error
 	if s.httpServer, err = httpwrapper.NewHttp2Server(bindAddr, tlsKeyLogPath, s.router); err != nil {
 		logger.InitLog.Errorf("Initialize HTTP server failed: %v", err)
 		return nil, err
