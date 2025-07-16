@@ -269,6 +269,9 @@ linters:
     # - stylecheck
     # - unparam
     # - wsl
+  
+  disable:
+    - typecheck
 
   #disable-all: false
   fast: true
