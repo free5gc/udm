@@ -89,7 +89,7 @@ func (c *Configuration) validate() (bool, error) {
 		var errs govalidator.Errors
 		for _, v := range c.ServiceNameList {
 			if v != "nudm-sdm" && v != "nudm-uecm" && v != "nudm-ueau" && v != "nudm-ee" && v != "nudm-pp" {
-				err := fmt.Errorf("Invalid ServiceNameList: [%s],"+
+				err := fmt.Errorf("invalid ServiceNameList: [%s],"+
 					" value should be nudm-sdm or nudm-uecm or nudm-ueau or nudm-ee or nudm-pp", v)
 				errs = append(errs, err)
 			}
@@ -104,19 +104,19 @@ func (c *Configuration) validate() (bool, error) {
 		for _, s := range c.SuciProfiles {
 			protectScheme := s.ProtectionScheme
 			if result := govalidator.StringMatches(protectScheme, "^[A-F0-9]{1}$"); !result {
-				err := fmt.Errorf("Invalid ProtectionScheme: %s, should be a single hexadecimal digit", protectScheme)
+				err := fmt.Errorf("invalid ProtectionScheme: %s, should be a single hexadecimal digit", protectScheme)
 				errs = append(errs, err)
 			}
 
 			privateKey := s.PrivateKey
 			if result := govalidator.StringMatches(privateKey, "^[A-Fa-f0-9]{64}$"); !result {
-				err := fmt.Errorf("Invalid PrivateKey: %s, should be 64 hexadecimal digits", privateKey)
+				err := fmt.Errorf("invalid PrivateKey: %s, should be 64 hexadecimal digits", privateKey)
 				errs = append(errs, err)
 			}
 
 			publicKey := s.PublicKey
 			if result := govalidator.StringMatches(publicKey, "^[A-Fa-f0-9]{64,130}$"); !result {
-				err := fmt.Errorf("Invalid PublicKey: %s, should be 64(profile A), 66(profile B, compressed),"+
+				err := fmt.Errorf("invalid PublicKey: %s, should be 64(profile A), 66(profile B, compressed),"+
 					"or 130(profile B, uncompressed) hexadecimal digits", publicKey)
 				errs = append(errs, err)
 			}
@@ -185,7 +185,7 @@ func appendInvalid(err error) error {
 
 	es := err.(govalidator.Errors).Errors()
 	for _, e := range es {
-		errs = append(errs, fmt.Errorf("Invalid %w", e))
+		errs = append(errs, fmt.Errorf("invalid %w", e))
 	}
 
 	return error(errs)

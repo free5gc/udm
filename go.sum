@@ -15,10 +15,10 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
-github.com/free5gc/openapi v1.1.0 h1:bOTp6vKC2MxupEXD76qeUL1MppV/SmXnka09JQJADZ0=
-github.com/free5gc/openapi v1.1.0/go.mod h1:Q2vSmc1xpSE9Dy8rbNSWQwv7cFLHbZvKhq528vj6Wbg=
-github.com/free5gc/util v1.0.7 h1:HGlLR/QT4i6o3i4bL5M3SQg6Bc7WdN3cN9VdcnEeQu8=
-github.com/free5gc/util v1.0.7/go.mod h1:a14oUpiGqSkyngEhDvHshxdwKWFP65iVAahkzsISIQE=
+github.com/free5gc/openapi v1.2.0 h1:AOPqkkiWK7XJPdzWVohWsoGkLBt8OrVkQkU7xzvzbek=
+github.com/free5gc/openapi v1.2.0/go.mod h1:pGVJ27QZk4UGG4/1IioBtxwIKNdqOk7L9qcrXvdTjYU=
+github.com/free5gc/util v1.1.0 h1:W0gz5+9X/CdVv7VHAC2eU5mGsO8jsztvX3T+z3xXHhI=
+github.com/free5gc/util v1.1.0/go.mod h1:33k3sojN/Vg+BbVmjfN3V8/5G/sboXS6OEOWWk7blqg=
 github.com/gabriel-vasile/mimetype v1.4.3 h1:in2uUcidCuFcDKtdcBxlR0rJ1+fsokWf+uqxgUFjbI0=
 github.com/gabriel-vasile/mimetype v1.4.3/go.mod h1:d8uq/6HKRL6CGdk+aubisF/M5GcPfT7nKyLpA0lbSSk=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
