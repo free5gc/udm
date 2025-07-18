@@ -29,7 +29,7 @@ func (s *nudrService) CreateUDMClientToUDR(id string) (*Nudr_DataRepository.APIC
 	uri := s.getUdrURI(id)
 	if uri == "" {
 		logger.ProcLog.Errorf("ID[%s] does not match any UDR", id)
-		return nil, fmt.Errorf("No UDR URI found")
+		return nil, fmt.Errorf("no UDR URI found")
 	}
 	s.nfDRMu.RLock()
 	client, ok := s.nfDRClients[uri]

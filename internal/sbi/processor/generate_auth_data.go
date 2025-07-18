@@ -17,8 +17,8 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/suci"
-	"github.com/free5gc/util/milenage"
 	"github.com/free5gc/util/ueauth"
 )
 
@@ -46,7 +46,7 @@ func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte) {
 
 	logger.UeauLog.Tracef("aucSQN: ConcSQNms=[%x]", ConcSQNms)
 
-	err = milenage.F2345(opc, k, rand, nil, nil, nil, nil, AK)
+	err = util.MilenageF2345(opc, k, rand, nil, nil, nil, nil, AK)
 	if err != nil {
 		logger.UeauLog.Errorln("aucSQN milenage F2345 err:", err)
 	}
@@ -57,7 +57,7 @@ func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte) {
 
 	logger.UeauLog.Tracef("aucSQN: opc=[%x], k=[%x], rand=[%x], AMF=[%x], SQNms=[%x]\n", opc, k, rand, AMF, SQNms)
 	// The AMF used to calculate MAC-S assumes a dummy value of all zeros
-	err = milenage.F1(opc, k, rand, SQNms, AMF, nil, macS)
+	err = util.MilenageF1(opc, k, rand, SQNms, AMF, nil, macS)
 	if err != nil {
 		logger.UeauLog.Errorln("aucSQN milenage F1 err:", err)
 	}
@@ -411,14 +411,14 @@ func (p *Processor) GenerateAuthDataProcedure(
 	AK, AKstar := make([]byte, 6), make([]byte, 6)
 
 	// Generate macA, macS
-	err = milenage.F1(opc, k, RAND, sqn, AMF, macA, macS)
+	err = util.MilenageF1(opc, k, RAND, sqn, AMF, macA, macS)
 	if err != nil {
 		logger.UeauLog.Errorln("milenage F1 err:", err)
 	}
 
 	// Generate RES, CK, IK, AK, AKstar
 	// RES == XRES (expected RES) for server
-	err = milenage.F2345(opc, k, RAND, RES, CK, IK, AK, AKstar)
+	err = util.MilenageF2345(opc, k, RAND, RES, CK, IK, AK, AKstar)
 	if err != nil {
 		logger.UeauLog.Errorln("milenage F2345 err:", err)
 	}
