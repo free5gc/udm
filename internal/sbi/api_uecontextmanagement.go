@@ -9,6 +9,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (s *Server) getUEContextManagementRoutes() []Route {
@@ -264,6 +265,7 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.UecmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -277,7 +279,8 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.UecmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -300,6 +303,7 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.UecmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -313,7 +317,8 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.UecmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -337,6 +342,7 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.UecmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -350,7 +356,8 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.UecmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -374,6 +381,7 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.UecmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -387,7 +395,8 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.UecmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -451,6 +460,7 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.UecmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -464,7 +474,8 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.UecmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 

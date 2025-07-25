@@ -8,6 +8,7 @@ import (
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	sbi_metrics "github.com/free5gc/util/metrics/sbi"
 )
 
 type nudrService struct {
@@ -40,6 +41,7 @@ func (s *nudrService) CreateUDMClientToUDR(id string) (*Nudr_DataRepository.APIC
 
 	cfg := Nudr_DataRepository.NewConfiguration()
 	cfg.SetBasePath(uri)
+	cfg.SetMetrics(sbi_metrics.SbiMetricHook)
 	client = Nudr_DataRepository.NewAPIClient(cfg)
 
 	s.nfDRMu.RUnlock()
