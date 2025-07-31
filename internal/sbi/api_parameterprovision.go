@@ -8,6 +8,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (s *Server) getParameterProvisionRoutes() []Route {
@@ -118,6 +119,7 @@ func (s *Server) HandleUpdate(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.PpLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -132,6 +134,7 @@ func (s *Server) HandleUpdate(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.PpLog.Errorln(problemDetail)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
@@ -142,6 +145,7 @@ func (s *Server) HandleUpdate(c *gin.Context) {
 			Status: http.StatusBadRequest,
 			Cause:  "NO_GPSI",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}

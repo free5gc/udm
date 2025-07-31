@@ -19,6 +19,7 @@ import (
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/suci"
+	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/ueauth"
 )
 
@@ -80,6 +81,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -90,6 +92,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 	client, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -99,11 +102,13 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		logger.UeauLog.Errorln("ConfirmAuth err:", err.Error())
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -119,6 +124,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -135,6 +141,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("suciToSupi error: ", err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -144,6 +151,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 	client, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -155,6 +163,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		logger.ProcLog.Errorf("Error on QueryAuthSubsData: %+v", err)
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			switch apiError.ErrorStatus {
 			case http.StatusNotFound:
@@ -165,6 +174,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -193,6 +203,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			}
 
 			logger.UeauLog.Errorln("kStr length is ", len(kStr))
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -204,6 +215,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("Nil PermanentKey")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -229,6 +241,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			Status: http.StatusForbidden,
 			Cause:  authenticationRejected,
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -244,6 +257,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("err:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -260,6 +274,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("err:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -275,6 +290,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("err:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -294,6 +310,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			}
 
 			logger.UeauLog.Errorln("err:", deCodeErr)
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -307,6 +324,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			}
 
 			logger.UeauLog.Errorln("err:", deCodeErr)
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -322,6 +340,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 				}
 
 				logger.UeauLog.Errorln("err:", err)
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
@@ -348,6 +367,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 				Status: http.StatusForbidden,
 				Cause:  "modification is rejected",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -364,6 +384,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("err:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -400,6 +421,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("update sqn error:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
