@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net"
+	"net/netip"
 	"os"
 	"strconv"
 	"strings"
@@ -47,8 +49,8 @@ type UDMContext struct {
 	NfId                           string
 	GroupId                        string
 	SBIPort                        int
-	RegisterIPv4                   string // IP register to NRF
-	BindingIPv4                    string
+	RegisterIP                     netip.Addr // IP register to NRF
+	BindingIP                      netip.Addr
 	UriScheme                      models.UriScheme
 	NfService                      map[models.ServiceName]models.NrfNfManagementNfService
 	NFDiscoveryClient              *Nnrf_NFDiscovery.APIClient
@@ -103,34 +105,25 @@ type UdmNFContext struct {
 func InitUdmContext(context *UDMContext) {
 	config := factory.UdmConfig
 	logger.UtilLog.Info("udmconfig Info: Version[", config.Info.Version, "] Description[", config.Info.Description, "]")
+
 	configuration := config.Configuration
 	udmContext.NfId = uuid.New().String()
 	sbi := configuration.Sbi
-	udmContext.UriScheme = ""
-	udmContext.SBIPort = factory.UdmSbiDefaultPort
-	udmContext.RegisterIPv4 = factory.UdmSbiDefaultIPv4
-	if sbi != nil {
-		if sbi.Scheme != "" {
-			udmContext.UriScheme = models.UriScheme(sbi.Scheme)
-		}
-		if sbi.RegisterIPv4 != "" {
-			udmContext.RegisterIPv4 = sbi.RegisterIPv4
-		}
-		if sbi.Port != 0 {
-			udmContext.SBIPort = sbi.Port
-		}
 
-		udmContext.BindingIPv4 = os.Getenv(sbi.BindingIPv4)
-		if udmContext.BindingIPv4 != "" {
-			logger.UtilLog.Info("Parsing ServerIPv4 address from ENV Variable.")
-		} else {
-			udmContext.BindingIPv4 = sbi.BindingIPv4
-			if udmContext.BindingIPv4 == "" {
-				logger.UtilLog.Warn("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
-				udmContext.BindingIPv4 = "0.0.0.0"
-			}
-		}
+	udmContext.SBIPort = sbi.Port
+	udmContext.UriScheme = models.UriScheme(sbi.Scheme)
+
+	if bindingIP := os.Getenv(sbi.BindingIP); bindingIP != "" {
+		logger.UtilLog.Info("Parsing BindingIP address from ENV Variable.")
+		sbi.BindingIP = bindingIP
 	}
+	if registerIP := os.Getenv(sbi.RegisterIP); registerIP != "" {
+		logger.UtilLog.Info("Parsing RegisterIP address from ENV Variable.")
+		sbi.RegisterIP = registerIP
+	}
+	udmContext.BindingIP = resolveIP(sbi.BindingIP)
+	udmContext.RegisterIP = resolveIP(sbi.RegisterIP)
+
 	udmContext.NrfUri = configuration.NrfUri
 	context.NrfCertPem = configuration.NrfCertPem
 	servingNameList := configuration.ServiceNameList
@@ -400,12 +393,12 @@ func (context *UDMContext) GetAmfNon3gppRegContext(supi string) *models.AmfNon3G
 func (ue *UdmUeContext) GetLocationURI(types int) string {
 	switch types {
 	case LocationUriAmf3GppAccessRegistration:
-		return GetSelf().GetIPv4Uri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-3gpp-access"
+		return GetSelf().GetIPUri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-3gpp-access"
 	case LocationUriAmfNon3GppAccessRegistration:
-		return GetSelf().GetIPv4Uri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-non-3gpp-access"
+		return GetSelf().GetIPUri() + factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/amf-non-3gpp-access"
 	case LocationUriSmfRegistration:
 
-		return GetSelf().GetIPv4Uri() +
+		return GetSelf().GetIPUri() +
 			factory.UdmUecmResUriPrefix + "/" + ue.Supi + "/registrations/smf-registrations/" + ue.PduSessionID
 	}
 	return ""
@@ -414,9 +407,9 @@ func (ue *UdmUeContext) GetLocationURI(types int) string {
 func (ue *UdmUeContext) GetLocationURI2(types int, supi string) string {
 	switch types {
 	case LocationUriSharedDataSubscription:
-		// return GetSelf().GetIPv4Uri() + UdmSdmResUriPrefix +"/shared-data-subscriptions/" + nf.SubscriptionID
+		// return GetSelf().GetIPUri() + UdmSdmResUriPrefix +"/shared-data-subscriptions/" + nf.SubscriptionID
 	case LocationUriSdmSubscription:
-		return GetSelf().GetIPv4Uri() + factory.UdmSdmResUriPrefix + "/" + supi + "/sdm-subscriptions/"
+		return GetSelf().GetIPUri() + factory.UdmSdmResUriPrefix + "/" + supi + "/sdm-subscriptions/"
 	}
 	return ""
 }
@@ -455,13 +448,49 @@ func (ue *UdmUeContext) SameAsStoredGUAMINon3gpp(inGuami models.Guami) bool {
 	return false
 }
 
-func (context *UDMContext) GetIPv4Uri() string {
-	return fmt.Sprintf("%s://%s:%d", context.UriScheme, context.RegisterIPv4, context.SBIPort)
+func (context *UDMContext) GetIPUri() string {
+	addr := context.RegisterIP
+	port := context.SBIPort
+
+	return fmt.Sprintf("%s://%s", context.UriScheme, netip.AddrPortFrom(addr, uint16(port)).String())
+}
+
+func resolveIP(ip string) netip.Addr {
+	resolvedIPs, err := net.DefaultResolver.LookupNetIP(context.Background(), "ip", ip)
+	if err != nil {
+		logger.InitLog.Errorf("Lookup failed with %s: %+v", ip, err)
+	}
+	resolvedIP := resolvedIPs[0].Unmap()
+	if resolvedIP := resolvedIP.String(); resolvedIP != ip {
+		logger.UtilLog.Infof("Lookup revolved %s into %s", ip, resolvedIP)
+	}
+	return resolvedIP
 }
 
 // GetSDMUri ... get subscriber data management service uri
 func (context *UDMContext) GetSDMUri() string {
-	return context.GetIPv4Uri() + factory.UdmSdmResUriPrefix
+	return context.GetIPUri() + factory.UdmSdmResUriPrefix
+}
+
+func GetIpEndPoint(context *UDMContext) []models.IpEndPoint {
+	if context.RegisterIP.Is6() {
+		return []models.IpEndPoint{
+			{
+				Ipv6Address: context.RegisterIP.String(),
+				Transport:   models.NrfNfManagementTransportProtocol_TCP,
+				Port:        int32(context.SBIPort),
+			},
+		}
+	} else if context.RegisterIP.Is4() {
+		return []models.IpEndPoint{
+			{
+				Ipv4Address: context.RegisterIP.String(),
+				Transport:   models.NrfNfManagementTransportProtocol_TCP,
+				Port:        int32(context.SBIPort),
+			},
+		}
+	}
+	return nil
 }
 
 func (context *UDMContext) InitNFService(serviceName []string, version string) {
@@ -480,14 +509,8 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 			},
 			Scheme:          context.UriScheme,
 			NfServiceStatus: models.NfServiceStatus_REGISTERED,
-			ApiPrefix:       context.GetIPv4Uri(),
-			IpEndPoints: []models.IpEndPoint{
-				{
-					Ipv4Address: context.RegisterIPv4,
-					Transport:   models.NrfNfManagementTransportProtocol_TCP,
-					Port:        int32(context.SBIPort),
-				},
-			},
+			ApiPrefix:       context.GetIPUri(),
+			IpEndPoints:     GetIpEndPoint(context),
 		}
 	}
 }
