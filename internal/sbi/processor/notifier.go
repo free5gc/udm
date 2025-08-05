@@ -8,6 +8,7 @@ import (
 	"github.com/free5gc/openapi/udm/SubscriberDataManagement"
 	"github.com/free5gc/openapi/udm/UEContextManagement"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
@@ -16,6 +17,7 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NrfNfManagementNfType_UDM)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -46,7 +48,7 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 			}
 		}
 	}
-
+	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 	c.JSON(int(problemDetails.Status), problemDetails)
 }
 
