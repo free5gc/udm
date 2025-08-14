@@ -7,6 +7,7 @@ import (
 	"runtime/debug"
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 
 	"github.com/free5gc/openapi"
@@ -18,6 +19,8 @@ import (
 	"github.com/free5gc/udm/internal/sbi/processor"
 	"github.com/free5gc/udm/pkg/app"
 	"github.com/free5gc/udm/pkg/factory"
+	"github.com/free5gc/util/metrics"
+	"github.com/free5gc/util/metrics/utils"
 )
 
 var _ app.App = &UdmApp{}
@@ -26,11 +29,12 @@ type UdmApp struct {
 	udmCtx *udm_context.UDMContext
 	cfg    *factory.Config
 
-	ctx    context.Context
-	cancel context.CancelFunc
-	wg     sync.WaitGroup
+	ctx           context.Context
+	cancel        context.CancelFunc
+	wg            sync.WaitGroup
+	metricsServer *metrics.Server
+	sbiServer     *sbi.Server
 
-	sbiServer *sbi.Server
 	consumer  *consumer.Consumer
 	processor *processor.Processor
 }
@@ -64,7 +68,35 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Ud
 		return nil, err
 	}
 
+	features := map[utils.MetricTypeEnabled]bool{utils.SBI: true}
+	customMetrics := make(map[utils.MetricTypeEnabled][]prometheus.Collector)
+	if cfg.AreMetricsEnabled() {
+		if udm.metricsServer, err = metrics.NewServer(
+			getInitMetrics(cfg, features, customMetrics), tlsKeyLogPath, logger.InitLog); err != nil {
+			return nil, err
+		}
+	}
+
 	return udm, nil
+}
+
+func getInitMetrics(
+	cfg *factory.Config,
+	features map[utils.MetricTypeEnabled]bool,
+	customMetrics map[utils.MetricTypeEnabled][]prometheus.Collector,
+) metrics.InitMetrics {
+	metricsInfo := metrics.Metrics{
+		BindingIPv4: cfg.GetMetricsBindingAddr(),
+		Scheme:      cfg.GetMetricsScheme(),
+		Namespace:   cfg.GetMetricsNamespace(),
+		Port:        cfg.GetMetricsPort(),
+		Tls: metrics.Tls{
+			Key: cfg.GetMetricsCertKeyPath(),
+			Pem: cfg.GetMetricsCertPemPath(),
+		},
+	}
+
+	return metrics.NewInitMetrics(metricsInfo, "udm", features, customMetrics)
 }
 
 func (a *UdmApp) SetLogEnable(enable bool) {
@@ -118,6 +150,12 @@ func (a *UdmApp) Start() {
 		logger.MainLog.Fatalf("Run SBI server failed: %+v", err)
 	}
 
+	if a.cfg.AreMetricsEnabled() && a.metricsServer != nil {
+		go func() {
+			a.metricsServer.Run(&a.wg)
+		}()
+	}
+
 	a.WaitRoutineStopped()
 }
 
@@ -137,6 +175,10 @@ func (a *UdmApp) listenShutdownEvent() {
 func (a *UdmApp) CallServerStop() {
 	if a.sbiServer != nil {
 		a.sbiServer.Stop()
+	}
+	if a.metricsServer != nil {
+		a.metricsServer.Stop()
+		logger.MainLog.Infof("UDM Metrics Server terminated")
 	}
 }
 

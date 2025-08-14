@@ -5,6 +5,7 @@ import (
 
 	Nudm_SubscriberDataManagement "github.com/free5gc/openapi/udm/SubscriberDataManagement"
 	Nudm_UEContextManagement "github.com/free5gc/openapi/udm/UEContextManagement"
+	sbi_metrics "github.com/free5gc/util/metrics/sbi"
 )
 
 type nudmService struct {
@@ -30,6 +31,7 @@ func (s *nudmService) GetSDMClient(uri string) *Nudm_SubscriberDataManagement.AP
 
 	configuration := Nudm_SubscriberDataManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
+	configuration.SetMetrics(sbi_metrics.SbiMetricHook)
 	client = Nudm_SubscriberDataManagement.NewAPIClient(configuration)
 
 	s.nfSDMMu.RUnlock()
@@ -52,6 +54,7 @@ func (s *nudmService) GetUECMClient(uri string) *Nudm_UEContextManagement.APICli
 
 	configuration := Nudm_UEContextManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
+	configuration.SetMetrics(sbi_metrics.SbiMetricHook)
 	client = Nudm_UEContextManagement.NewAPIClient(configuration)
 
 	s.nfUECMMu.RUnlock()

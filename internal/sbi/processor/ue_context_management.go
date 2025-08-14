@@ -11,12 +11,14 @@ import (
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 // ue_context_managemanet_service
 func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, supportedFeatures string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -27,6 +29,7 @@ func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, suppo
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -36,10 +39,12 @@ func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, suppo
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -52,11 +57,13 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContext
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 	}
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -65,10 +72,12 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContext
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -82,6 +91,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -99,6 +109,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -111,10 +122,12 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -160,6 +173,7 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -174,6 +188,7 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -187,10 +202,12 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -219,6 +236,7 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -230,6 +248,7 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 			Status: http.StatusNotFound,
 			Cause:  "CONTEXT_NOT_FOUND",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -245,6 +264,7 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 				Status: http.StatusForbidden,
 				Cause:  "INVALID_GUAMI",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -291,6 +311,7 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -304,11 +325,13 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			if amfContext3gppErr, ok2 := apiErr.Model().(Nudr_DataRepository.AmfContext3gppError); ok2 {
 				problem := amfContext3gppErr.ProblemDetails
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -327,6 +350,7 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -338,6 +362,7 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 			Status: http.StatusNotFound,
 			Cause:  "CONTEXT_NOT_FOUND",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -353,6 +378,7 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 				Status: http.StatusForbidden,
 				Cause:  "INVALID_GUAMI",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -399,6 +425,7 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -411,11 +438,13 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			if amfContextNon3gppErr, ok2 := apiErr.Model().(Nudr_DataRepository.AmfContextNon3gppError); ok2 {
 				problem := amfContextNon3gppErr.ProblemDetails
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -429,6 +458,7 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -436,6 +466,7 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -444,6 +475,7 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 	num, err := strconv.ParseInt(pduSessionID, 10, 32)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -456,10 +488,12 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -475,6 +509,7 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -498,6 +533,7 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -505,10 +541,12 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
