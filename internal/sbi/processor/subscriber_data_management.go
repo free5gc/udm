@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 
@@ -561,6 +562,18 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 }
 
 func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription) {
+	// check if the data valid
+	supiPattern := `^(imsi-[0-9]{15}|nai-.+)$`
+    matched, err := regexp.MatchString(supiPattern, sdmSubscription.NfInstanceId)
+	if err != nil || !matched {
+        problemDetail := models.ProblemDetails{
+            Status: http.StatusBadRequest,
+            Cause:  "INVALID_IE_VALUE",
+        }
+        c.JSON(int(problemDetail.Status), problemDetail)
+        return
+    }
+
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NrfNfManagementNfType_UDM)
 	if err != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
