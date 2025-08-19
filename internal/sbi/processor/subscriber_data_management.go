@@ -408,10 +408,10 @@ func (p *Processor) GetSmDataProcedure(
 		if errUnmarshal := json.Unmarshal([]byte(Snssai), &modelSnassai); errUnmarshal != nil {
 			logger.ProcLog.Errorf("modelSnassai Unmarshal Error: %+v", errUnmarshal)
 			problemDetail := models.ProblemDetails{
-                Status: http.StatusBadRequest,
-                Detail: "The 'single-nssai' parameter is malformed.",
-                Cause:  "INVALID_IE_VALUE",
-            }
+				Status: http.StatusBadRequest,
+				Detail: "The 'single-nssai' parameter is malformed.",
+				Cause:  "INVALID_IE_VALUE",
+			}
 			c.JSON(int(problemDetail.Status), problemDetail)
 			return
 		}
