@@ -564,7 +564,7 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription) {
 	// check if the data valid
 	supiPattern := `^(imsi-[0-9]{15}|nai-.+)$`
-    matched, err := regexp.MatchString(supiPattern, sdmSubscription.NfInstanceId)
+	matched, err := regexp.MatchString(supiPattern, sdmSubscription.NfInstanceId)
 	if err != nil || !matched {
         problemDetail := models.ProblemDetails{
             Status: http.StatusBadRequest,
