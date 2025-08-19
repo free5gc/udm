@@ -92,7 +92,10 @@ func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string)
 				return
 			}
 		}
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Cause:  "DATA_NOT_FOUND",
+		}
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
