@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/openapi/udm/SubscriberDataManagement"
@@ -13,7 +15,6 @@ import (
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
-	"github.com/gin-gonic/gin"
 )
 
 func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
