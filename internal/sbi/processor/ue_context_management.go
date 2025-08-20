@@ -215,21 +215,21 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 	// TS 23.502 4.2.2.2.2 14d: UDM initiate a Nudm_UECM_DeregistrationNotification to the old AMF
 	// corresponding to the same (e.g. 3GPP) access, if one exists
 	if oldAmfNon3GppAccessRegContext != nil {
-        deregistData := models.UdmUecmDeregistrationData{
-            DeregReason: models.UdmUecmDeregistrationReason_UE_INITIAL_REGISTRATION,
-            AccessType:  models.AccessType_NON_3_GPP_ACCESS,
-        }
-       
-        go func() {
-            logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmfNon3GppAccessRegContext.Guami)
-            pd := p.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
-                deregistData) // Deregistration Notify Triggered
-            if pd != nil {
-                logger.UecmLog.Errorf("RegisterAmfNon3gppAccess: send DeregNotify fail %v", pd)
-            }
-        }()
+		deregistData := models.UdmUecmDeregistrationData{
+			DeregReason: models.UdmUecmDeregistrationReason_UE_INITIAL_REGISTRATION,
+			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
+		}
 
-        c.JSON(http.StatusOK, registerRequest)
+		go func() {
+			logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmfNon3GppAccessRegContext.Guami)
+			pd := p.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
+				deregistData) // Deregistration Notify Triggered
+			if pd != nil {
+				logger.UecmLog.Errorf("RegisterAmfNon3gppAccess: send DeregNotify fail %v", pd)
+			}
+		}()
+
+		c.JSON(http.StatusOK, registerRequest)
 	} else {
 		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
 		c.Header("Location", udmUe.GetLocationURI(udm_context.LocationUriAmfNon3GppAccessRegistration))
