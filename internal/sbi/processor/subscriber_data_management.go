@@ -3,10 +3,11 @@ package processor
 import (
 	"encoding/json"
 	"net/http"
-	"regexp"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/google/uuid"
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
@@ -563,9 +564,7 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 
 func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription) {
 	// check if the data valid
-	supiPattern := `^(imsi-[0-9]{15}|nai-.+)$`
-	matched, err := regexp.MatchString(supiPattern, sdmSubscription.NfInstanceId)
-	if err != nil || !matched {
+	if _, err := uuid.Parse(sdmSubscription.NfInstanceId); err != nil {
 		problemDetail := models.ProblemDetails{
 			Status: http.StatusBadRequest,
 			Cause:  "INVALID_IE_VALUE",
