@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/google/uuid"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/openapi/udm/SubscriberDataManagement"
@@ -561,6 +563,16 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 }
 
 func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription) {
+	// check if the data valid
+	if _, err := uuid.Parse(sdmSubscription.NfInstanceId); err != nil {
+		problemDetail := models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "INVALID_IE_VALUE",
+		}
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NrfNfManagementNfType_UDM)
 	if err != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
