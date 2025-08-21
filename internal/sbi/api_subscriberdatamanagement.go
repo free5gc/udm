@@ -139,14 +139,12 @@ func (s *Server) HandleGetSharedData(c *gin.Context) {
 	sharedDataIds := c.QueryArray("shared-data-ids")
 	supportedFeatures := c.QueryArray("supported-features")
 
-	var sf string
+	supportedFeature := ""
 	if len(supportedFeatures) > 0 {
-		sf = supportedFeatures[0]
-	} else {
-		sf = ""
+		supportedFeature = supportedFeatures[0]
 	}
 
-	s.Processor().GetSharedDataProcedure(c, sharedDataIds, sf)
+	s.Processor().GetSharedDataProcedure(c, sharedDataIds, supportedFeature)
 }
 
 // SubscribeToSharedData - subscribe to notifications for shared data
