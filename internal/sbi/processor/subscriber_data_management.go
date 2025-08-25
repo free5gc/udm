@@ -91,6 +91,8 @@ func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
+			c.JSON(apiErr.ErrorStatus, apiErr.RawBody)
+			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
