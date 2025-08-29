@@ -412,6 +412,7 @@ func (p *Processor) GetSmDataProcedure(
 				Detail: "The 'single-nssai' parameter is malformed.",
 				Cause:  "INVALID_IE_VALUE",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 			c.JSON(int(problemDetail.Status), problemDetail)
 			return
 		}
