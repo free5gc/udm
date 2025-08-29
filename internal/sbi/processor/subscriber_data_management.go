@@ -404,12 +404,18 @@ func (p *Processor) GetSmDataProcedure(
 	}
 
 	var modelSnassai models.Snssai
-	if errUnmarshal := json.Unmarshal([]byte(Snssai), &modelSnassai); errUnmarshal != nil {
-		logger.ProcLog.Errorf("modelSnassai Unmarshal Error: %+v", errUnmarshal)
-		problemDetails := openapi.ProblemDetailsSystemFailure(errUnmarshal.Error())
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
+	if Snssai != "" {
+		if errUnmarshal := json.Unmarshal([]byte(Snssai), &modelSnassai); errUnmarshal != nil {
+			logger.ProcLog.Errorf("modelSnassai Unmarshal Error: %+v", errUnmarshal)
+			problemDetail := models.ProblemDetails{
+				Status: http.StatusBadRequest,
+				Detail: "The 'single-nssai' parameter is malformed.",
+				Cause:  "INVALID_IE_VALUE",
+			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
+			c.JSON(int(problemDetail.Status), problemDetail)
+			return
+		}
 	}
 
 	var querySmDataRequest Nudr_DataRepository.QuerySmDataRequest
