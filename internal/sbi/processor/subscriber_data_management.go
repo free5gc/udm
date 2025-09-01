@@ -84,14 +84,10 @@ func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string)
 	idTranslationResultResp, err := clientAPI.QueryIdentityDataBySUPIOrGPSIDocumentApi.GetIdentityData(
 		ctx, &getIdentityDataRequest)
 	if err != nil {
-		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
-			if getIdTransError, ok2 := apiErr.Model().(Nudr_DataRepository.GetIdentityDataError); ok2 {
-				problem := getIdTransError.ProblemDetails
-				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
-				c.JSON(int(problem.Status), problem)
-				return
-			}
-			c.JSON(apiErr.ErrorStatus, apiErr.RawBody)
+		apiError, ok := err.(openapi.GenericOpenAPIError)
+		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
+			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
