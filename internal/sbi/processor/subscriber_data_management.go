@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-
 	"github.com/google/uuid"
 
 	"github.com/free5gc/openapi"
