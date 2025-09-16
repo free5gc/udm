@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
@@ -567,6 +568,28 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 }
 
 func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription) {
+	if sdmSubscription.NfInstanceId == "" {
+		logger.SdmLog.Warnf("Missing mandatory parameter: nfInstanceId")
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "MANDATORY_IE_MISSING",
+		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.JSON(http.StatusBadRequest, problemDetails)
+		return
+	}
+
+	if _, err := uuid.Parse(sdmSubscription.NfInstanceId); err != nil {
+		logger.SdmLog.Warnf("Invalid nfInstanceId format: %s", sdmSubscription.NfInstanceId)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "INVALID_IE_VALUE",
+		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.JSON(http.StatusBadRequest, problemDetails)
+		return
+	}
+
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NrfNfManagementNfType_UDM)
 	if err != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
