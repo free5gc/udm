@@ -52,10 +52,30 @@ func (s *Server) getPlmnIDStruct(
 ) (plmnIDStruct *models.PlmnId, problemDetails *models.ProblemDetails) {
 	if queryParameters["plmn-id"] != nil {
 		plmnIDJson := queryParameters["plmn-id"][0]
+
+		if plmnIDJson == "" {
+			problemDetails = &models.ProblemDetails{
+				Title:  "Invalid Parameter",
+				Status: http.StatusBadRequest,
+				Cause:  "plmn-id parameter cannot be empty",
+			}
+			return nil, problemDetails
+		}
+
 		plmnIDStruct := &models.PlmnId{}
 		err := json.Unmarshal([]byte(plmnIDJson), plmnIDStruct)
 		if err != nil {
 			logger.SdmLog.Warnln("Unmarshal Error in targetPlmnListtruct: ", err)
+			problemDetails = &models.ProblemDetails{
+				Title:  "Invalid Parameter",
+				Status: http.StatusBadRequest,
+				Cause:  "Failed to parse plmn-id JSON",
+				InvalidParams: []models.InvalidParam{{
+					Param:  "plmn-id",
+					Reason: err.Error(),
+				}},
+			}
+			return nil, problemDetails
 		}
 		return plmnIDStruct, nil
 	} else {
