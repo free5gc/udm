@@ -35,13 +35,17 @@ func (s *Server) HandleGetAmData(c *gin.Context) {
 
 	supi := c.Params.ByName("supi")
 
-	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
+	plmnQuery := c.Request.URL.Query()
+	plmnIDStruct, problemDetails := s.getPlmnIDStruct(plmnQuery)
 	if problemDetails != nil {
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
+
+	var plmnID string
+	if plmnIDStruct != nil {
+		plmnID = plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	}
 	supportedFeatures := query.Get("supported-features")
 
 	s.Processor().GetAmDataProcedure(c, supi, plmnID, supportedFeatures)
@@ -50,7 +54,7 @@ func (s *Server) HandleGetAmData(c *gin.Context) {
 func (s *Server) getPlmnIDStruct(
 	queryParameters url.Values,
 ) (plmnIDStruct *models.PlmnId, problemDetails *models.ProblemDetails) {
-	if queryParameters["plmn-id"] != nil {
+	if len(queryParameters["plmn-id"]) > 0 {
 		plmnIDJson := queryParameters["plmn-id"][0]
 
 		if plmnIDJson == "" {
@@ -79,12 +83,7 @@ func (s *Server) getPlmnIDStruct(
 		}
 		return plmnIDStruct, nil
 	} else {
-		problemDetails := &models.ProblemDetails{
-			Title:  "Invalid Parameter",
-			Status: http.StatusBadRequest,
-			Cause:  "No get plmn-id",
-		}
-		return nil, problemDetails
+		return nil, nil
 	}
 }
 
@@ -107,13 +106,16 @@ func (s *Server) HandleGetSmfSelectData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetSmfSelectData")
 
 	supi := c.Params.ByName("supi")
-	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
+	plmnQuery := c.Request.URL.Query()
+	plmnIDStruct, problemDetails := s.getPlmnIDStruct(plmnQuery)
 	if problemDetails != nil {
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	var plmnID string
+	if plmnIDStruct != nil {
+		plmnID = plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	}
 	supportedFeatures := query.Get("supported-features")
 
 	s.Processor().GetSmfSelectDataProcedure(c, supi, plmnID, supportedFeatures)
@@ -139,13 +141,16 @@ func (s *Server) HandleGetSupi(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetSupiRequest")
 
 	supi := c.Params.ByName("supi")
-	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
+	plmnQuery := c.Request.URL.Query()
+	plmnIDStruct, problemDetails := s.getPlmnIDStruct(plmnQuery)
 	if problemDetails != nil {
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	var plmnID string
+	if plmnIDStruct != nil {
+		plmnID = plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	}
 	dataSetNames := strings.Split(query.Get("dataset-names"), ",")
 	supportedFeatures := query.Get("supported-features")
 
@@ -372,13 +377,17 @@ func (s *Server) HandleGetNssai(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetNssai")
 
 	supi := c.Params.ByName("supi")
-	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
+	plmnQuery := c.Request.URL.Query()
+	plmnIDStruct, problemDetails := s.getPlmnIDStruct(plmnQuery)
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	var plmnID string
+	if plmnIDStruct != nil {
+		plmnID = plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	}
 	supportedFeatures := query.Get("supported-features")
 
 	s.Processor().GetNssaiProcedure(c, supi, plmnID, supportedFeatures)
@@ -394,14 +403,18 @@ func (s *Server) HandleGetSmData(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle GetSmData")
 
+	plmnQuery := c.Request.URL.Query()
 	supi := c.Params.ByName("supi")
-	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
+	plmnIDStruct, problemDetails := s.getPlmnIDStruct(plmnQuery)
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
-	plmnID := plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	var plmnID string
+	if plmnIDStruct != nil {
+		plmnID = plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	}
 	Dnn := query.Get("dnn")
 	Snssai := query.Get("single-nssai")
 	supportedFeatures := query.Get("supported-features")
