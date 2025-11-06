@@ -56,39 +56,38 @@ func (s *Server) getPlmnIDStruct(
 	queryParameters url.Values,
 ) (plmnIDStruct *models.PlmnId, problemDetails *models.ProblemDetails) {
 	values, exists := queryParameters["plmn-id"]
-    if !exists {
+	if !exists {
 		// not exist like: http:{ip:port}/api/.../
-        return nil, nil
-    }
-    if len(values) == 0 || strings.TrimSpace(values[0]) == "" {
+		return nil, nil
+	}
+	if len(values) == 0 || strings.TrimSpace(values[0]) == "" {
 		// exist but it is empty like: http:{ip:port}/api/.../?plmn-id=
-        problemDetails = &models.ProblemDetails{
-            Title:  "Invalid Parameter",
-            Status: http.StatusBadRequest,
-            Cause:  "plmn-id parameter cannot be empty",
-        }
-        return nil, problemDetails
-    }
+		problemDetails = &models.ProblemDetails{
+			Title:  "Invalid Parameter",
+			Status: http.StatusBadRequest,
+			Cause:  "plmn-id parameter cannot be empty",
+		}
+		return nil, problemDetails
+	}
 
-    // exist and not empty link: http:{ip:port}/api/.../?plmn-id=xxx
-    plmnIDJson := values[0]
-    plmnIDStruct = &models.PlmnId{} 
-    err := json.Unmarshal([]byte(plmnIDJson), plmnIDStruct)
-    
-    if err != nil {
-        logger.SdmLog.Warnln("Unmarshal Error in targetPlmnListtruct: ", err)
-        problemDetails = &models.ProblemDetails{
-            Title:  "Invalid Parameter",
-            Status: http.StatusBadRequest,
-            Cause:  "Failed to parse plmn-id JSON",
-            InvalidParams: []models.InvalidParam{{
-                Param:  "plmn-id",
-                Reason: err.Error(),
-            }},
-        }
-        return nil, problemDetails
-    }
-    return plmnIDStruct, nil
+	// exist and not empty link: http:{ip:port}/api/.../?plmn-id=xxx
+	plmnIDJson := values[0]
+	plmnIDStruct = &models.PlmnId{}
+	err := json.Unmarshal([]byte(plmnIDJson), plmnIDStruct)
+	if err != nil {
+		logger.SdmLog.Warnln("Unmarshal Error in targetPlmnListtruct: ", err)
+		problemDetails = &models.ProblemDetails{
+			Title:  "Invalid Parameter",
+			Status: http.StatusBadRequest,
+			Cause:  "Failed to parse plmn-id JSON",
+			InvalidParams: []models.InvalidParam{{
+				Param:  "plmn-id",
+				Reason: err.Error(),
+			}},
+		}
+		return nil, problemDetails
+	}
+	return plmnIDStruct, nil
 }
 
 // Info - Nudm_Sdm Info service operation
