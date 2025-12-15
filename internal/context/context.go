@@ -9,8 +9,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/google/uuid"
-
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
@@ -104,7 +102,7 @@ func InitUdmContext(context *UDMContext) {
 	config := factory.UdmConfig
 	logger.UtilLog.Info("udmconfig Info: Version[", config.Info.Version, "] Description[", config.Info.Description, "]")
 	configuration := config.Configuration
-	udmContext.NfId = uuid.New().String()
+	udmContext.NfId = config.GetNfInstanceId()
 	sbi := configuration.Sbi
 	udmContext.UriScheme = ""
 	udmContext.SBIPort = factory.UdmSbiDefaultPort
