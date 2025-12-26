@@ -20,8 +20,8 @@ import (
 	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/metrics/sbi"
-	"github.com/free5gc/util/ueauth"
 	"github.com/free5gc/util/milenage"
+	"github.com/free5gc/util/ueauth"
 )
 
 const (
@@ -49,11 +49,11 @@ func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte) {
 	}
 
 	logger.UeauLog.Tracef("aucSQN: SQNms=[%x]\n", SQNms)
-	
+
 	// Extract MAC-S from AUTS for logging (optional)
 	macS := auts[6:14]
 	logger.UeauLog.Tracef("aucSQN: macS=[%x]\n", macS)
-	
+
 	return SQNms, macS
 }
 
