@@ -21,6 +21,7 @@ import (
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/ueauth"
+	"github.com/free5gc/util/milenage"
 )
 
 const (
@@ -37,32 +38,22 @@ const (
 )
 
 func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte) {
-	AK, SQNms := make([]byte, 6), make([]byte, 6)
-	macS := make([]byte, 8)
-	ConcSQNms := auts[:6]
-	AMF, err := hex.DecodeString(resyncAMF)
+	// Use ValidateAUTS to verify AUTS and extract SQNms
+	// This function internally:
+	// 1. Uses AK* (f5*) to de-conceal SQNms from AUTS
+	// 2. Computes MAC-S with AMF=0x0000 and verifies it
+	SQNms, _, err := milenage.ValidateAUTS(opc, k, rand, auts)
 	if err != nil {
+		logger.UeauLog.Errorln("aucSQN ValidateAUTS err:", err)
 		return nil, nil
 	}
 
-	logger.UeauLog.Tracef("aucSQN: ConcSQNms=[%x]", ConcSQNms)
-
-	err = util.MilenageF2345(opc, k, rand, nil, nil, nil, nil, AK)
-	if err != nil {
-		logger.UeauLog.Errorln("aucSQN milenage F2345 err:", err)
-	}
-
-	for i := 0; i < 6; i++ {
-		SQNms[i] = AK[i] ^ ConcSQNms[i]
-	}
-
-	logger.UeauLog.Tracef("aucSQN: opc=[%x], k=[%x], rand=[%x], AMF=[%x], SQNms=[%x]\n", opc, k, rand, AMF, SQNms)
-	// The AMF used to calculate MAC-S assumes a dummy value of all zeros
-	err = util.MilenageF1(opc, k, rand, SQNms, AMF, nil, macS)
-	if err != nil {
-		logger.UeauLog.Errorln("aucSQN milenage F1 err:", err)
-	}
+	logger.UeauLog.Tracef("aucSQN: SQNms=[%x]\n", SQNms)
+	
+	// Extract MAC-S from AUTS for logging (optional)
+	macS := auts[6:14]
 	logger.UeauLog.Tracef("aucSQN: macS=[%x]\n", macS)
+	
 	return SQNms, macS
 }
 
