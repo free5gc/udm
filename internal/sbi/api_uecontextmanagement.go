@@ -10,6 +10,7 @@ import (
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
+	"github.com/free5gc/udm/internal/util"
 )
 
 func (s *Server) getUEContextManagementRoutes() []Route {
@@ -245,6 +246,21 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 	logger.UecmLog.Infoln("Handle GetAmfNon3gppAccessRequest")
 
 	ueId := c.Param("ueId")
+	// TS 29.503 5.3.2.5.3
+	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := util.IsValidSupi(ueId) || util.IsValidGpsi(ueId)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueId)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	supportedFeatures := c.Query("supported-features")
 	var queryAmfContextNon3gppRequest Nudr_DataRepository.QueryAmfContextNon3gppRequest
 	queryAmfContextNon3gppRequest.SupportedFeatures = &supportedFeatures
@@ -255,6 +271,23 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 // Register - register as AMF for non-3GPP access
 func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 	var amfNon3GppAccessRegistration models.AmfNon3GppAccessRegistration
+
+	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.2.3
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := util.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -286,14 +319,30 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 
 	logger.UecmLog.Infof("Handle RegisterAmfNon3gppAccessRequest")
 
-	ueID := c.Param("ueId")
-
 	s.Processor().RegisterAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistration, ueID)
 }
 
 // RegistrationAmf3gppAccess - register as AMF for 3GPP access
 func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 	var amf3GppAccessRegistration models.Amf3GppAccessRegistration
+
+	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.2.2 
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := util.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -348,7 +397,6 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 
 	logger.UecmLog.Infof("Handle RegistrationAmf3gppAccess")
 
-	ueID := c.Param("ueId")
 	logger.UecmLog.Info("UEID: ", ueID)
 
 	s.Processor().RegistrationAmf3gppAccessProcedure(c, amf3GppAccessRegistration, ueID)
@@ -357,6 +405,24 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 // UpdateAmfNon3gppAccess - update a parameter in the AMF registration for non-3GPP access
 func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 	var amfNon3GppAccessRegistrationModification models.AmfNon3GppAccessRegistrationModification
+
+	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.6.3
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := util.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -387,14 +453,29 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 
 	logger.UecmLog.Infof("Handle UpdateAmfNon3gppAccessRequest")
 
-	ueID := c.Param("ueId")
-
 	s.Processor().UpdateAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistrationModification, ueID)
 }
 
 // UpdateAmf3gppAccess - Update a parameter in the AMF registration for 3GPP access
 func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 	var amf3GppAccessRegistrationModification models.Amf3GppAccessRegistrationModification
+
+	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.6.2
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := util.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -425,8 +506,6 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 	}
 
 	logger.UecmLog.Infof("Handle UpdateAmf3gppAccessRequest")
-
-	ueID := c.Param("ueId")
 
 	s.Processor().UpdateAmf3gppAccessProcedure(c, amf3GppAccessRegistrationModification, ueID)
 }
@@ -466,6 +545,21 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 	logger.UecmLog.Infof("Handle DeregistrationSmfRegistrations")
 
 	ueID := c.Params.ByName("ueId")
+	// TS 29.503 5.3.2.4.4
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := util.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	pduSessionID := c.Params.ByName("pduSessionId")
 
 	s.Processor().DeregistrationSmfRegistrationsProcedure(c, ueID, pduSessionID)
@@ -474,6 +568,23 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 // RegistrationSmfRegistrations - register as SMF
 func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	var smfRegistration models.SmfRegistration
+
+	ueID := c.Params.ByName("ueId")
+	// TS 29.503 5.3.2.2.4
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := util.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -505,7 +616,6 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 
 	logger.UecmLog.Infof("Handle RegistrationSmfRegistrations")
 
-	ueID := c.Params.ByName("ueId")
 	pduSessionID := c.Params.ByName("pduSessionId")
 
 	s.Processor().RegistrationSmfRegistrationsProcedure(
@@ -521,6 +631,21 @@ func (s *Server) HandleGetAmf3gppAccess(c *gin.Context) {
 	logger.UecmLog.Infof("Handle HandleGetAmf3gppAccessRequest")
 
 	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.5.2
+	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := util.IsValidSupi(ueID) || util.IsValidGpsi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	supportedFeatures := c.Query("supported-features")
 
 	s.Processor().GetAmf3gppAccessProcedure(c, ueID, supportedFeatures)
