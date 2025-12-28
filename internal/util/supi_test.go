@@ -72,5 +72,4 @@ func TestIsValidSupi(t *testing.T) {
 		}
 		runTests(t, tests)
 	})
-
 }

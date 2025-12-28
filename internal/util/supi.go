@@ -8,9 +8,11 @@ import (
 // TS 29.571 5.3.2 & TS 23.003
 // SUPI format validation
 var supiImsiRegex = regexp.MustCompile(`^imsi-[0-9]{5,15}$`)
-// TS 29.571 5.3.2 & TS 23.003 28.7.2 
+
+// TS 29.571 5.3.2 & TS 23.003 28.7.2
 // NAI format validation
 var supiNaiRegex = regexp.MustCompile(`^nai-.+@.+$`)
+
 // TS 29.571 5.3.2 & TS 23.003 28.15.2(gci) & TS 23.003 28.16.2(gli)
 // GCI/GLI format validation
 var supiGciGliRegex = regexp.MustCompile(`^(gci|gli)-.+$`)
@@ -27,8 +29,8 @@ func IsValidSupi(supi string) bool {
 
 	if strings.HasPrefix(supi, "nai-") {
 		if strings.Contains(supi, "\x00") {
-            return false
-        }
+			return false
+		}
 		return supiNaiRegex.MatchString(supi)
 	}
 	if strings.HasPrefix(supi, "gci-") || strings.HasPrefix(supi, "gli-") {

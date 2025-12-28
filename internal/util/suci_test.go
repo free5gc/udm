@@ -48,7 +48,7 @@ func TestIsValidSuci(t *testing.T) {
 				args{"suci-0-466-092-0-0-0-123456"},
 				true,
 			},
-			
+
 			// Format Errors
 			{
 				"Invalid Type 0 (Bad MCC)",
@@ -97,10 +97,10 @@ func TestIsValidSuci(t *testing.T) {
 			{"Empty String", args{""}, false},
 			{"Wrong Prefix", args{"suciX-0-208-93-0-0-0-1"}, false},
 			{"Unknown Type (Type 9)", args{"suci-9-208-93-0-0-0-1"}, false}, // Currently only 0 and 1 supported
-			
+
 			// [Security] Null Byte Injection
 			{"Null Byte Injection", args{"suci-0-208-93\x00-0-0-0-1"}, false},
-			
+
 			// Fuzzing garbage
 			{"Garbage String", args{"suci-0-garbage-data"}, false},
 		}

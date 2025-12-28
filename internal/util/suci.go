@@ -9,7 +9,8 @@ import (
 // Regex for IMSI-based SUCI (Type 0)
 // Format: suci-0-<MCC>-<MNC>-<RoutingInd>-<Scheme>-<KeyId>-<Output>
 // Example: suci-0-208-93-0-0-0-1234567890 (Null Scheme)
-var suciImsiRegex = regexp.MustCompile(`^suci-0-[0-9]{3}-[0-9]{2,3}-[0-9a-fA-F]{1,4}-[0-9a-fA-F]{1,2}-[0-9a-fA-F]{1,2}-.+$`)
+var suciImsiRegex = regexp.MustCompile(`^suci-0-[0-9]{3}-[0-9]{2,3}-[0-9a-fA-F]{1,4}-` +
+	`[0-9a-fA-F]{1,2}-[0-9a-fA-F]{1,2}-.+$`)
 
 // Regex for NAI-based SUCI (Type 1)
 // Format: suci-1-<HomeNetworkId>-<RoutingInd>-<Scheme>-<KeyId>-<Output>
