@@ -2,6 +2,7 @@ package sbi
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -624,6 +625,20 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 		return
 	}
 	pduSessionID := c.Params.ByName("pduSessionId")
+	// TS 29.571 5.4.2 valid PDU Session ID is an integer in the range 0 to 255
+	pduSessionIDInt,err := strconv.Atoi(pduSessionID)
+	if pduSessionIDInt < 0 || pduSessionIDInt > 255 || err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE PduSessionId is missing or invalid",
+			Cause:  "MISSING_OR_INVALID_PARAMETER",
+		}
+		logger.UecmLog.Errorln("Mandatory IE PduSessionId is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	s.Processor().DeregistrationSmfRegistrationsProcedure(c, ueID, pduSessionID)
 }
@@ -699,6 +714,20 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	logger.UecmLog.Infof("Handle RegistrationSmfRegistrations")
 
 	pduSessionID := c.Params.ByName("pduSessionId")
+	// TS 29.571 5.4.2 valid PDU Session ID is an integer in the range 0 to 255
+	pduSessionIDInt,err := strconv.Atoi(pduSessionID)
+	if pduSessionIDInt < 0 || pduSessionIDInt > 255 || err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE PduSessionId is missing or invalid",
+			Cause:  "MISSING_OR_INVALID_PARAMETER",
+		}
+		logger.UecmLog.Errorln("Mandatory IE PduSessionId is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	s.Processor().RegistrationSmfRegistrationsProcedure(
 		c,
