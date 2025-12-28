@@ -62,7 +62,7 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 			Detail: "Supi is invalid",
 			Cause:  "INVALID_KEY",
 		}
-		logger.UeauLog.Errorln("Supi is invalid")
+		logger.UeauLog.Warnln("Supi is invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
