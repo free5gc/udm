@@ -9,6 +9,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
+	"github.com/free5gc/udm/internal/util"
 )
 
 func (s *Server) getUEAuthenticationRoutes() []Route {
@@ -54,7 +55,18 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 	}
 
 	supi := c.Params.ByName("supi")
-
+	if !util.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UeauLog.Errorln("Supi is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	logger.UeauLog.Infoln("Handle ConfirmAuthDataRequest")
 
 	s.Processor().ConfirmAuthDataProcedure(c, authEvent, supi)
