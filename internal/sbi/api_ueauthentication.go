@@ -107,6 +107,19 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 	logger.UeauLog.Infoln("Handle GenerateAuthDataRequest")
 
 	supiOrSuci := c.Param("supiOrSuci")
+	if !util.IsValidSupi(supiOrSuci) && !util.IsValidSuci(supiOrSuci) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi or Suci is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UeauLog.Warnln("Supi or Suci is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+	logger.UeauLog.Infoln("Handle ConfirmAuthDataRequest")
 
 	s.Processor().GenerateAuthDataProcedure(c, authInfoReq, supiOrSuci)
 }
