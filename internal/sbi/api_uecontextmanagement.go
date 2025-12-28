@@ -337,7 +337,7 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
 			Cause:  "MISSING_OR_INVALID_PARAMETER",
 		}
-		logger.UecmLog.Errorln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -415,7 +415,7 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
 			Cause:  "MISSING_OR_INVALID_PARAMETER",
 		}
-		logger.UecmLog.Errorln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -490,7 +490,7 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
 			Cause:  "MISSING_OR_INVALID_PARAMETER",
 		}
-		logger.UecmLog.Errorln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -563,7 +563,7 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
 			Cause:  "MISSING_OR_INVALID_PARAMETER",
 		}
-		logger.UecmLog.Errorln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -634,7 +634,7 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 			Detail: "Mandatory IE PduSessionId is missing or invalid",
 			Cause:  "MISSING_OR_INVALID_PARAMETER",
 		}
-		logger.UecmLog.Errorln("Mandatory IE PduSessionId is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE PduSessionId is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -705,7 +705,7 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
 			Cause:  "MISSING_OR_INVALID_PARAMETER",
 		}
-		logger.UecmLog.Errorln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -723,7 +723,7 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 			Detail: "Mandatory IE PduSessionId is missing or invalid",
 			Cause:  "MISSING_OR_INVALID_PARAMETER",
 		}
-		logger.UecmLog.Errorln("Mandatory IE PduSessionId is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE PduSessionId is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
