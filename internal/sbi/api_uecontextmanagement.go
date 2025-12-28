@@ -317,6 +317,31 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 		return
 	}
 
+	// TS 29.503 6.2.6.2.3 requirements check
+	missingIE := ""
+    if amfNon3GppAccessRegistration.AmfInstanceId == "" {
+        missingIE = "AmfInstanceId"
+    } else if amfNon3GppAccessRegistration.Guami == nil {
+        missingIE = "Guami"
+    } else if amfNon3GppAccessRegistration.DeregCallbackUri == "" {
+        missingIE = "DeregCallbackUri"
+    } else if amfNon3GppAccessRegistration.RatType == "" {
+        missingIE = "RatType"
+    }
+
+	if missingIE != "" {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Cause:  "MISSING_OR_INVALID_PARAMETER",
+		}
+		logger.UecmLog.Errorln("Mandatory IE " + missingIE + " is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}	
+
 	logger.UecmLog.Infof("Handle RegisterAmfNon3gppAccessRequest")
 
 	s.Processor().RegisterAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistration, ueID)
@@ -451,6 +476,25 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 		return
 	}
 
+	// TS 29.503 6.2.6.2.8 requirements check
+	missingIE := ""
+    if amfNon3GppAccessRegistrationModification.Guami == nil {
+        missingIE = "Guami"
+    }
+
+	if missingIE != "" {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Cause:  "MISSING_OR_INVALID_PARAMETER",
+		}
+		logger.UecmLog.Errorln("Mandatory IE " + missingIE + " is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+	
 	logger.UecmLog.Infof("Handle UpdateAmfNon3gppAccessRequest")
 
 	s.Processor().UpdateAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistrationModification, ueID)
@@ -502,6 +546,25 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 		logger.UecmLog.Errorln(problemDetail)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
 		c.JSON(int(rsp.Status), rsp)
+		return
+	}
+
+	// TS 29.503 6.2.6.2.7 requirements check
+	missingIE := ""
+    if amf3GppAccessRegistrationModification.Guami == nil {
+        missingIE = "Guami"
+    }
+
+	if missingIE != "" {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Cause:  "MISSING_OR_INVALID_PARAMETER",
+		}
+		logger.UecmLog.Errorln("Mandatory IE " + missingIE + " is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
 
@@ -611,6 +674,25 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 		logger.UecmLog.Errorln(problemDetail)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
 		c.JSON(int(rsp.Status), rsp)
+		return
+	}
+
+	// TS 29.503 6.2.6.2.4 requirements check
+	missingIE := ""
+    if smfRegistration.SmfInstanceId == "" {
+        missingIE = "SmfInstanceId"
+    }
+
+	if missingIE != "" {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Cause:  "MISSING_OR_INVALID_PARAMETER",
+		}
+		logger.UecmLog.Errorln("Mandatory IE " + missingIE + " is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
 
