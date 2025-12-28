@@ -10,8 +10,8 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/udm/internal/util"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (s *Server) getUEContextManagementRoutes() []Route {
@@ -320,15 +320,15 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 
 	// TS 29.503 6.2.6.2.3 requirements check
 	missingIE := ""
-    if amfNon3GppAccessRegistration.AmfInstanceId == "" {
-        missingIE = "AmfInstanceId"
-    } else if amfNon3GppAccessRegistration.Guami == nil {
-        missingIE = "Guami"
-    } else if amfNon3GppAccessRegistration.DeregCallbackUri == "" {
-        missingIE = "DeregCallbackUri"
-    } else if amfNon3GppAccessRegistration.RatType == "" {
-        missingIE = "RatType"
-    }
+	if amfNon3GppAccessRegistration.AmfInstanceId == "" {
+		missingIE = "AmfInstanceId"
+	} else if amfNon3GppAccessRegistration.Guami == nil {
+		missingIE = "Guami"
+	} else if amfNon3GppAccessRegistration.DeregCallbackUri == "" {
+		missingIE = "DeregCallbackUri"
+	} else if amfNon3GppAccessRegistration.RatType == "" {
+		missingIE = "RatType"
+	}
 
 	if missingIE != "" {
 		problemDetail := models.ProblemDetails{
@@ -341,7 +341,7 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
-	}	
+	}
 
 	logger.UecmLog.Infof("Handle RegisterAmfNon3gppAccessRequest")
 
@@ -353,7 +353,7 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 	var amf3GppAccessRegistration models.Amf3GppAccessRegistration
 
 	ueID := c.Param("ueId")
-	// TS 29.503 5.3.2.2.2 
+	// TS 29.503 5.3.2.2.2
 	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
 	valid := util.IsValidSupi(ueID)
 	if !valid {
@@ -398,15 +398,15 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 	}
 	// TS 29.503 6.2.6.2.2 requirements check
 	missingIE := ""
-    if amf3GppAccessRegistration.AmfInstanceId == "" {
-        missingIE = "AmfInstanceId"
-    } else if amf3GppAccessRegistration.Guami == nil {
-        missingIE = "Guami"
-    } else if amf3GppAccessRegistration.DeregCallbackUri == "" {
-        missingIE = "DeregCallbackUri"
-    } else if amf3GppAccessRegistration.RatType == "" {
-        missingIE = "RatType"
-    }
+	if amf3GppAccessRegistration.AmfInstanceId == "" {
+		missingIE = "AmfInstanceId"
+	} else if amf3GppAccessRegistration.Guami == nil {
+		missingIE = "Guami"
+	} else if amf3GppAccessRegistration.DeregCallbackUri == "" {
+		missingIE = "DeregCallbackUri"
+	} else if amf3GppAccessRegistration.RatType == "" {
+		missingIE = "RatType"
+	}
 
 	if missingIE != "" {
 		problemDetail := models.ProblemDetails{
@@ -479,9 +479,9 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 
 	// TS 29.503 6.2.6.2.8 requirements check
 	missingIE := ""
-    if amfNon3GppAccessRegistrationModification.Guami == nil {
-        missingIE = "Guami"
-    }
+	if amfNon3GppAccessRegistrationModification.Guami == nil {
+		missingIE = "Guami"
+	}
 
 	if missingIE != "" {
 		problemDetail := models.ProblemDetails{
@@ -495,7 +495,7 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
-	
+
 	logger.UecmLog.Infof("Handle UpdateAmfNon3gppAccessRequest")
 
 	s.Processor().UpdateAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistrationModification, ueID)
@@ -552,9 +552,9 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 
 	// TS 29.503 6.2.6.2.7 requirements check
 	missingIE := ""
-    if amf3GppAccessRegistrationModification.Guami == nil {
-        missingIE = "Guami"
-    }
+	if amf3GppAccessRegistrationModification.Guami == nil {
+		missingIE = "Guami"
+	}
 
 	if missingIE != "" {
 		problemDetail := models.ProblemDetails{
@@ -626,7 +626,7 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 	}
 	pduSessionID := c.Params.ByName("pduSessionId")
 	// TS 29.571 5.4.2 valid PDU Session ID is an integer in the range 0 to 255
-	pduSessionIDInt,err := strconv.Atoi(pduSessionID)
+	pduSessionIDInt, err := strconv.Atoi(pduSessionID)
 	if pduSessionIDInt < 0 || pduSessionIDInt > 255 || err != nil {
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
@@ -694,9 +694,9 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 
 	// TS 29.503 6.2.6.2.4 requirements check
 	missingIE := ""
-    if smfRegistration.SmfInstanceId == "" {
-        missingIE = "SmfInstanceId"
-    }
+	if smfRegistration.SmfInstanceId == "" {
+		missingIE = "SmfInstanceId"
+	}
 
 	if missingIE != "" {
 		problemDetail := models.ProblemDetails{
@@ -715,7 +715,7 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 
 	pduSessionID := c.Params.ByName("pduSessionId")
 	// TS 29.571 5.4.2 valid PDU Session ID is an integer in the range 0 to 255
-	pduSessionIDInt,err := strconv.Atoi(pduSessionID)
+	pduSessionIDInt, err := strconv.Atoi(pduSessionID)
 	if pduSessionIDInt < 0 || pduSessionIDInt > 255 || err != nil {
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",

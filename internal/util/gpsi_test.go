@@ -29,7 +29,7 @@ func TestIsValidGpsi(t *testing.T) {
 	t.Run("Check_MSISDN", func(t *testing.T) {
 		tests := []testCase{
 			{"Valid MSISDN (Standard)", args{"msisdn-886912345678"}, true},
-			{"Valid MSISDN (Min Length 5)", args{"msisdn-12345"}, true},   // TS 29.571 regex lower bound
+			{"Valid MSISDN (Min Length 5)", args{"msisdn-12345"}, true},            // TS 29.571 regex lower bound
 			{"Valid MSISDN (Max Length 15)", args{"msisdn-123456789012345"}, true}, // TS 29.571 regex upper bound
 			{"Invalid MSISDN (Too short)", args{"msisdn-1234"}, false},
 			{"Invalid MSISDN (Too long)", args{"msisdn-1234567890123456"}, false},
