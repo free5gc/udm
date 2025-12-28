@@ -8,8 +8,8 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/udm/internal/util"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (s *Server) getUEAuthenticationRoutes() []Route {
@@ -26,6 +26,22 @@ func (s *Server) getUEAuthenticationRoutes() []Route {
 // ConfirmAuth - Create a new confirmation event
 func (s *Server) HandleConfirmAuth(c *gin.Context) {
 	var authEvent models.AuthEvent
+	// TS 29.503 6.3.6.2.3
+	// Validate SUPI format
+	supi := c.Params.ByName("supi")
+	if !util.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UeauLog.Warnln("Supi is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -54,19 +70,31 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 		return
 	}
 
-	supi := c.Params.ByName("supi")
-	if !util.IsValidSupi(supi) {
+	// TS 29.503 6.3.6.2.7 requirements check
+	missingIE := ""
+	if authEvent.NfInstanceId == "" {
+		missingIE = "nfInstanceId"
+	} else if authEvent.TimeStamp == nil {
+		missingIE = "timestamp"
+	} else if authEvent.AuthType == "" {
+		missingIE = "authtype"
+	} else if authEvent.ServingNetworkName == "" {
+		missingIE = "servingNetworkName"
+	}
+
+	if missingIE != "" {
 		problemDetail := models.ProblemDetails{
-			Title:  "Malformed request syntax",
+			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
-			Detail: "Supi is invalid",
-			Cause:  "INVALID_KEY",
+			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Cause:  "MISSING_OR_INVALID_PARAMETER",
 		}
-		logger.UeauLog.Warnln("Supi is invalid")
+		logger.UeauLog.Warnln("Mandatory IE " + missingIE + "is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
+
 	logger.UeauLog.Infoln("Handle ConfirmAuthDataRequest")
 
 	s.Processor().ConfirmAuthDataProcedure(c, authEvent, supi)
@@ -75,6 +103,21 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 // GenerateAuthData - Generate authentication data for the UE
 func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 	var authInfoReq models.AuthenticationInfoRequest
+	// TS 29.503 6.3.3.2.2
+	// Validate SUPI or SUCI format
+	supiOrSuci := c.Param("supiOrSuci")
+	if !util.IsValidSupi(supiOrSuci) && !util.IsValidSuci(supiOrSuci) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi or Suci is invalid",
+			Cause:  "INVALID_KEY",
+		}
+		logger.UeauLog.Warnln("Supi or Suci is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -104,22 +147,28 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 		return
 	}
 
-	logger.UeauLog.Infoln("Handle GenerateAuthDataRequest")
+	// TS 29.503 6.3.6.2.2 requirements check
+	missingIE := ""
+	if authInfoReq.ServingNetworkName == "" {
+		missingIE = "servingNetworkName"
+	} else if authInfoReq.AusfInstanceId == "" {
+		missingIE = "ausfInstanceId"
+	}
 
-	supiOrSuci := c.Param("supiOrSuci")
-	if !util.IsValidSupi(supiOrSuci) && !util.IsValidSuci(supiOrSuci) {
+	if missingIE != "" {
 		problemDetail := models.ProblemDetails{
-			Title:  "Malformed request syntax",
+			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
-			Detail: "Supi or Suci is invalid",
-			Cause:  "INVALID_KEY",
+			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Cause:  "MISSING_OR_INVALID_PARAMETER",
 		}
-		logger.UeauLog.Warnln("Supi or Suci is invalid")
+		logger.UeauLog.Warnln("Mandatory IE " + missingIE + "is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
-	logger.UeauLog.Infoln("Handle ConfirmAuthDataRequest")
+
+	logger.UeauLog.Infoln("Handle GenerateAuthDataRequest")
 
 	s.Processor().GenerateAuthDataProcedure(c, authInfoReq, supiOrSuci)
 }
