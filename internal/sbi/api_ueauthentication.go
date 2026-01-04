@@ -34,7 +34,7 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
 			Detail: "Supi is invalid",
-			Cause:  "INVALID_KEY",
+			Cause:  "MANDATORY_IE_INCORRECT",
 		}
 		logger.UeauLog.Warnln("Supi is invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
@@ -87,7 +87,7 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
 			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
-			Cause:  "MISSING_OR_INVALID_PARAMETER",
+			Cause:  "MANDATORY_IE_MISSING",
 		}
 		logger.UeauLog.Warnln("Mandatory IE " + missingIE + "is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
@@ -111,7 +111,7 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
 			Detail: "Supi or Suci is invalid",
-			Cause:  "INVALID_KEY",
+			Cause:  "MANDATORY_IE_INCORRECT",
 		}
 		logger.UeauLog.Warnln("Supi or Suci is invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
@@ -160,7 +160,7 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
 			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
-			Cause:  "MISSING_OR_INVALID_PARAMETER",
+			Cause:  "MANDATORY_IE_MISSING",
 		}
 		logger.UeauLog.Warnln("Mandatory IE " + missingIE + "is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
