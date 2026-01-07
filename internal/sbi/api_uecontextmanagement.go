@@ -10,7 +10,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/udm/internal/util"
+	"github.com/free5gc/util/validator"
 	"github.com/free5gc/util/metrics/sbi"
 )
 
@@ -249,7 +249,7 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 	ueId := c.Param("ueId")
 	// TS 29.503 5.3.2.5.3
 	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI) shall be in the format defined in 3GPP TS 23.003 & 29.571
-	valid := util.IsValidSupi(ueId) || util.IsValidGpsi(ueId)
+	valid := validator.IsValidSupi(ueId) || validator.IsValidGpsi(ueId)
 	if !valid {
 		problemDetail := models.ProblemDetails{
 			Title:  "Invalid ueID format",
@@ -276,7 +276,7 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.2.3
 	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
-	valid := util.IsValidSupi(ueID)
+	valid := validator.IsValidSupi(ueID)
 	if !valid {
 		problemDetail := models.ProblemDetails{
 			Title:  "Invalid ueID format",
@@ -355,7 +355,7 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.2.2
 	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
-	valid := util.IsValidSupi(ueID)
+	valid := validator.IsValidSupi(ueID)
 	if !valid {
 		problemDetail := models.ProblemDetails{
 			Title:  "Invalid ueID format",
@@ -435,7 +435,7 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.6.3
 	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
-	valid := util.IsValidSupi(ueID)
+	valid := validator.IsValidSupi(ueID)
 	if !valid {
 		problemDetail := models.ProblemDetails{
 			Title:  "Invalid ueID format",
@@ -508,7 +508,7 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.6.2
 	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
-	valid := util.IsValidSupi(ueID)
+	valid := validator.IsValidSupi(ueID)
 	if !valid {
 		problemDetail := models.ProblemDetails{
 			Title:  "Invalid ueID format",
@@ -611,7 +611,7 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 	ueID := c.Params.ByName("ueId")
 	// TS 29.503 5.3.2.4.4
 	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
-	valid := util.IsValidSupi(ueID)
+	valid := validator.IsValidSupi(ueID)
 	if !valid {
 		problemDetail := models.ProblemDetails{
 			Title:  "Invalid ueID format",
@@ -650,7 +650,7 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	ueID := c.Params.ByName("ueId")
 	// TS 29.503 5.3.2.2.4
 	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
-	valid := util.IsValidSupi(ueID)
+	valid := validator.IsValidSupi(ueID)
 	if !valid {
 		problemDetail := models.ProblemDetails{
 			Title:  "Invalid ueID format",
@@ -744,7 +744,7 @@ func (s *Server) HandleGetAmf3gppAccess(c *gin.Context) {
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.5.2
 	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI) shall be in the format defined in 3GPP TS 23.003 & 29.571
-	valid := util.IsValidSupi(ueID) || util.IsValidGpsi(ueID)
+	valid := validator.IsValidSupi(ueID) || validator.IsValidGpsi(ueID)
 	if !valid {
 		problemDetail := models.ProblemDetails{
 			Title:  "Invalid ueID format",
