@@ -8,7 +8,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/udm/internal/util"
+	"github.com/free5gc/util/validator"
 	"github.com/free5gc/util/metrics/sbi"
 )
 
@@ -29,7 +29,7 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 	// TS 29.503 6.3.6.2.3
 	// Validate SUPI format
 	supi := c.Params.ByName("supi")
-	if !util.IsValidSupi(supi) {
+	if !validator.IsValidSupi(supi) {
 		problemDetail := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
@@ -106,7 +106,7 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 	// TS 29.503 6.3.3.2.2
 	// Validate SUPI or SUCI format
 	supiOrSuci := c.Param("supiOrSuci")
-	if !util.IsValidSupi(supiOrSuci) && !util.IsValidSuci(supiOrSuci) {
+	if !validator.IsValidSupi(supiOrSuci) && !validator.IsValidSuci(supiOrSuci) {
 		problemDetail := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
