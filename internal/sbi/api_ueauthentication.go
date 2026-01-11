@@ -8,8 +8,8 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/util/validator"
 	"github.com/free5gc/util/metrics/sbi"
+	"github.com/free5gc/util/validator"
 )
 
 func (s *Server) getUEAuthenticationRoutes() []Route {
