@@ -88,10 +88,11 @@ func (s *nnrfService) SendSearchNFInstances(
 	}
 
 	searchNfInstancesRsp, err1 := client.NFInstancesStoreApi.SearchNFInstances(ctx, &param)
-	result := searchNfInstancesRsp.SearchResult
 	if err1 != nil {
 		logger.ConsumerLog.Errorf("SearchNFInstances failed: %+v", err)
+		return nil, err1
 	}
+	result := searchNfInstancesRsp.SearchResult
 
 	return &result, nil
 }
