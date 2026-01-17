@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -91,6 +92,10 @@ func (s *nnrfService) SendSearchNFInstances(
 	if err1 != nil {
 		logger.ConsumerLog.Errorf("SearchNFInstances failed: %+v", err)
 		return nil, err1
+	}
+	if searchNfInstancesRsp == nil {
+		logger.ConsumerLog.Errorf("SearchNFInstances result nil:%+v", err)
+		return nil, fmt.Errorf("SearchNFInstances result nil:%+v", err)
 	}
 	result := searchNfInstancesRsp.SearchResult
 
