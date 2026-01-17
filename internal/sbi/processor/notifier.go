@@ -22,7 +22,13 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 		return
 	}
 
+	// TS 29.503 5.2.2.5.2
 	ue, _ := p.Context().UdmUeFindBySupi(supi)
+	if ue == nil {
+		logger.CallbackLog.Warnf("no local UE context for supi=%s ", supi)
+		c.Status(204)
+		return
+	}
 
 	clientAPI := p.Consumer().GetSDMClient("DataChangeNotification")
 
@@ -47,6 +53,10 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 				problemDetails = openapi.ProblemDetailsSystemFailure(err.Error())
 			}
 		}
+	}
+	if problemDetails == nil {
+		c.Status(204)
+		return
 	}
 	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 	c.JSON(int(problemDetails.Status), problemDetails)

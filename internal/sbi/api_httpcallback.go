@@ -9,6 +9,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
+	"github.com/free5gc/util/validator"
 )
 
 func (s *Server) getHttpCallBackRoutes() []Route {
@@ -59,7 +60,33 @@ func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
 		return
 	}
 
-	supi := c.Params.ByName("supi")
+	// TS 29.503 6.1.6.2.21
+	if len(dataChangeNotify.NotifyItems) == 0 {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE NotifyItems is missing or invalid",
+			Cause:  "MANDATORY_IE_MISSING",
+		}
+		logger.CallbackLog.Warnln("Mandatory IE NotifyItems is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+	
+	supi := dataChangeNotify.UeId
+	if !validator.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid Supi format",
+			Status: http.StatusBadRequest,
+			Detail: "The Supi format is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid Supi format [%s]", supi)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	logger.CallbackLog.Infof("Handle DataChangeNotificationToNF")
 
