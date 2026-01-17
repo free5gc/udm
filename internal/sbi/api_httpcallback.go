@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
@@ -72,7 +73,7 @@ func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
-	
+
 	supi := dataChangeNotify.UeId
 	if !validator.IsValidSupi(supi) {
 		problemDetail := models.ProblemDetails{
