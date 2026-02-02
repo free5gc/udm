@@ -3,6 +3,7 @@ package sbi
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -10,8 +11,8 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/util/validator"
 	"github.com/free5gc/util/metrics/sbi"
+	"github.com/free5gc/util/validator"
 )
 
 func (s *Server) getUEContextManagementRoutes() []Route {
@@ -319,25 +320,29 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 	}
 
 	// TS 29.503 6.2.6.2.3 requirements check
-	missingIE := ""
+	missingIEList := make([]string, 0)
 	if amfNon3GppAccessRegistration.AmfInstanceId == "" {
-		missingIE = "AmfInstanceId"
-	} else if amfNon3GppAccessRegistration.Guami == nil {
-		missingIE = "Guami"
-	} else if amfNon3GppAccessRegistration.DeregCallbackUri == "" {
-		missingIE = "DeregCallbackUri"
-	} else if amfNon3GppAccessRegistration.RatType == "" {
-		missingIE = "RatType"
+		missingIEList = append(missingIEList, "AmfInstanceId")
+	}
+	if amfNon3GppAccessRegistration.Guami == nil {
+		missingIEList = append(missingIEList, "Guami")
+	}
+	if amfNon3GppAccessRegistration.DeregCallbackUri == "" {
+		missingIEList = append(missingIEList, "DeregCallbackUri")
+	}
+	if amfNon3GppAccessRegistration.RatType == "" {
+		missingIEList = append(missingIEList, "RatType")
 	}
 
-	if missingIE != "" {
+	if len(missingIEList) > 0 {
+		missingIEs := strings.Join(missingIEList, ", ")
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
-			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Detail: "Mandatory IE [" + missingIEs + "] is missing or invalid",
 			Cause:  "MANDATORY_IE_MISSING",
 		}
-		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE [" + missingIEs + "] is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -397,25 +402,29 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 		return
 	}
 	// TS 29.503 6.2.6.2.2 requirements check
-	missingIE := ""
+	missingIEList := make([]string, 0)
 	if amf3GppAccessRegistration.AmfInstanceId == "" {
-		missingIE = "AmfInstanceId"
-	} else if amf3GppAccessRegistration.Guami == nil {
-		missingIE = "Guami"
-	} else if amf3GppAccessRegistration.DeregCallbackUri == "" {
-		missingIE = "DeregCallbackUri"
-	} else if amf3GppAccessRegistration.RatType == "" {
-		missingIE = "RatType"
+		missingIEList = append(missingIEList, "AmfInstanceId")
+	}
+	if amf3GppAccessRegistration.Guami == nil {
+		missingIEList = append(missingIEList, "Guami")
+	}
+	if amf3GppAccessRegistration.DeregCallbackUri == "" {
+		missingIEList = append(missingIEList, "DeregCallbackUri")
+	}
+	if amf3GppAccessRegistration.RatType == "" {
+		missingIEList = append(missingIEList, "RatType")
 	}
 
-	if missingIE != "" {
+	if len(missingIEList) > 0 {
+		missingIEs := strings.Join(missingIEList, ", ")
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
-			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Detail: "Mandatory IE [" + missingIEs + "] is missing or invalid",
 			Cause:  "MANDATORY_IE_MISSING",
 		}
-		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE [" + missingIEs + "] is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -478,19 +487,14 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 	}
 
 	// TS 29.503 6.2.6.2.8 requirements check
-	missingIE := ""
 	if amfNon3GppAccessRegistrationModification.Guami == nil {
-		missingIE = "Guami"
-	}
-
-	if missingIE != "" {
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
-			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Detail: "Mandatory IE Guami is missing or invalid",
 			Cause:  "MANDATORY_IE_MISSING",
 		}
-		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE Guami is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -551,19 +555,14 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 	}
 
 	// TS 29.503 6.2.6.2.7 requirements check
-	missingIE := ""
 	if amf3GppAccessRegistrationModification.Guami == nil {
-		missingIE = "Guami"
-	}
-
-	if missingIE != "" {
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
-			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Detail: "Mandatory IE Guami  is missing or invalid",
 			Cause:  "MANDATORY_IE_MISSING",
 		}
-		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE Guami is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -693,19 +692,26 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	}
 
 	// TS 29.503 6.2.6.2.4 requirements check
-	missingIE := ""
+	missingIEList := make([]string, 0)
 	if smfRegistration.SmfInstanceId == "" {
-		missingIE = "SmfInstanceId"
+		missingIEList = append(missingIEList, "SmfInstanceId")
+	}
+	if smfRegistration.SingleNssai == nil {
+		missingIEList = append(missingIEList, "SingleNssai")
+	}
+	if smfRegistration.PlmnId == nil {
+		missingIEList = append(missingIEList, "PlmnId")
 	}
 
-	if missingIE != "" {
+	if len(missingIEList) > 0 {
+		missingIEs := strings.Join(missingIEList, ", ")
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
-			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Detail: "Mandatory IE [" + missingIEs + "] is missing or invalid",
 			Cause:  "MANDATORY_IE_MISSING",
 		}
-		logger.UecmLog.Warnln("Mandatory IE " + missingIE + " is missing or invalid")
+		logger.UecmLog.Warnln("Mandatory IE [" + missingIEs + "] is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
