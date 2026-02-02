@@ -9,7 +9,6 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
-	"github.com/free5gc/util/validator"
 )
 
 func (s *Server) getHttpCallBackRoutes() []Route {
@@ -24,7 +23,7 @@ func (s *Server) getHttpCallBackRoutes() []Route {
 		{
 			"DataChangeNotificationToNF",
 			http.MethodPost,
-			"/sdm-subscriptions",
+			"/:supi/sdm-subscriptions",
 			s.HandleDataChangeNotificationToNF,
 		},
 	}
@@ -74,19 +73,7 @@ func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
 		return
 	}
 
-	supi := dataChangeNotify.UeId
-	if !validator.IsValidSupi(supi) {
-		problemDetail := models.ProblemDetails{
-			Title:  "Invalid Supi format",
-			Status: http.StatusBadRequest,
-			Detail: "The Supi format is invalid",
-			Cause:  "MANDATORY_IE_INCORRECT",
-		}
-		logger.UecmLog.Warnf("Registration Reject: Invalid Supi format [%s]", supi)
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
-		c.JSON(int(problemDetail.Status), problemDetail)
-		return
-	}
+	supi := c.Params.ByName("supi")
 
 	logger.CallbackLog.Infof("Handle DataChangeNotificationToNF")
 
