@@ -2,6 +2,7 @@ package sbi
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -71,25 +72,29 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 	}
 
 	// TS 29.503 6.3.6.2.7 requirements check
-	missingIE := ""
+	missingIEList := make([]string, 0)
 	if authEvent.NfInstanceId == "" {
-		missingIE = "nfInstanceId"
-	} else if authEvent.TimeStamp == nil {
-		missingIE = "timestamp"
-	} else if authEvent.AuthType == "" {
-		missingIE = "authtype"
-	} else if authEvent.ServingNetworkName == "" {
-		missingIE = "servingNetworkName"
+		missingIEList = append(missingIEList, "nfInstancdId")
+	}
+	if authEvent.TimeStamp == nil {
+		missingIEList = append(missingIEList, "timestamp")
+	}
+	if authEvent.AuthType == "" {
+		missingIEList = append(missingIEList, "authtype")
+	}
+	if authEvent.ServingNetworkName == "" {
+		missingIEList = append(missingIEList, "servingNetworkName")
 	}
 
-	if missingIE != "" {
+	if len(missingIEList) > 0 {
+		missingIEs := strings.Join(missingIEList, ", ")
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
-			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Detail: "Mandatory IE [" + missingIEs + "] is missing or invalid",
 			Cause:  "MANDATORY_IE_MISSING",
 		}
-		logger.UeauLog.Warnln("Mandatory IE " + missingIE + "is missing or invalid")
+		logger.UeauLog.Warnln("Mandatory IE [" + missingIEs + "] is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
@@ -148,21 +153,23 @@ func (s *Server) HandleGenerateAuthData(c *gin.Context) {
 	}
 
 	// TS 29.503 6.3.6.2.2 requirements check
-	missingIE := ""
+	missingIEList := make([]string, 0)
 	if authInfoReq.ServingNetworkName == "" {
-		missingIE = "servingNetworkName"
-	} else if authInfoReq.AusfInstanceId == "" {
-		missingIE = "ausfInstanceId"
+		missingIEList = append(missingIEList, "servingNetworkName")
+	}
+	if authInfoReq.AusfInstanceId == "" {
+		missingIEList = append(missingIEList, "ausfInstanceId")
 	}
 
-	if missingIE != "" {
+	if len(missingIEList) > 0 {
+		missingIEs := strings.Join(missingIEList, ", ")
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
-			Detail: "Mandatory IE " + missingIE + " is missing or invalid",
+			Detail: "Mandatory IE [" + missingIEs + "] is missing or invalid",
 			Cause:  "MANDATORY_IE_MISSING",
 		}
-		logger.UeauLog.Warnln("Mandatory IE " + missingIE + "is missing or invalid")
+		logger.UeauLog.Warnln("Mandatory IE [" + missingIEs + "] is missing or invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
