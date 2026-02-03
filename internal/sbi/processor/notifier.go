@@ -1,6 +1,8 @@
 package processor
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/openapi"
@@ -22,11 +24,9 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 		return
 	}
 
-	// TS 29.503 5.2.2.5.2
-	ue, _ := p.Context().UdmUeFindBySupi(supi)
-	if ue == nil {
-		logger.CallbackLog.Warnf("no local UE context for supi=%s ", supi)
-		c.Status(204)
+	ue, ok := p.Context().UdmUeFindBySupi(supi)
+	if !ok {
+		c.Status(http.StatusNoContent)
 		return
 	}
 
@@ -55,7 +55,7 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 		}
 	}
 	if problemDetails == nil {
-		c.Status(204)
+		c.Status(http.StatusNoContent)
 		return
 	}
 	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
