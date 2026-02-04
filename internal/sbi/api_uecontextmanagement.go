@@ -2,7 +2,6 @@ package sbi
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -625,8 +624,7 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 	}
 	pduSessionID := c.Params.ByName("pduSessionId")
 	// TS 29.571 5.4.2 valid PDU Session ID is an integer in the range 0 to 255
-	pduSessionIDInt, err := strconv.Atoi(pduSessionID)
-	if pduSessionIDInt < 0 || pduSessionIDInt > 255 || err != nil {
+	if !validator.IsValidPduSessionID(pduSessionID) {
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
@@ -721,8 +719,7 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 
 	pduSessionID := c.Params.ByName("pduSessionId")
 	// TS 29.571 5.4.2 valid PDU Session ID is an integer in the range 0 to 255
-	pduSessionIDInt, err := strconv.Atoi(pduSessionID)
-	if pduSessionIDInt < 0 || pduSessionIDInt > 255 || err != nil {
+	if !validator.IsValidPduSessionID(pduSessionID) {
 		problemDetail := models.ProblemDetails{
 			Title:  "Missing or invalid parameter",
 			Status: http.StatusBadRequest,
