@@ -12,6 +12,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
+	"github.com/free5gc/util/validator"
 )
 
 func (s *Server) getSubscriberDataManagementRoutes() []Route {
@@ -33,7 +34,21 @@ func (s *Server) HandleGetAmData(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle GetAmData")
 
+	// TS 29.503 6.1.3.5.2
+	// Validate SUPI format
 	supi := c.Params.ByName("supi")
+	if !validator.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("Supi is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	// use c.Request.URL.Query() only for getPlmnIDStruct
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
@@ -256,10 +271,25 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 func (s *Server) HandleUnsubscribe(c *gin.Context) {
 	logger.SdmLog.Infof("Handle Unsubscribe")
 
-	supi := c.Params.ByName("ueId")
+	// TS 29.503 6.1.3.4.2
+	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI)
+	ueId := c.Params.ByName("ueId")
+	valid := validator.IsValidGpsi(ueId) || validator.IsValidSupi(ueId)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "UE ID is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("UE ID is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	subscriptionID := c.Params.ByName("subscriptionId")
 
-	s.Processor().UnsubscribeProcedure(c, supi, subscriptionID)
+	s.Processor().UnsubscribeProcedure(c, ueId, subscriptionID)
 }
 
 // UnsubscribeForSharedData - unsubscribe from notifications for shared data
@@ -273,6 +303,25 @@ func (s *Server) HandleUnsubscribeForSharedData(c *gin.Context) {
 // Modify - modify the subscription
 func (s *Server) HandleModify(c *gin.Context) {
 	var sdmSubsModificationReq models.SdmSubsModification
+
+	// TS 29.503 6.1.3.4.2
+	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI)
+	ueId := c.Params.ByName("ueId")
+	valid := validator.IsValidGpsi(ueId) || validator.IsValidSupi(ueId)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "UE ID is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("UE ID is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+	subscriptionID := c.Params.ByName("subscriptionId")
+
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -303,10 +352,7 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle Modify")
 
-	supi := c.Params.ByName("ueId")
-	subscriptionID := c.Params.ByName("subscriptionId")
-
-	s.Processor().ModifyProcedure(c, &sdmSubsModificationReq, supi, subscriptionID)
+	s.Processor().ModifyProcedure(c, &sdmSubsModificationReq, ueId, subscriptionID)
 }
 
 // ModifyForSharedData - modify the subscription
@@ -433,9 +479,24 @@ func (s *Server) HandleGetIdTranslationResult(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle GetIdTranslationResultRequest")
 
-	gpsi := c.Params.ByName("ueId")
+	// TS 29.503 6.1.3.12.2
+	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI)
+	ueId := c.Params.ByName("ueId")
+	valid := validator.IsValidGpsi(ueId) || validator.IsValidSupi(ueId)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "UE ID is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("UE ID is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
-	s.Processor().GetIdTranslationResultProcedure(c, gpsi)
+	s.Processor().GetIdTranslationResultProcedure(c, ueId)
 }
 
 func (s *Server) HandleGetMultipleIdentifiers(c *gin.Context) {

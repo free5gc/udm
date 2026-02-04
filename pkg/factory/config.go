@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/google/uuid"
 
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/pkg/suci"
@@ -21,6 +22,7 @@ const (
 	UdmDefaultCertPemPath         = "./cert/udm.pem"
 	UdmDefaultPrivateKeyPath      = "./cert/udm.key"
 	UdmDefaultConfigPath          = "./config/udmcfg.yaml"
+	UdmDefaultNfInstanceIdEnvVar  = "UDM_NF_INSTANCE_ID"
 	UdmSbiDefaultIPv4             = "127.0.0.3"
 	UdmSbiDefaultPort             = 8000
 	UdmSbiDefaultScheme           = "https"
@@ -70,6 +72,7 @@ type Info struct {
 }
 
 type Configuration struct {
+	NfInstanceId    string             `yaml:"nfInstanceId,omitempty" valid:"optional,uuidv4"`
 	Sbi             *Sbi               `yaml:"sbi,omitempty"  valid:"required"`
 	Metrics         *Metrics           `yaml:"metrics,omitempty" valid:"optional"`
 	ServiceNameList []string           `yaml:"serviceNameList,omitempty"  valid:"required"`
@@ -86,6 +89,10 @@ type Logger struct {
 func (c *Configuration) validate() (bool, error) {
 	govalidator.TagMap["scheme"] = func(str string) bool {
 		return str == "https" || str == "http"
+	}
+
+	if c.NfInstanceId == "" {
+		c.NfInstanceId = uuid.New().String()
 	}
 
 	if sbi := c.Sbi; sbi != nil {
@@ -163,6 +170,31 @@ func (c *Config) GetCertKeyPath() string {
 	c.RLock()
 	defer c.RUnlock()
 	return c.Configuration.Sbi.Tls.Key
+}
+
+func (c *Config) GetNfInstanceId() string {
+	c.RLock()
+	defer c.RUnlock()
+
+	var nfInstanceId string
+
+	logger.CfgLog.Debugf("Fetching nfInstanceId from env var \"%s\"", UdmDefaultNfInstanceIdEnvVar)
+
+	if nfInstanceId = os.Getenv(UdmDefaultNfInstanceIdEnvVar); nfInstanceId == "" {
+		logger.CfgLog.Debugf("No value found for \"%s\" env, fallback on config nfInstanceId : %s",
+			UdmDefaultNfInstanceIdEnvVar, c.Configuration.NfInstanceId)
+		return c.Configuration.NfInstanceId
+	}
+
+	if err := uuid.Validate(nfInstanceId); err != nil {
+		logger.CfgLog.Errorf("Env var \"%s\" is not a valid uuid, "+
+			"fallback on configuration nfInstanceId : %s", UdmDefaultNfInstanceIdEnvVar, c.Configuration.NfInstanceId)
+		return c.Configuration.NfInstanceId
+	}
+
+	logger.CfgLog.Debugf("nfInstanceId from %s : %s", UdmDefaultNfInstanceIdEnvVar, nfInstanceId)
+
+	return nfInstanceId
 }
 
 type Sbi struct {
