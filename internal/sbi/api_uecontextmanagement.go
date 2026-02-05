@@ -2,6 +2,7 @@ package sbi
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -10,6 +11,7 @@ import (
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
+	"github.com/free5gc/util/validator"
 )
 
 func (s *Server) getUEContextManagementRoutes() []Route {
@@ -245,6 +247,21 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 	logger.UecmLog.Infoln("Handle GetAmfNon3gppAccessRequest")
 
 	ueId := c.Param("ueId")
+	// TS 29.503 5.3.2.5.3
+	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := validator.IsValidSupi(ueId) || validator.IsValidGpsi(ueId)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueId)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	supportedFeatures := c.Query("supported-features")
 	var queryAmfContextNon3gppRequest Nudr_DataRepository.QueryAmfContextNon3gppRequest
 	queryAmfContextNon3gppRequest.SupportedFeatures = &supportedFeatures
@@ -255,6 +272,23 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 // Register - register as AMF for non-3GPP access
 func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 	var amfNon3GppAccessRegistration models.AmfNon3GppAccessRegistration
+
+	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.2.3
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := validator.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -284,9 +318,36 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 		return
 	}
 
-	logger.UecmLog.Infof("Handle RegisterAmfNon3gppAccessRequest")
+	// TS 29.503 6.2.6.2.3 requirements check
+	missingIEList := make([]string, 0)
+	if amfNon3GppAccessRegistration.AmfInstanceId == "" {
+		missingIEList = append(missingIEList, "AmfInstanceId")
+	}
+	if amfNon3GppAccessRegistration.Guami == nil {
+		missingIEList = append(missingIEList, "Guami")
+	}
+	if amfNon3GppAccessRegistration.DeregCallbackUri == "" {
+		missingIEList = append(missingIEList, "DeregCallbackUri")
+	}
+	if amfNon3GppAccessRegistration.RatType == "" {
+		missingIEList = append(missingIEList, "RatType")
+	}
 
-	ueID := c.Param("ueId")
+	if len(missingIEList) > 0 {
+		missingIEs := strings.Join(missingIEList, ", ")
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE [" + missingIEs + "] is missing or invalid",
+			Cause:  "MANDATORY_IE_MISSING",
+		}
+		logger.UecmLog.Warnln("Mandatory IE [" + missingIEs + "] is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+
+	logger.UecmLog.Infof("Handle RegisterAmfNon3gppAccessRequest")
 
 	s.Processor().RegisterAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistration, ueID)
 }
@@ -294,6 +355,24 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 // RegistrationAmf3gppAccess - register as AMF for 3GPP access
 func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 	var amf3GppAccessRegistration models.Amf3GppAccessRegistration
+
+	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.2.2
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := validator.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -321,10 +400,37 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 		c.JSON(int(rsp.Status), rsp)
 		return
 	}
+	// TS 29.503 6.2.6.2.2 requirements check
+	missingIEList := make([]string, 0)
+	if amf3GppAccessRegistration.AmfInstanceId == "" {
+		missingIEList = append(missingIEList, "AmfInstanceId")
+	}
+	if amf3GppAccessRegistration.Guami == nil {
+		missingIEList = append(missingIEList, "Guami")
+	}
+	if amf3GppAccessRegistration.DeregCallbackUri == "" {
+		missingIEList = append(missingIEList, "DeregCallbackUri")
+	}
+	if amf3GppAccessRegistration.RatType == "" {
+		missingIEList = append(missingIEList, "RatType")
+	}
+
+	if len(missingIEList) > 0 {
+		missingIEs := strings.Join(missingIEList, ", ")
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE [" + missingIEs + "] is missing or invalid",
+			Cause:  "MANDATORY_IE_MISSING",
+		}
+		logger.UecmLog.Warnln("Mandatory IE [" + missingIEs + "] is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	logger.UecmLog.Infof("Handle RegistrationAmf3gppAccess")
 
-	ueID := c.Param("ueId")
 	logger.UecmLog.Info("UEID: ", ueID)
 
 	s.Processor().RegistrationAmf3gppAccessProcedure(c, amf3GppAccessRegistration, ueID)
@@ -333,6 +439,24 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 // UpdateAmfNon3gppAccess - update a parameter in the AMF registration for non-3GPP access
 func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 	var amfNon3GppAccessRegistrationModification models.AmfNon3GppAccessRegistrationModification
+
+	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.6.3
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := validator.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -361,9 +485,21 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 		return
 	}
 
-	logger.UecmLog.Infof("Handle UpdateAmfNon3gppAccessRequest")
+	// TS 29.503 6.2.6.2.8 requirements check
+	if amfNon3GppAccessRegistrationModification.Guami == nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE Guami is missing or invalid",
+			Cause:  "MANDATORY_IE_MISSING",
+		}
+		logger.UecmLog.Warnln("Mandatory IE Guami is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
-	ueID := c.Param("ueId")
+	logger.UecmLog.Infof("Handle UpdateAmfNon3gppAccessRequest")
 
 	s.Processor().UpdateAmfNon3gppAccessProcedure(c, amfNon3GppAccessRegistrationModification, ueID)
 }
@@ -371,6 +507,23 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 // UpdateAmf3gppAccess - Update a parameter in the AMF registration for 3GPP access
 func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 	var amf3GppAccessRegistrationModification models.Amf3GppAccessRegistrationModification
+
+	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.6.2
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := validator.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -400,9 +553,21 @@ func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
 		return
 	}
 
-	logger.UecmLog.Infof("Handle UpdateAmf3gppAccessRequest")
+	// TS 29.503 6.2.6.2.7 requirements check
+	if amf3GppAccessRegistrationModification.Guami == nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE Guami  is missing or invalid",
+			Cause:  "MANDATORY_IE_MISSING",
+		}
+		logger.UecmLog.Warnln("Mandatory IE Guami is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
-	ueID := c.Param("ueId")
+	logger.UecmLog.Infof("Handle UpdateAmf3gppAccessRequest")
 
 	s.Processor().UpdateAmf3gppAccessProcedure(c, amf3GppAccessRegistrationModification, ueID)
 }
@@ -442,7 +607,35 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 	logger.UecmLog.Infof("Handle DeregistrationSmfRegistrations")
 
 	ueID := c.Params.ByName("ueId")
+	// TS 29.503 5.3.2.4.4
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := validator.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	pduSessionID := c.Params.ByName("pduSessionId")
+	// TS 29.571 5.4.2 valid PDU Session ID is an integer in the range 0 to 255
+	if !validator.IsValidPduSessionID(pduSessionID) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE PduSessionId is missing or invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnln("Mandatory IE PduSessionId is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	s.Processor().DeregistrationSmfRegistrationsProcedure(c, ueID, pduSessionID)
 }
@@ -450,6 +643,23 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 // RegistrationSmfRegistrations - register as SMF
 func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 	var smfRegistration models.SmfRegistration
+
+	ueID := c.Params.ByName("ueId")
+	// TS 29.503 5.3.2.2.4
+	// Validate SUPI format the UE ID (SUPI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := validator.IsValidSupi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -479,10 +689,48 @@ func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
 		return
 	}
 
+	// TS 29.503 6.2.6.2.4 requirements check
+	missingIEList := make([]string, 0)
+	if smfRegistration.SmfInstanceId == "" {
+		missingIEList = append(missingIEList, "SmfInstanceId")
+	}
+	if smfRegistration.SingleNssai == nil {
+		missingIEList = append(missingIEList, "SingleNssai")
+	}
+	if smfRegistration.PlmnId == nil {
+		missingIEList = append(missingIEList, "PlmnId")
+	}
+
+	if len(missingIEList) > 0 {
+		missingIEs := strings.Join(missingIEList, ", ")
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE [" + missingIEs + "] is missing or invalid",
+			Cause:  "MANDATORY_IE_MISSING",
+		}
+		logger.UecmLog.Warnln("Mandatory IE [" + missingIEs + "] is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+
 	logger.UecmLog.Infof("Handle RegistrationSmfRegistrations")
 
-	ueID := c.Params.ByName("ueId")
 	pduSessionID := c.Params.ByName("pduSessionId")
+	// TS 29.571 5.4.2 valid PDU Session ID is an integer in the range 0 to 255
+	if !validator.IsValidPduSessionID(pduSessionID) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Missing or invalid parameter",
+			Status: http.StatusBadRequest,
+			Detail: "Mandatory IE PduSessionId is missing or invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnln("Mandatory IE PduSessionId is missing or invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 
 	s.Processor().RegistrationSmfRegistrationsProcedure(
 		c,
@@ -497,6 +745,21 @@ func (s *Server) HandleGetAmf3gppAccess(c *gin.Context) {
 	logger.UecmLog.Infof("Handle HandleGetAmf3gppAccessRequest")
 
 	ueID := c.Param("ueId")
+	// TS 29.503 5.3.2.5.2
+	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI) shall be in the format defined in 3GPP TS 23.003 & 29.571
+	valid := validator.IsValidSupi(ueID) || validator.IsValidGpsi(ueID)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Invalid ueID format",
+			Status: http.StatusBadRequest,
+			Detail: "The ueID format is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.UecmLog.Warnf("Registration Reject: Invalid ueID format [%s]", ueID)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	supportedFeatures := c.Query("supported-features")
 
 	s.Processor().GetAmf3gppAccessProcedure(c, ueID, supportedFeatures)
