@@ -59,6 +59,7 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContext
 	if err != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
+		return
 	}
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(ueID)
 	if err != nil {
