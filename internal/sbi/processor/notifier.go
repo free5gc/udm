@@ -1,6 +1,8 @@
 package processor
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/free5gc/openapi"
@@ -22,7 +24,11 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 		return
 	}
 
-	ue, _ := p.Context().UdmUeFindBySupi(supi)
+	ue, ok := p.Context().UdmUeFindBySupi(supi)
+	if !ok {
+		c.Status(http.StatusNoContent)
+		return
+	}
 
 	clientAPI := p.Consumer().GetSDMClient("DataChangeNotification")
 
@@ -47,6 +53,10 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 				problemDetails = openapi.ProblemDetailsSystemFailure(err.Error())
 			}
 		}
+	}
+	if problemDetails == nil {
+		c.Status(http.StatusNoContent)
+		return
 	}
 	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 	c.JSON(int(problemDetails.Status), problemDetails)
