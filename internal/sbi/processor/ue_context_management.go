@@ -40,7 +40,7 @@ func (p *Processor) GetAmf3gppAccessProcedure(c *gin.Context, ueID string, suppo
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -73,7 +73,7 @@ func (p *Processor) GetAmfNon3gppAccessProcedure(c *gin.Context, queryAmfContext
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -123,7 +123,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -203,7 +203,7 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -496,7 +496,7 @@ func (p *Processor) DeregistrationSmfRegistrationsProcedure(c *gin.Context,
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -549,7 +549,7 @@ func (p *Processor) RegistrationSmfRegistrationsProcedure(
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
