@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"encoding/json"
 	"io"
 	"net/http/httptest"
 	"testing"
@@ -109,4 +110,65 @@ func TestGenerateAuthDataProcedure(t *testing.T) {
 	require.Equal(t, expectResponse.AuthType, res.AuthType)
 	require.Equal(t, expectResponse.Supi, res.Supi)
 	require.Equal(t, expectResponse.AuthenticationVector.AvType, res.AuthenticationVector.AvType)
+}
+
+func TestGenerateAuthDataProcedure_UDRError(t *testing.T) {
+	defer gock.Off()
+	openapi.InterceptH2CClient()
+	defer openapi.RestoreH2CClient()
+
+	// mock UDR response with 404 and a JSON error body (not base64 string)
+	errorBody := `{"title":"Not Found","status":404,"cause":"USER_NOT_FOUND"}`
+	gock.New("http://127.0.0.4:8000").
+		Get("/nudr-dr/v2/subscription-data/imsi-208930000000001/authentication-data/authentication-subscription").
+		Reply(404).
+		AddHeader("Content-Type", "application/json").
+		BodyString(errorBody)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockApp := mockapp.NewMockApp(ctrl)
+	testConsumer, err := consumer.NewConsumer(mockApp)
+	require.NoError(t, err)
+	testProcessor, err := NewProcessor(mockApp)
+	require.NoError(t, err)
+	udm_context.GetSelf().NrfUri = "http://127.0.0.10:8000"
+	ue := new(udm_context.UdmUeContext)
+	ue.Init()
+	ue.Supi = "imsi-208930000000001"
+	ue.UdrUri = "http://127.0.0.4:8000"
+	udm_context.GetSelf().UdmUePool.Store("imsi-208930000000001", ue)
+
+	mockApp.EXPECT().Consumer().Return(testConsumer).AnyTimes()
+	mockApp.EXPECT().Context().Return(
+		&udm_context.UDMContext{
+			OAuth2Required: false,
+			NrfUri:         "http://127.0.0.10:8000",
+			NfId:           "1",
+		},
+	).AnyTimes()
+
+	authInfoReq := models.AuthenticationInfoRequest{
+		ServingNetworkName: "internet",
+	}
+	httpRecorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(httpRecorder)
+	testProcessor.GenerateAuthDataProcedure(c, authInfoReq, "imsi-208930000000001")
+
+	httpResp := httpRecorder.Result()
+	defer func() {
+		if errClose := httpResp.Body.Close(); errClose != nil {
+			t.Fatalf("Failed to close response body: %+v", errClose)
+		}
+	}()
+	rawBytes, errReadAll := io.ReadAll(httpResp.Body)
+	require.NoError(t, errReadAll)
+	body := string(rawBytes)
+
+	// validate response status code and body content
+	require.Equal(t, 404, httpResp.StatusCode)
+
+	// corrected assertion to check if body is valid JSON and contains expected error cause
+	require.True(t, json.Valid(rawBytes), "response body should be valid JSON, got: %s", body)
+	require.Contains(t, body, "USER_NOT_FOUND")
 }

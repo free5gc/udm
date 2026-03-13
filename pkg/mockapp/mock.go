@@ -83,7 +83,6 @@ func (mr *MockAppMockRecorder) Consumer() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Consumer", reflect.TypeOf((*MockApp)(nil).Consumer))
 }
 
-
 // SetLogEnable mocks base method.
 func (m *MockApp) SetLogEnable(enable bool) {
 	m.ctrl.T.Helper()

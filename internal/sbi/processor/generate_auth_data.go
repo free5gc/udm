@@ -94,7 +94,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		logger.UeauLog.Errorln("ConfirmAuth err:", err.Error())
@@ -155,7 +155,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			switch apiError.ErrorStatus {
 			case http.StatusNotFound:
 				logger.UeauLog.Warnf("Return from UDR QueryAuthSubsData error")
