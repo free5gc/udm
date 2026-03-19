@@ -29,6 +29,8 @@ github.com/free5gc/openapi v1.2.3 h1:w4TmYBR8TUE4ZgKo7eiMZbyZPURSBFlMWiFeX+OsiA8
 github.com/free5gc/openapi v1.2.3/go.mod h1:fLvaBtUZrvrzkKrmn5Aza+JNbpWnp3kxKixu6kLSD3k=
 github.com/free5gc/util v1.3.2-0.20260204030658-79d56f347175 h1:F1KLSNuHBQzQC2rjC0Zu0ehaAc1n2Gmkw52g8YgnsdY=
 github.com/free5gc/util v1.3.2-0.20260204030658-79d56f347175/go.mod h1:qsv/ez8YhI+pO8bjNiZWXc2xmRE3XuEIa0EDTCPkSy0=
+github.com/free5gc/util v1.3.2-0.20260319090834-b2a2938f37b4 h1:2Ml+rXDYyRkPYc8pKMr09hbrRx6hMS5Ic2e9b7CEx64=
+github.com/free5gc/util v1.3.2-0.20260319090834-b2a2938f37b4/go.mod h1:qsv/ez8YhI+pO8bjNiZWXc2xmRE3XuEIa0EDTCPkSy0=
 github.com/gabriel-vasile/mimetype v1.4.3 h1:in2uUcidCuFcDKtdcBxlR0rJ1+fsokWf+uqxgUFjbI0=
 github.com/gabriel-vasile/mimetype v1.4.3/go.mod h1:d8uq/6HKRL6CGdk+aubisF/M5GcPfT7nKyLpA0lbSSk=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
