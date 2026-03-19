@@ -141,6 +141,7 @@ func (s *Server) shutdownHttpServer() {
 func newRouter(s *Server) *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	router.Use(metrics.InboundMetrics())
+	router.GET("/", s.HandleIndex)
 
 	// EE
 	udmEERoutes := s.getEventExposureRoutes()
@@ -152,8 +153,11 @@ func newRouter(s *Server) *gin.Engine {
 
 	// Callback
 	udmCallBackRoutes := s.getHttpCallBackRoutes()
-	udmCallNackGroup := router.Group("")
-	AddService(udmCallNackGroup, udmCallBackRoutes)
+	udmCallBackGroup := router.Group("")
+	udmCallBackGroup.Use(func(c *gin.Context) {
+		util.NewRouterAuthorizationCheck(models.ServiceName_NUDM_SDM).Check(c, s.Context())
+	})
+	AddService(udmCallBackGroup, udmCallBackRoutes)
 
 	// UEAU
 	udmUEAURoutes := s.getUEAuthenticationRoutes()
