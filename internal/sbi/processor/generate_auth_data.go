@@ -236,6 +236,18 @@ func (p *Processor) GenerateAuthDataProcedure(
 		return
 	}
 
+	if authSubs.AuthenticationSubscription.SequenceNumber == nil {
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusForbidden,
+			Cause:  authenticationRejected,
+			Detail: "SequenceNumber is missing",
+		}
+		logger.UeauLog.Errorln("Nil SequenceNumber")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
+	}
+
 	sqnStr := p.strictHex(authSubs.AuthenticationSubscription.SequenceNumber.Sqn, 12)
 	logger.UeauLog.Traceln("sqnStr", sqnStr)
 	sqn, err := hex.DecodeString(sqnStr)
