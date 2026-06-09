@@ -42,7 +42,7 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -174,7 +174,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
 				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-				c.JSON(apiError.ErrorStatus, apiError.RawBody)
+				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -201,7 +201,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
 				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-				c.JSON(apiError.ErrorStatus, apiError.RawBody)
+				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -230,7 +230,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
 				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-				c.JSON(apiError.ErrorStatus, apiError.RawBody)
+				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -282,7 +282,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
 				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-				c.JSON(apiError.ErrorStatus, apiError.RawBody)
+				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -313,7 +313,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
 				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-				c.JSON(apiError.ErrorStatus, apiError.RawBody)
+				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -431,7 +431,7 @@ func (p *Processor) GetSmDataProcedure(
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -501,7 +501,7 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -550,7 +550,7 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -649,7 +649,7 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.S
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -856,7 +856,7 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
@@ -907,7 +907,7 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
