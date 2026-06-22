@@ -15,13 +15,6 @@ import (
 func (s *Server) getHttpCallBackRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
-		},
-
-		{
 			"DataChangeNotificationToNF",
 			http.MethodPost,
 			"/:supi/sdm-subscriptions",
