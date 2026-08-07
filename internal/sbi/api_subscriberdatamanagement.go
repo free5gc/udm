@@ -194,7 +194,7 @@ func (s *Server) HandleGetSharedData(c *gin.Context) {
 
 // SubscribeToSharedData - subscribe to notifications for shared data
 func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
-	var sharedDataSubsReq models.SdmSubscription
+	var sharedDataSubsReq models.Udm_SDM_SdmSubscription
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -231,7 +231,7 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 
 // Subscribe - subscribe to notifications
 func (s *Server) HandleSubscribe(c *gin.Context) {
-	var sdmSubscriptionReq models.SdmSubscription
+	var sdmSubscriptionReq models.Udm_SDM_SdmSubscription
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -302,7 +302,7 @@ func (s *Server) HandleUnsubscribeForSharedData(c *gin.Context) {
 
 // Modify - modify the subscription
 func (s *Server) HandleModify(c *gin.Context) {
-	var sdmSubsModificationReq models.SdmSubsModification
+	var sdmSubsModificationReq models.Udm_SDM_SdmSubsModification
 
 	// TS 29.503 6.1.3.4.2
 	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI)
@@ -357,7 +357,7 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 // ModifyForSharedData - modify the subscription
 func (s *Server) HandleModifyForSharedData(c *gin.Context) {
-	var sharedDataSubscriptions models.SdmSubsModification
+	var sharedDataSubscriptions models.Udm_SDM_SdmSubsModification
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{

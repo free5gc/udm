@@ -21,14 +21,13 @@ import (
 func TestGenerateAuthDataProcedure(t *testing.T) {
 	defer gock.Off() // Flush pending mocks after test execution
 
-	openapi.InterceptH2CClient()
-	defer openapi.RestoreH2CClient()
+	openapi.InterceptInnerHttp2Client(t, false)
 
-	queryRes := models.AuthenticationSubscription{
-		AuthenticationMethod:          models.AuthMethod__5_G_AKA,
+	queryRes := models.Udr_DR_AuthenticationSubscription{
+		AuthenticationMethod:          models.Udr_DR_AuthMethod_5_G_AKA,
 		EncPermanentKey:               "8baf473f2f8fd09487cccbd7097c6862",
 		ProtectionParameterId:         "8baf473f2f8fd09487cccbd7097c6862",
-		SequenceNumber:                &models.SequenceNumber{Sqn: "000000000023"},
+		SequenceNumber:                &models.Udr_DR_SequenceNumber{Sqn: "000000000023"},
 		AuthenticationManagementField: "8000",
 		AlgorithmId:                   "128-EEA0",
 		EncOpcKey:                     "8e27b6af0e692e750f32667a3b14605d",
@@ -69,7 +68,7 @@ func TestGenerateAuthDataProcedure(t *testing.T) {
 		},
 	).AnyTimes()
 
-	authInfoReq := models.AuthenticationInfoRequest{
+	authInfoReq := models.Udm_UEAU_AuthenticationInfoRequest{
 		ServingNetworkName: "internet",
 	}
 	httpRecorder := httptest.NewRecorder()
@@ -86,15 +85,15 @@ func TestGenerateAuthDataProcedure(t *testing.T) {
 		t.Fatalf("Failed to read response body: %+v", errReadAll)
 	}
 
-	var res models.UdmUeauAuthenticationInfoResult
+	var res models.Udm_UEAU_AuthenticationInfoResult
 	err = openapi.Deserialize(&res, rawBytes, httpResp.Header.Get("Content-Type"))
 	if err != nil {
 		t.Fatalf("Failed to deserialize response body: %+v", err)
 	}
 
-	expectResponse := models.UdmUeauAuthenticationInfoResult{
+	expectResponse := models.Udm_UEAU_AuthenticationInfoResult{
 		AuthType: "5G_AKA",
-		AuthenticationVector: &models.AuthenticationVector{
+		AuthenticationVector: &models.Udm_UEAU_AuthenticationVector{
 			AvType: "5G_HE_AKA",
 			// Rand:     "6823f0dc9da02a61f6224d278a6f65b0",
 			// Autn:     "1a7692538cf2800082662b9daa0396c5",
@@ -114,8 +113,7 @@ func TestGenerateAuthDataProcedure(t *testing.T) {
 
 func TestGenerateAuthDataProcedure_UDRError(t *testing.T) {
 	defer gock.Off()
-	openapi.InterceptH2CClient()
-	defer openapi.RestoreH2CClient()
+	openapi.InterceptInnerHttp2Client(t, false)
 
 	// mock UDR response with 404 and a JSON error body (not base64 string)
 	errorBody := `{"title":"Not Found","status":404,"cause":"USER_NOT_FOUND"}`
@@ -148,7 +146,7 @@ func TestGenerateAuthDataProcedure_UDRError(t *testing.T) {
 		},
 	).AnyTimes()
 
-	authInfoReq := models.AuthenticationInfoRequest{
+	authInfoReq := models.Udm_UEAU_AuthenticationInfoRequest{
 		ServingNetworkName: "internet",
 	}
 	httpRecorder := httptest.NewRecorder()

@@ -107,7 +107,7 @@ func (s *Server) getParameterProvisionRoutes() []Route {
 }
 
 func (s *Server) HandleUpdate(c *gin.Context) {
-	var ppDataReq models.PpData
+	var ppDataReq models.Udm_PP_PpData
 
 	// step 1: retrieve http request body
 	requestBody, err := c.GetRawData()

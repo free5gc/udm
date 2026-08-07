@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/nrf/NFManagement"
+	NFManagement "github.com/free5gc/openapi/nrf/NFMgmt"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/sbi"
@@ -197,7 +197,7 @@ func (a *UdmApp) terminateProcedure() {
 		case openapi.GenericOpenAPIError:
 			switch errModel := apiErr.Model().(type) {
 			case NFManagement.DeregisterNFInstanceError:
-				pd := &errModel.ProblemDetails
+				pd := errModel.ProblemDetails
 				logger.InitLog.Errorf("Deregister NF instance Failed Problem[%+v]", pd)
 			case error:
 				logger.InitLog.Errorf("Deregister NF instance Error[%+v]", err)

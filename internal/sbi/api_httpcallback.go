@@ -24,7 +24,7 @@ func (s *Server) getHttpCallBackRoutes() []Route {
 }
 
 func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
-	var dataChangeNotify models.DataChangeNotify
+	var dataChangeNotify models.Udr_DR_DataChangeNotify
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{

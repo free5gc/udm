@@ -7,15 +7,15 @@ import (
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
-	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
+	Nudr_DataRepository "github.com/free5gc/openapi/udr/DR"
 	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (p *Processor) UpdateProcedure(c *gin.Context,
-	updateRequest models.PpData,
+	updateRequest models.Udm_PP_PpData,
 	gpsi string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDR_DR, models.Nrf_NFMgmt_NFType_UDR)
 	if err != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)

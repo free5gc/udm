@@ -8,7 +8,7 @@ import (
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
-	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
+	Nudr_DataRepository "github.com/free5gc/openapi/udr/DR"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/validator"
@@ -271,7 +271,7 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 
 // Register - register as AMF for non-3GPP access
 func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
-	var amfNon3GppAccessRegistration models.AmfNon3GppAccessRegistration
+	var amfNon3GppAccessRegistration models.Udm_UECM_AmfNon3GppAccessRegistration
 
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.2.3
@@ -354,7 +354,7 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 
 // RegistrationAmf3gppAccess - register as AMF for 3GPP access
 func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
-	var amf3GppAccessRegistration models.Amf3GppAccessRegistration
+	var amf3GppAccessRegistration models.Udm_UECM_Amf3GppAccessRegistration
 
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.2.2
@@ -438,7 +438,7 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 
 // UpdateAmfNon3gppAccess - update a parameter in the AMF registration for non-3GPP access
 func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
-	var amfNon3GppAccessRegistrationModification models.AmfNon3GppAccessRegistrationModification
+	var amfNon3GppAccessRegistrationModification models.Udm_UECM_AmfNon3GppAccessRegistrationModification
 
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.6.3
@@ -506,7 +506,7 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 
 // UpdateAmf3gppAccess - Update a parameter in the AMF registration for 3GPP access
 func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
-	var amf3GppAccessRegistrationModification models.Amf3GppAccessRegistrationModification
+	var amf3GppAccessRegistrationModification models.Udm_UECM_Amf3GppAccessRegistrationModification
 
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.6.2
@@ -642,7 +642,7 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 
 // RegistrationSmfRegistrations - register as SMF
 func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
-	var smfRegistration models.SmfRegistration
+	var smfRegistration models.Udm_UECM_SmfRegistration
 
 	ueID := c.Params.ByName("ueId")
 	// TS 29.503 5.3.2.2.4
