@@ -4,7 +4,7 @@ go 1.26.2
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
-	github.com/free5gc/openapi v1.2.5-0.20260716090436-13797f3a9f13
+	github.com/free5gc/openapi v1.2.5-0.20260811062155-dfddae693851
 	github.com/free5gc/util v1.3.3-0.20260806004242-cfe683dea97d
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
