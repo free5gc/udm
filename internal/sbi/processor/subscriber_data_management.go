@@ -842,7 +842,8 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		logger.SdmLog.Errorf("Create UDR client for trace-data query failed: %v", err)
+		problemDetails := openapi.ProblemDetailsSystemFailure("Upstream request failed")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -859,7 +860,8 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		logger.SdmLog.Errorf("Trace-data query failed: %v", err)
+		problemDetails := openapi.ProblemDetailsSystemFailure("Upstream request failed")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
