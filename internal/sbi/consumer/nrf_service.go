@@ -100,7 +100,7 @@ func (s *nnrfService) SendSearchNFInstances(
 
 	client := s.getNFDiscClient(udmContext.NrfUri)
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NNRF_DISC, models.Nrf_NFMgmt_NFType_NRF)
+	ctx, _, err := s.consumer.Context().GetTokenCtxForNRF(models.Nrf_NFMgmt_ServiceName_NNRF_DISC)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (s *nnrfService) SendNFInstancesUDR(id string, types int) string {
 func (s *nnrfService) SendDeregisterNFInstance() (err error) {
 	logger.ConsumerLog.Infof("Send Deregister NFInstance")
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NNRF_NFM, models.Nrf_NFMgmt_NFType_NRF)
+	ctx, _, err := s.consumer.Context().GetTokenCtxForNRF(models.Nrf_NFMgmt_ServiceName_NNRF_NFM)
 	if err != nil {
 		return err
 	}
@@ -186,8 +186,7 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context, applyOAuth2 bool) 
 			if res.Nrf_NFMgmt_NFProfile != nil {
 				nf = *res.Nrf_NFMgmt_NFProfile
 			}
-			s.processRegisterResponse(udmContext, nf, applyOAuth2)
-			return nil
+			return s.processRegisterResponse(udmContext, nf, applyOAuth2)
 		}
 		logger.ConsumerLog.Errorf("UDM register to NRF Error[%v]", err)
 		select {
@@ -204,9 +203,7 @@ func (s *nnrfService) processRegisterResponse(
 	udmContext *udm_context.UDMContext,
 	nf models.Nrf_NFMgmt_NFProfile,
 	applyOAuth2 bool,
-) {
-	s.heartbeatTimer = nf.HeartBeatTimer
-
+) error {
 	oauth2 := false
 	if customInfo, ok := nf.CustomInfo.(map[string]interface{}); ok {
 		if v, isBool := customInfo["oauth2"].(bool); isBool {
@@ -215,13 +212,14 @@ func (s *nnrfService) processRegisterResponse(
 		}
 	}
 	if applyOAuth2 {
-		udmContext.OAuth2Required = oauth2
-		if oauth2 && udmContext.NrfCertPem == "" {
-			logger.CfgLog.Error("OAuth2 enable but no nrfCertPem provided in config.")
+		if err := udmContext.SetOAuth2Required(oauth2); err != nil {
+			return err
 		}
 	} else if oauth2 != udmContext.OAuth2Required {
 		logger.ConsumerLog.Warnf("NRF OAuth2 setting changed to %v, restart UDM to apply it", oauth2)
 	}
+	s.heartbeatTimer = nf.HeartBeatTimer
+	return nil
 }
 
 // SendUpdateNFInstance sends an NFUpdate PATCH to the NRF, honoring ctx. The
@@ -231,9 +229,8 @@ func (s *nnrfService) SendUpdateNFInstance(ctx context.Context, patchItems []mod
 	nf models.Nrf_NFMgmt_NFProfile, problemDetails *models.ProblemDetails, err error,
 ) {
 	udmContext := s.consumer.Context()
-	tokCtx, pd, err := udmContext.GetTokenCtx(
+	tokCtx, pd, err := udmContext.GetTokenCtxForNRF(
 		models.Nrf_NFMgmt_ServiceName_NNRF_NFM,
-		models.Nrf_NFMgmt_NFType_NRF,
 	)
 	if err != nil {
 		return nf, pd, err

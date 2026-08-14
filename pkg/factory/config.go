@@ -83,6 +83,7 @@ type Configuration struct {
 	ServiceNameList []string           `yaml:"serviceNameList,omitempty"  valid:"required"`
 	NrfUri          string             `yaml:"nrfUri,omitempty"  valid:"required, url"`
 	NrfCertPem      string             `yaml:"nrfCertPem,omitempty" valid:"optional"`
+	NrfNfInstanceId string             `yaml:"nrfNfInstanceId,omitempty" valid:"optional,uuidv4"`
 	SuciProfiles    []suci.SuciProfile `yaml:"SuciProfile,omitempty"`
 	// NfHeartBeatTimer is the fallback heartbeat interval in seconds, from 1 to
 	// 3600 as the NRF accepts. The interval the NRF assigns always wins.
