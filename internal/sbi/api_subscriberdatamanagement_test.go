@@ -19,6 +19,7 @@ import (
 	"github.com/free5gc/udm/internal/sbi/consumer"
 	"github.com/free5gc/udm/internal/sbi/processor"
 	"github.com/free5gc/udm/pkg/app"
+	"github.com/free5gc/util/validator"
 )
 
 type traceDataTestApp struct {
@@ -317,4 +318,77 @@ func newSDMTestContext(t *testing.T, method, target, body string) (*httptest.Res
 	require.NoError(t, err)
 	c.Request = req
 	return recorder, c
+}
+
+// setupSdmTestRouter registers the six nudm-sdm GET handlers under test
+// (plus HandleGetAmData as the reference handler that already validates).
+// The handlers are served by a zero-value Server: invalid-supi requests are
+// rejected before any Processor call, so no Processor stub is needed.
+func setupSdmTestRouter() *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	s := &Server{}
+	r := gin.New()
+	group := r.Group("/nudm-sdm/v2")
+	AddService(group, []Route{
+		{"GetSmfSelectData", http.MethodGet, "/:supi/smf-select-data", s.HandleGetSmfSelectData},
+		{"GetSupi", http.MethodGet, "/:supi", s.HandleGetSupi},
+		{"GetTraceData", http.MethodGet, "/:supi/trace-data", s.HandleGetTraceData},
+		{"GetUeContextInSmfData", http.MethodGet, "/:supi/ue-context-in-smf-data", s.HandleGetUeContextInSmfData},
+		{"GetNssai", http.MethodGet, "/:supi/nssai", s.HandleGetNssai},
+		{"GetSmData", http.MethodGet, "/:supi/sm-data", s.HandleGetSmData},
+		{"GetAmData", http.MethodGet, "/:supi/am-data", s.HandleGetAmData},
+	})
+	return r
+}
+
+func TestSdmGetHandlersRejectInvalidSupi(t *testing.T) {
+	router := setupSdmTestRouter()
+
+	// CVE-2026-42459 PoC: control characters in supi make UDM build an
+	// invalid internal UDR URL and leak it in a 500 response.
+	const invalidSupi = "imsi-22277%00INJECTED"
+
+	cases := []struct {
+		name string
+		path string
+	}{
+		{"smf-select-data", "/nudm-sdm/v2/" + invalidSupi + "/smf-select-data"},
+		{"supi", "/nudm-sdm/v2/" + invalidSupi},
+		{"trace-data", "/nudm-sdm/v2/" + invalidSupi + "/trace-data"},
+		{"ue-context-in-smf-data", "/nudm-sdm/v2/" + invalidSupi + "/ue-context-in-smf-data"},
+		{"nssai", "/nudm-sdm/v2/" + invalidSupi + "/nssai"},
+		{"sm-data", "/nudm-sdm/v2/" + invalidSupi + "/sm-data"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, tc.path, nil)
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			if w.Code != http.StatusBadRequest {
+				t.Fatalf("expected 400 Bad Request, got %d", w.Code)
+			}
+			var pd models.ProblemDetails
+			if err := json.Unmarshal(w.Body.Bytes(), &pd); err != nil {
+				t.Fatalf("unmarshal problem details: %v", err)
+			}
+			if pd.Detail != "Supi is invalid" {
+				t.Fatalf("expected detail %q, got %q", "Supi is invalid", pd.Detail)
+			}
+		})
+	}
+}
+
+func TestSdmValidSupiPassesValidation(t *testing.T) {
+	// Well-formed SUPIs must pass validator.IsValidSupi so the new guard
+	// blocks in the six handlers never reject legitimate requests.
+	for _, supi := range []string{
+		"imsi-222770000000001",
+		"nai-username@example.com",
+	} {
+		if !validator.IsValidSupi(supi) {
+			t.Errorf("expected %q to be a valid SUPI", supi)
+		}
+	}
 }
