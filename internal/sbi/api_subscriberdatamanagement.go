@@ -102,7 +102,36 @@ func (s *Server) getPlmnIDStruct(
 		}
 		return nil, problemDetails
 	}
+	// TS 23.003: MCC is 3 digits and MNC is 2-3 digits. Bound the length
+	// and charset so an oversized/crafted mcc/mnc cannot propagate
+	// unsanitized into the internal outbound UDR request URL
+	// (GHSA-42jf-j68x-57gx).
+	if !isValidMccMnc(plmnIDStruct.Mcc, plmnIDStruct.Mnc) {
+		problemDetails = &models.ProblemDetails{
+			Title:  "Invalid Parameter",
+			Status: http.StatusBadRequest,
+			Cause:  "plmn-id contains invalid mcc/mnc",
+		}
+		return nil, problemDetails
+	}
 	return plmnIDStruct, nil
+}
+
+func isValidMccMnc(mcc, mnc string) bool {
+	if len(mcc) != 3 || len(mnc) < 2 || len(mnc) > 3 {
+		return false
+	}
+	for _, c := range mcc {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	for _, c := range mnc {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // Info - Nudm_Sdm Info service operation
