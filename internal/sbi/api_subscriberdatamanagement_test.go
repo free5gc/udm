@@ -47,7 +47,7 @@ func (a *traceDataTestApp) CancelContext() context.Context {
 
 func TestOneLayerPathHandlerDoesNotMatchSubstrings(t *testing.T) {
 	server := &Server{}
-	for _, supi := range []string{"shared", "data", "multiple"} {
+	for _, supi := range []string{"imsi-208930000000001", "imsi-208930000000002", "imsi-208930000000003"} {
 		t.Run(supi, func(t *testing.T) {
 			target := "/" + supi + "?plmn-id=not-json"
 			recorder, c := newSDMTestContext(t, http.MethodGet, target, "")
@@ -362,7 +362,7 @@ func TestSdmGetHandlersRejectInvalidSupi(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, tc.path, nil)
+			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, tc.path, nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
