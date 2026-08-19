@@ -10,8 +10,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/free5gc/openapi/models"
-	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
-	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
+	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDisc"
+	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFMgmt"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/util"
@@ -76,14 +76,14 @@ func (s *nnrfService) getNFDiscClient(uri string) *Nnrf_NFDiscovery.APIClient {
 
 func (s *nnrfService) SendSearchNFInstances(
 	nrfUri string, param Nnrf_NFDiscovery.SearchNFInstancesRequest) (
-	*models.SearchResult, error,
+	*models.Nrf_NFDisc_SearchResult, error,
 ) {
 	// Set client and set url
 	udmContext := s.consumer.Context()
 
 	client := s.getNFDiscClient(udmContext.NrfUri)
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NNRF_DISC, models.NrfNfManagementNfType_NRF)
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NNRF_DISC, models.Nrf_NFMgmt_NFType_NRF)
 	if err != nil {
 		return nil, err
 	}
@@ -97,15 +97,13 @@ func (s *nnrfService) SendSearchNFInstances(
 		logger.ConsumerLog.Errorf("SearchNFInstances result nil:%+v", err1)
 		return nil, fmt.Errorf("SearchNFInstances result nil:%+v", err1)
 	}
-	result := searchNfInstancesRsp.SearchResult
-
-	return &result, nil
+	return searchNfInstancesRsp.Nrf_NFDisc_SearchResult, nil
 }
 
 func (s *nnrfService) SendNFInstancesUDR(id string, types int) string {
 	self := udm_context.GetSelf()
-	targetNfType := models.NrfNfManagementNfType_UDR
-	requestNfType := models.NrfNfManagementNfType_UDM
+	targetNfType := models.Nrf_NFMgmt_NFType_UDR
+	requestNfType := models.Nrf_NFMgmt_NFType_UDM
 	searchNFinstanceRequest := Nnrf_NFDiscovery.SearchNFInstancesRequest{
 		// 	DataSet: optional.NewInterface(models.DataSetId_SUBSCRIPTION),
 	}
@@ -118,7 +116,11 @@ func (s *nnrfService) SendNFInstancesUDR(id string, types int) string {
 		return ""
 	}
 	for _, profile := range result.NfInstances {
-		return util.SearchNFServiceUri(profile, models.ServiceName_NUDR_DR, models.NfServiceStatus_REGISTERED)
+		return util.SearchNFServiceUri(
+			profile,
+			models.Nrf_NFMgmt_ServiceName_NUDR_DR,
+			models.Nrf_NFMgmt_NFServiceStatus_REGISTERED,
+		)
 	}
 	return ""
 }
@@ -126,7 +128,7 @@ func (s *nnrfService) SendNFInstancesUDR(id string, types int) string {
 func (s *nnrfService) SendDeregisterNFInstance() (err error) {
 	logger.ConsumerLog.Infof("Send Deregister NFInstance")
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NrfNfManagementNfType_NRF)
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NNRF_NFM, models.Nrf_NFMgmt_NFType_NRF)
 	if err != nil {
 		return err
 	}
@@ -152,7 +154,7 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 	}
 	var registerNfInstanceRequest Nnrf_NFManagement.RegisterNFInstanceRequest
 	registerNfInstanceRequest.NfInstanceID = &udmContext.NfId
-	registerNfInstanceRequest.NrfNfManagementNfProfile = &nfProfile
+	registerNfInstanceRequest.RequestBody = &nfProfile
 	var res *Nnrf_NFManagement.RegisterNFInstanceResponse
 	for {
 		select {
@@ -164,7 +166,7 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 		res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(ctx, &registerNfInstanceRequest)
 
 		if err != nil || res == nil {
-			logger.ConsumerLog.Errorf("UDM register to NRF Error[%v]", err.Error())
+			logger.ConsumerLog.Errorf("UDM register to NRF Error[%v]", err)
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -179,9 +181,10 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 			retrieveNfInstanceID = resourceUri[strings.LastIndex(resourceUri, "/")+1:]
 
 			oauth2 := false
-			if res.NrfNfManagementNfProfile.CustomInfo != nil {
-				v, ok := res.NrfNfManagementNfProfile.CustomInfo["oauth2"].(bool)
-				if ok {
+			if res.Nrf_NFMgmt_NFProfile != nil {
+				customInfo, ok := res.Nrf_NFMgmt_NFProfile.CustomInfo.(map[string]interface{})
+				v, isBool := customInfo["oauth2"].(bool)
+				if ok && isBool {
 					oauth2 = v
 					logger.MainLog.Infoln("OAuth2 setting receive from NRF:", oauth2)
 				}
@@ -198,18 +201,18 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 }
 
 func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (
-	profile models.NrfNfManagementNfProfile, err error,
+	profile models.Nrf_NFMgmt_NFProfile, err error,
 ) {
 	profile.NfInstanceId = udmContext.NfId
-	profile.NfType = models.NrfNfManagementNfType_UDM
-	profile.NfStatus = models.NrfNfManagementNfStatus_REGISTERED
+	profile.NfType = models.Nrf_NFMgmt_NFType_UDM
+	profile.NfStatus = models.Nrf_NFMgmt_NFStatus_REGISTERED
 	profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIPv4)
 	for _, nfService := range udmContext.NfService {
 		profile.NfServices = append(profile.NfServices, nfService)
 	}
-	profile.UdmInfo = &models.UdmInfo{
+	profile.UdmInfo = &models.Nrf_NFMgmt_UdmInfo{
 		// Todo
-		// SupiRanges: &[]models.SupiRange{
+		// SupiRanges: &[]models.Nrf_NFMgmt_SupiRange{
 		// 	{
 		// 		//from TS 29.510 6.1.6.2.9 example2
 		//		//no need to set supirange in this moment 2019/10/4

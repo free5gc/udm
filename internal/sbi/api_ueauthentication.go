@@ -26,7 +26,7 @@ func (s *Server) getUEAuthenticationRoutes() []Route {
 
 // ConfirmAuth - Create a new confirmation event
 func (s *Server) HandleConfirmAuth(c *gin.Context) {
-	var authEvent models.AuthEvent
+	var authEvent models.Udm_UEAU_AuthEvent
 	// TS 29.503 6.3.6.2.3
 	// Validate SUPI format
 	supi := c.Params.ByName("supi")
@@ -107,7 +107,7 @@ func (s *Server) HandleConfirmAuth(c *gin.Context) {
 
 // GenerateAuthData - Generate authentication data for the UE
 func (s *Server) HandleGenerateAuthData(c *gin.Context) {
-	var authInfoReq models.AuthenticationInfoRequest
+	var authInfoReq models.Udm_UEAU_AuthenticationInfoRequest
 	// TS 29.503 6.3.3.2.2
 	// Validate SUPI or SUCI format
 	supiOrSuci := c.Param("supiOrSuci")

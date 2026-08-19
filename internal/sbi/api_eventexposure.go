@@ -45,7 +45,7 @@ func (s *Server) getEventExposureRoutes() []Route {
 
 // HTTPCreateEeSubscription - Subscribe
 func (s *Server) HandleCreateEeSubscription(c *gin.Context) {
-	var eesubscription models.UdmEeEeSubscription
+	var eesubscription models.Udm_EvtExpos_EeSubscription
 
 	requestBody, err := c.GetRawData()
 	if err != nil {

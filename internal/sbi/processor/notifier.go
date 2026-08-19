@@ -7,8 +7,8 @@ import (
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/openapi/udm/SubscriberDataManagement"
-	"github.com/free5gc/openapi/udm/UEContextManagement"
+	"github.com/free5gc/openapi/udm/SDM"
+	"github.com/free5gc/openapi/udm/UECM"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
 )
@@ -17,7 +17,7 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 	notifyItems []models.NotifyItem,
 	supi string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NrfNfManagementNfType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDM_SDM, models.Nrf_NFMgmt_NFType_UDM)
 	if err != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
@@ -35,18 +35,18 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 	var problemDetails *models.ProblemDetails
 	for _, subscriptionDataSubscription := range ue.UdmSubsToNotify {
 		onDataChangeNotificationurl := subscriptionDataSubscription.OriginalCallbackReference
-		dataChangeNotification := models.ModificationNotification{}
+		dataChangeNotification := models.Udm_SDM_ModificationNotification{}
 		dataChangeNotification.NotifyItems = notifyItems
-		var subDataChangeNotificationPostRequest SubscriberDataManagement.SubscribeDatachangeNotificationPostRequest
-		subDataChangeNotificationPostRequest.ModificationNotification = &dataChangeNotification
-		_, err = clientAPI.SubscriptionCreationApi.SubscribeDatachangeNotificationPost(
+		var subDataChangeNotificationPostRequest SDM.SubscribeDatachangeNotificationRequest
+		subDataChangeNotificationPostRequest.RequestBody = &dataChangeNotification
+		_, err = clientAPI.SubscriptionCreationApi.SubscribeDatachangeNotification(
 			ctx, onDataChangeNotificationurl, &subDataChangeNotificationPostRequest)
 		if err != nil {
 			if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 				// API error
 				if subDataChangeNoti_err, ok2 := apiErr.
-					Model().(SubscriberDataManagement.SubscribeDatachangeNotificationPostError); ok2 {
-					problemDetails = &subDataChangeNoti_err.ProblemDetails
+					Model().(SDM.SubscribeDatachangeNotificationError); ok2 {
+					problemDetails = subDataChangeNoti_err.ProblemDetails
 				}
 			} else {
 				logger.HttpLog.Error(err.Error())
@@ -63,27 +63,27 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 }
 
 func (p *Processor) SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
-	deregistData models.UdmUecmDeregistrationData,
+	deregistData models.Udm_UECM_DeregistrationData,
 ) *models.ProblemDetails {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_UECM, models.NrfNfManagementNfType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDM_UECM, models.Nrf_NFMgmt_NFType_UDM)
 	if err != nil {
 		return pd
 	}
 
 	clientAPI := p.Consumer().GetUECMClient("SendOnDeregistrationNotification")
-	var call3GppRegistrationDeregistrationNotificationPostRequest UEContextManagement.
-		Call3GppRegistrationDeregistrationNotificationPostRequest
-	call3GppRegistrationDeregistrationNotificationPostRequest.UdmUecmDeregistrationData = &deregistData
+	var call3GppRegistrationDeregistrationNotificationPostRequest UECM.
+		Call3GppRegistrationDeregistrationNotificationRequest
+	call3GppRegistrationDeregistrationNotificationPostRequest.RequestBody = &deregistData
 	_, err = clientAPI.AMFRegistrationFor3GPPAccessApi.
-		Call3GppRegistrationDeregistrationNotificationPost(ctx,
+		Call3GppRegistrationDeregistrationNotification(ctx,
 			onDeregistrationNotificationUrl,
 			&call3GppRegistrationDeregistrationNotificationPostRequest)
 	if err != nil {
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			// API error
 			if deregisterNoti_err, ok2 := apiErr.
-				Model().(UEContextManagement.Call3GppRegistrationDeregistrationNotificationPostError); ok2 {
-				return &deregisterNoti_err.ProblemDetails
+				Model().(UECM.Call3GppRegistrationDeregistrationNotificationError); ok2 {
+				return deregisterNoti_err.ProblemDetails
 			}
 		}
 	}
