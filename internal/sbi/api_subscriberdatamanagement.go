@@ -54,6 +54,7 @@ func (s *Server) HandleGetAmData(c *gin.Context) {
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -80,7 +81,11 @@ func (s *Server) getPlmnIDStruct(
 		problemDetails = &models.ProblemDetails{
 			Title:  "Invalid Parameter",
 			Status: http.StatusBadRequest,
-			Cause:  "plmn-id parameter cannot be empty",
+			Cause:  "OPTIONAL_QUERY_PARAM_INCORRECT",
+			InvalidParams: []models.InvalidParam{{
+				Param:  "query plmn-id",
+				Reason: "cannot be empty",
+			}},
 		}
 		return nil, problemDetails
 	}
@@ -94,10 +99,22 @@ func (s *Server) getPlmnIDStruct(
 		problemDetails = &models.ProblemDetails{
 			Title:  "Invalid Parameter",
 			Status: http.StatusBadRequest,
-			Cause:  "Failed to parse plmn-id JSON",
+			Cause:  "OPTIONAL_QUERY_PARAM_INCORRECT",
 			InvalidParams: []models.InvalidParam{{
-				Param:  "plmn-id",
-				Reason: err.Error(),
+				Param:  "query plmn-id",
+				Reason: "must be a valid PlmnId JSON object",
+			}},
+		}
+		return nil, problemDetails
+	}
+	if !validator.IsValidPlmnIdParts(plmnIDStruct.Mcc, plmnIDStruct.Mnc) {
+		problemDetails = &models.ProblemDetails{
+			Title:  "Invalid Parameter",
+			Status: http.StatusBadRequest,
+			Cause:  "OPTIONAL_QUERY_PARAM_INCORRECT",
+			InvalidParams: []models.InvalidParam{{
+				Param:  "query plmn-id",
+				Reason: "MCC must contain 3 digits and MNC must contain 2 or 3 digits",
 			}},
 		}
 		return nil, problemDetails
@@ -128,6 +145,7 @@ func (s *Server) HandleGetSmfSelectData(c *gin.Context) {
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -164,6 +182,7 @@ func (s *Server) HandleGetSupi(c *gin.Context) {
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -212,14 +231,15 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 
 	err = openapi.Deserialize(&sharedDataSubsReq, requestBody, "application/json")
 	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
+		logger.SdmLog.Errorf("[Request Body] %v", err)
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: problemDetail,
+			Detail: "The request body is malformed or does not match the expected schema.",
+			Cause:  "INVALID_MSG_FORMAT",
 		}
-		logger.SdmLog.Errorln(problemDetail)
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, rsp.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(rsp.Status), rsp)
 		return
 	}
@@ -249,14 +269,15 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 
 	err = openapi.Deserialize(&sdmSubscriptionReq, requestBody, "application/json")
 	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
+		logger.SdmLog.Errorf("[Request Body] %v", err)
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: problemDetail,
+			Detail: "The request body is malformed or does not match the expected schema.",
+			Cause:  "INVALID_MSG_FORMAT",
 		}
-		logger.SdmLog.Errorln(problemDetail)
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, rsp.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(rsp.Status), rsp)
 		return
 	}
@@ -338,14 +359,15 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 	err = openapi.Deserialize(&sdmSubsModificationReq, requestBody, "application/json")
 	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
+		logger.SdmLog.Errorf("[Request Body] %v", err)
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: problemDetail,
+			Detail: "The request body is malformed or does not match the expected schema.",
+			Cause:  "INVALID_MSG_FORMAT",
 		}
-		logger.SdmLog.Errorln(problemDetail)
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, rsp.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(rsp.Status), rsp)
 		return
 	}
@@ -374,14 +396,15 @@ func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 
 	err = openapi.Deserialize(&sharedDataSubscriptions, requestBody, "application/json")
 	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
+		logger.SdmLog.Errorf("[Request Body] %v", err)
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: problemDetail,
+			Detail: "The request body is malformed or does not match the expected schema.",
+			Cause:  "INVALID_MSG_FORMAT",
 		}
-		logger.SdmLog.Errorln(problemDetail)
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, rsp.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(rsp.Status), rsp)
 		return
 	}
@@ -399,7 +422,18 @@ func (s *Server) HandleGetTraceData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetTraceData")
 
 	supi := c.Params.ByName("supi")
-	plmnID := c.Query("plmn-id")
+	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
+	if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
+	}
+
+	var plmnID string
+	if plmnIDStruct != nil {
+		plmnID = plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	}
 
 	s.Processor().GetTraceDataProcedure(c, supi, plmnID)
 }
@@ -432,6 +466,7 @@ func (s *Server) HandleGetNssai(c *gin.Context) {
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -459,6 +494,7 @@ func (s *Server) HandleGetSmData(c *gin.Context) {
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -567,7 +603,7 @@ func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {
 	supi := c.Param("supi")
 	oneLayerPathRouter := s.getOneLayerRoutes()
 	for _, route := range oneLayerPathRouter {
-		if strings.Contains(route.Pattern, supi) && route.Method == c.Request.Method {
+		if route.Pattern == "/"+supi && route.Method == c.Request.Method {
 			route.HandlerFunc(c)
 			return
 		}
@@ -614,14 +650,33 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 	}
 
 	twoLayerPathRouter := s.getTwoLayerRoutes()
+	requestPath := "/" + supi + "/" + op
 	for _, route := range twoLayerPathRouter {
-		if strings.Contains(route.Pattern, op) && route.Method == c.Request.Method {
+		if pathPatternMatches(route.Pattern, requestPath) && route.Method == c.Request.Method {
 			route.HandlerFunc(c)
 			return
 		}
 	}
 
 	c.String(http.StatusNotFound, "404 page not found")
+}
+
+func pathPatternMatches(pattern, path string) bool {
+	patternParts := strings.Split(strings.Trim(pattern, "/"), "/")
+	pathParts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(patternParts) != len(pathParts) {
+		return false
+	}
+
+	for i := range patternParts {
+		if strings.HasPrefix(patternParts[i], ":") {
+			continue
+		}
+		if patternParts[i] != pathParts[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
