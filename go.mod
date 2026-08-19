@@ -4,8 +4,8 @@ go 1.26.2
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
-	github.com/free5gc/openapi v1.2.5-0.20260811062155-dfddae693851
-	github.com/free5gc/util v1.3.3-0.20260806004242-cfe683dea97d
+	github.com/free5gc/openapi v1.3.0
+	github.com/free5gc/util v1.4.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/h2non/gock v1.2.0
@@ -15,7 +15,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli/v2 v2.27.7
 	go.uber.org/mock v0.4.0
-	golang.org/x/net v0.47.0
+	golang.org/x/net v0.55.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -68,7 +68,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.51.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
