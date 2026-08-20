@@ -17,6 +17,11 @@ import (
 	"github.com/free5gc/util/metrics/sbi"
 )
 
+func newSdmSystemFailureProblemDetails(err error) *models.ProblemDetails {
+	logger.SdmLog.Errorf("SDM upstream request failed: %v", err)
+	return openapi.ProblemDetailsSystemFailure("Upstream request failed")
+}
+
 func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDR_DR, models.Nrf_NFMgmt_NFType_UDR)
 	if err != nil {
@@ -140,7 +145,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -178,7 +183,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			problemDetails := newSdmSystemFailureProblemDetails(err)
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
@@ -205,7 +210,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			problemDetails := newSdmSystemFailureProblemDetails(err)
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
@@ -234,7 +239,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			problemDetails := newSdmSystemFailureProblemDetails(err)
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
@@ -286,7 +291,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			problemDetails := newSdmSystemFailureProblemDetails(err)
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
@@ -317,7 +322,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 				c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 				return
 			}
-			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			problemDetails := newSdmSystemFailureProblemDetails(err)
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
@@ -399,7 +404,7 @@ func (p *Processor) GetSmDataProcedure(
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		logger.ProcLog.Errorf("CreateUDMClientToUDR Error: %+v", err)
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -435,7 +440,7 @@ func (p *Processor) GetSmDataProcedure(
 			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -490,7 +495,7 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 	var nssaiResp models.Udm_SDM_Nssai
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -505,7 +510,7 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -537,7 +542,7 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -554,7 +559,7 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -855,8 +860,7 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
-		logger.SdmLog.Errorf("Create UDR client for trace-data query failed: %v", err)
-		problemDetails := openapi.ProblemDetailsSystemFailure("Upstream request failed")
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -873,8 +877,7 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
-		logger.SdmLog.Errorf("Trace-data query failed: %v", err)
-		problemDetails := openapi.ProblemDetailsSystemFailure("Upstream request failed")
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -900,7 +903,7 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
@@ -925,7 +928,7 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
-		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		problemDetails := newSdmSystemFailureProblemDetails(err)
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
