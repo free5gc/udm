@@ -277,7 +277,15 @@ func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (
 	profile.NfType = models.Nrf_NFMgmt_NFType_UDM
 	profile.NfStatus = models.Nrf_NFMgmt_NFStatus_REGISTERED
 	profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIPv4)
-	for _, nfService := range udmContext.NfService {
+	for serviceName, nfService := range udmContext.NfService {
+		if nfService.ServiceName == "" {
+			nfService.ServiceName = serviceName
+		}
+		allowedNfTypes, known := udm_context.AllowedNfTypesForService(nfService.ServiceName)
+		if !known {
+			return profile, fmt.Errorf("no AllowedNfTypes policy for service %q", nfService.ServiceName)
+		}
+		nfService.AllowedNfTypes = allowedNfTypes
 		profile.NfServices = append(profile.NfServices, nfService)
 	}
 	profile.UdmInfo = &models.Nrf_NFMgmt_UdmInfo{

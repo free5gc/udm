@@ -66,12 +66,15 @@ func (s *Server) Run(traceCtx context.Context, wg *sync.WaitGroup) error {
 	ctx := s.CancelContext()
 	if err := s.Consumer().RegisterNFInstance(ctx, true); err != nil {
 		logger.InitLog.Errorf("UDM register to NRF Error[%s]", err.Error())
-	} else {
-		// Only a registered profile has something to keep alive.
-		s.Consumer().StartHeartbeat(ctx, wg)
+		return err
 	}
 
+	// Only a registered profile has something to keep alive.
+	s.Consumer().StartHeartbeat(ctx, wg)
+
 	wg.Add(1)
+
+	// Start UDM server only if the NRF registration has succeeded.
 	go s.startServer(wg)
 
 	return nil
