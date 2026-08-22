@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,28 @@ func (s *Server) getSubscriberDataManagementRoutes() []Route {
 			s.HandleIndex,
 		},
 	}
+}
+
+func isValidSubscriptionID(subscriptionID string) bool {
+	id, err := strconv.Atoi(subscriptionID)
+	return err == nil && id > 0 && strconv.Itoa(id) == subscriptionID
+}
+
+func validateSubscriptionID(c *gin.Context) (string, bool) {
+	subscriptionID := c.Params.ByName("subscriptionId")
+	if !isValidSubscriptionID(subscriptionID) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Subscription ID is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("Subscription ID is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return "", false
+	}
+	return subscriptionID, true
 }
 
 // GetAmData - retrieve a UE's Access and Mobility Subscription Data
@@ -336,7 +359,10 @@ func (s *Server) HandleUnsubscribe(c *gin.Context) {
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
-	subscriptionID := c.Params.ByName("subscriptionId")
+	subscriptionID, valid := validateSubscriptionID(c)
+	if !valid {
+		return
+	}
 
 	s.Processor().UnsubscribeProcedure(c, ueId, subscriptionID)
 }
@@ -345,7 +371,10 @@ func (s *Server) HandleUnsubscribe(c *gin.Context) {
 func (s *Server) HandleUnsubscribeForSharedData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle UnsubscribeForSharedData")
 
-	subscriptionID := c.Params.ByName("subscriptionId")
+	subscriptionID, valid := validateSubscriptionID(c)
+	if !valid {
+		return
+	}
 	s.Processor().UnsubscribeForSharedDataProcedure(c, subscriptionID)
 }
 
@@ -369,7 +398,10 @@ func (s *Server) HandleModify(c *gin.Context) {
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
-	subscriptionID := c.Params.ByName("subscriptionId")
+	subscriptionID, valid := validateSubscriptionID(c)
+	if !valid {
+		return
+	}
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -407,6 +439,11 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 // ModifyForSharedData - modify the subscription
 func (s *Server) HandleModifyForSharedData(c *gin.Context) {
+	subscriptionID, valid := validateSubscriptionID(c)
+	if !valid {
+		return
+	}
+
 	var sharedDataSubscriptions models.Udm_SDM_SdmSubsModification
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -440,7 +477,6 @@ func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle ModifyForSharedData")
 
 	supi := c.Params.ByName("supi")
-	subscriptionID := c.Params.ByName("subscriptionId")
 
 	s.Processor().ModifyForSharedDataProcedure(c, &sharedDataSubscriptions, supi, subscriptionID)
 }
