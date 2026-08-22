@@ -27,14 +27,35 @@ func (s *Server) getSubscriberDataManagementRoutes() []Route {
 	}
 }
 
-func isValidSubscriptionID(subscriptionID string) bool {
-	id, err := strconv.Atoi(subscriptionID)
-	return err == nil && id > 0 && strconv.Itoa(id) == subscriptionID
+func isValidSDMSubscriptionID(subscriptionID string) bool {
+	id, err := strconv.ParseUint(subscriptionID, 10, 64)
+	return err == nil && id > 0 && strconv.FormatUint(id, 10) == subscriptionID
 }
 
-func validateSubscriptionID(c *gin.Context) (string, bool) {
+func isValidSharedDataSubscriptionID(subscriptionID string) bool {
+	if len(subscriptionID) == 0 || len(subscriptionID) > 128 {
+		return false
+	}
+
+	for i := 0; i < len(subscriptionID); i++ {
+		ch := subscriptionID[i]
+		if (ch < 'a' || ch > 'z') &&
+			(ch < 'A' || ch > 'Z') &&
+			(ch < '0' || ch > '9') &&
+			ch != '-' && ch != '.' && ch != '_' && ch != '~' {
+			return false
+		}
+	}
+	return true
+}
+
+func validateSubscriptionID(c *gin.Context, sharedData bool) (string, bool) {
 	subscriptionID := c.Params.ByName("subscriptionId")
-	if !isValidSubscriptionID(subscriptionID) {
+	valid := isValidSDMSubscriptionID(subscriptionID)
+	if sharedData {
+		valid = isValidSharedDataSubscriptionID(subscriptionID)
+	}
+	if !valid {
 		problemDetail := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
@@ -359,7 +380,7 @@ func (s *Server) HandleUnsubscribe(c *gin.Context) {
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
-	subscriptionID, valid := validateSubscriptionID(c)
+	subscriptionID, valid := validateSubscriptionID(c, false)
 	if !valid {
 		return
 	}
@@ -371,7 +392,7 @@ func (s *Server) HandleUnsubscribe(c *gin.Context) {
 func (s *Server) HandleUnsubscribeForSharedData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle UnsubscribeForSharedData")
 
-	subscriptionID, valid := validateSubscriptionID(c)
+	subscriptionID, valid := validateSubscriptionID(c, true)
 	if !valid {
 		return
 	}
@@ -398,7 +419,7 @@ func (s *Server) HandleModify(c *gin.Context) {
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
-	subscriptionID, valid := validateSubscriptionID(c)
+	subscriptionID, valid := validateSubscriptionID(c, false)
 	if !valid {
 		return
 	}
@@ -439,7 +460,7 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 // ModifyForSharedData - modify the subscription
 func (s *Server) HandleModifyForSharedData(c *gin.Context) {
-	subscriptionID, valid := validateSubscriptionID(c)
+	subscriptionID, valid := validateSubscriptionID(c, true)
 	if !valid {
 		return
 	}

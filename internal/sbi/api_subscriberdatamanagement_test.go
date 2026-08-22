@@ -161,7 +161,7 @@ func TestTwoLayerPathHandlerMatchesPathAndMethod(t *testing.T) {
 	}
 }
 
-func TestIsValidSubscriptionID(t *testing.T) {
+func TestIsValidSDMSubscriptionID(t *testing.T) {
 	tests := []struct {
 		name string
 		id   string
@@ -181,7 +181,30 @@ func TestIsValidSubscriptionID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, isValidSubscriptionID(tt.id))
+			require.Equal(t, tt.want, isValidSDMSubscriptionID(tt.id))
+		})
+	}
+}
+
+func TestIsValidSharedDataSubscriptionID(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		want bool
+	}{
+		{name: "positive integer", id: "1", want: true},
+		{name: "uuid", id: "550e8400-e29b-41d4-a716-446655440000", want: true},
+		{name: "opaque identifier", id: "shared_subscription.v2~a", want: true},
+		{name: "empty", id: "", want: false},
+		{name: "special characters", id: "$ne", want: false},
+		{name: "json", id: `{"$ne":null}`, want: false},
+		{name: "path separator", id: "subscription/id", want: false},
+		{name: "oversized", id: strings.Repeat("9", 10_000), want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, isValidSharedDataSubscriptionID(tt.id))
 		})
 	}
 }
