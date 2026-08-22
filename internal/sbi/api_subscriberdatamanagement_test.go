@@ -161,6 +161,108 @@ func TestTwoLayerPathHandlerMatchesPathAndMethod(t *testing.T) {
 	}
 }
 
+func TestIsValidSDMSubscriptionID(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		want bool
+	}{
+		{name: "positive integer", id: "1", want: true},
+		{name: "larger positive integer", id: "42", want: true},
+		{name: "empty", id: "", want: false},
+		{name: "zero", id: "0", want: false},
+		{name: "negative integer", id: "-1", want: false},
+		{name: "leading zero", id: "01", want: false},
+		{name: "explicit plus sign", id: "+1", want: false},
+		{name: "special characters", id: "$ne", want: false},
+		{name: "non-numeric", id: "subscription", want: false},
+		{name: "oversized", id: strings.Repeat("9", 10_000), want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, isValidSDMSubscriptionID(tt.id))
+		})
+	}
+}
+
+func TestIsValidSharedDataSubscriptionID(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		want bool
+	}{
+		{name: "positive integer", id: "1", want: true},
+		{name: "uuid", id: "550e8400-e29b-41d4-a716-446655440000", want: true},
+		{name: "opaque identifier", id: "shared_subscription.v2~a", want: true},
+		{name: "empty", id: "", want: false},
+		{name: "special characters", id: "$ne", want: false},
+		{name: "json", id: `{"$ne":null}`, want: false},
+		{name: "path separator", id: "subscription/id", want: false},
+		{name: "oversized", id: strings.Repeat("9", 10_000), want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, isValidSharedDataSubscriptionID(tt.id))
+		})
+	}
+}
+
+func TestHandlersRejectInvalidSubscriptionIDs(t *testing.T) {
+	validSupi := "imsi-208930000000001"
+	tests := []struct {
+		name    string
+		method  string
+		path    string
+		body    string
+		params  gin.Params
+		handler func(*gin.Context)
+	}{
+		{
+			name:    "unsubscribe",
+			method:  http.MethodDelete,
+			path:    "/" + validSupi + "/sdm-subscriptions/$ne",
+			params:  gin.Params{{Key: "ueId", Value: validSupi}, {Key: "subscriptionId", Value: "$ne"}},
+			handler: (&Server{}).HandleUnsubscribe,
+		},
+		{
+			name:    "unsubscribe shared data",
+			method:  http.MethodDelete,
+			path:    "/shared-data-subscriptions/$ne",
+			params:  gin.Params{{Key: "subscriptionId", Value: "$ne"}},
+			handler: (&Server{}).HandleUnsubscribeForSharedData,
+		},
+		{
+			name:    "modify",
+			method:  http.MethodPatch,
+			path:    "/" + validSupi + "/sdm-subscriptions/$ne",
+			body:    `{}`,
+			params:  gin.Params{{Key: "ueId", Value: validSupi}, {Key: "subscriptionId", Value: "$ne"}},
+			handler: (&Server{}).HandleModify,
+		},
+		{
+			name:    "modify shared data",
+			method:  http.MethodPatch,
+			path:    "/shared-data-subscriptions/$ne",
+			body:    `[1,2,3]`,
+			params:  gin.Params{{Key: "subscriptionId", Value: "$ne"}},
+			handler: (&Server{}).HandleModifyForSharedData,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recorder, c := newSDMTestContext(t, tt.method, tt.path, tt.body)
+			c.Params = tt.params
+
+			require.NotPanics(t, func() { tt.handler(c) })
+			require.Equal(t, http.StatusBadRequest, recorder.Code)
+			require.Contains(t, recorder.Body.String(), "Subscription ID is invalid")
+		})
+	}
+}
+
 func TestGetPlmnIDStruct(t *testing.T) {
 	server := &Server{}
 	tests := []struct {
