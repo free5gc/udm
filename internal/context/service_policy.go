@@ -10,6 +10,10 @@ var servicePolicies = map[models.Nrf_NFMgmt_ServiceName][]models.Nrf_NFMgmt_NFTy
 	models.Nrf_NFMgmt_ServiceName_NUDM_SDM: {
 		models.Nrf_NFMgmt_NFType_AMF,
 		models.Nrf_NFMgmt_NFType_SMF,
+		// UDR sends SDM data-change callbacks to UDM.
+		models.Nrf_NFMgmt_NFType_UDR,
+		// UDM uses Nudm_SDM for shared-data self-calls.
+		models.Nrf_NFMgmt_NFType_UDM,
 		models.Nrf_NFMgmt_NFType_SMSF,
 		models.Nrf_NFMgmt_NFType_GMLC,
 		models.Nrf_NFMgmt_NFType_NEF,

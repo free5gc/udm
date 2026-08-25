@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/google/uuid"
+
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDisc"
 	"github.com/free5gc/openapi/oauth"
@@ -17,7 +19,6 @@ import (
 	"github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/idgenerator"
-	"github.com/google/uuid"
 )
 
 var udmContext = UDMContext{}

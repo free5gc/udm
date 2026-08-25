@@ -596,8 +596,15 @@ func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscripti
 		return
 	}
 
-	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDM_SDM, models.Nrf_NFMgmt_NFType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtxForNFInstance(
+		models.Nrf_NFMgmt_ServiceName_NUDM_SDM,
+		models.Nrf_NFMgmt_NFType_UDM,
+		p.Context().NfId,
+	)
 	if err != nil {
+		if pd == nil {
+			pd = openapi.ProblemDetailsSystemFailure(err.Error())
+		}
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
@@ -687,8 +694,15 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.U
 }
 
 func (p *Processor) UnsubscribeForSharedDataProcedure(c *gin.Context, subscriptionID string) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDM_SDM, models.Nrf_NFMgmt_NFType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtxForNFInstance(
+		models.Nrf_NFMgmt_ServiceName_NUDM_SDM,
+		models.Nrf_NFMgmt_NFType_UDM,
+		p.Context().NfId,
+	)
 	if err != nil {
+		if pd == nil {
+			pd = openapi.ProblemDetailsSystemFailure(err.Error())
+		}
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
