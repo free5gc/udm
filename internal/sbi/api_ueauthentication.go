@@ -218,7 +218,7 @@ func (s *Server) UEAUTwoLayerPathHandlerFunc(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusNotFound, "404 page not found")
+	respondResourceURIStructureNotFound(c)
 }
 
 func (s *Server) UEAUThreeLayerPathHandlerFunc(c *gin.Context) {
@@ -254,5 +254,5 @@ func (s *Server) UEAUThreeLayerPathHandlerFunc(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusNotFound, "404 page not found")
+	respondResourceURIStructureNotFound(c)
 }
