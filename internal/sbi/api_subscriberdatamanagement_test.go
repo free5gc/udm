@@ -19,6 +19,7 @@ import (
 	"github.com/free5gc/udm/internal/sbi/consumer"
 	"github.com/free5gc/udm/internal/sbi/processor"
 	"github.com/free5gc/udm/pkg/app"
+	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/validator"
 )
 
@@ -157,6 +158,87 @@ func TestTwoLayerPathHandlerMatchesPathAndMethod(t *testing.T) {
 				server.TwoLayerPathHandlerFunc(c)
 			})
 			require.Equal(t, tt.wantStatus, recorder.Code)
+		})
+	}
+}
+
+func TestPathHandlersRejectUnmatchedResourceURIs(t *testing.T) {
+	server := &Server{}
+	const supi = "imsi-208930000000003"
+	tests := []struct {
+		name    string
+		method  string
+		path    string
+		params  gin.Params
+		handler func(*gin.Context)
+	}{
+		{
+			name:    "sdm one layer wrong method",
+			method:  http.MethodDelete,
+			path:    "/nudm-sdm/v2/" + supi,
+			params:  gin.Params{{Key: "supi", Value: supi}},
+			handler: server.OneLayerPathHandlerFunc,
+		},
+		{
+			name:    "sdm two layer unknown resource",
+			method:  http.MethodGet,
+			path:    "/nudm-sdm/v2/" + supi + "/no-such-resource",
+			params:  gin.Params{{Key: "supi", Value: supi}, {Key: "subscriptionId", Value: "no-such-resource"}},
+			handler: server.TwoLayerPathHandlerFunc,
+		},
+		{
+			name:    "sdm two layer wrong method",
+			method:  http.MethodPost,
+			path:    "/nudm-sdm/v2/" + supi + "/am-data",
+			params:  gin.Params{{Key: "supi", Value: supi}, {Key: "subscriptionId", Value: "am-data"}},
+			handler: server.TwoLayerPathHandlerFunc,
+		},
+		{
+			name:   "sdm three layer unknown resource",
+			method: http.MethodGet,
+			path:   "/nudm-sdm/v2/" + supi + "/am-data/no-such-resource",
+			params: gin.Params{
+				{Key: "supi", Value: supi},
+				{Key: "subscriptionId", Value: "am-data"},
+				{Key: "thirdLayer", Value: "no-such-resource"},
+			},
+			handler: server.ThreeLayerPathHandlerFunc,
+		},
+		{
+			name:    "ueau two layer unknown resource",
+			method:  http.MethodGet,
+			path:    "/nudm-ueau/v1/" + supi + "/no-such-resource",
+			params:  gin.Params{{Key: "supi", Value: supi}, {Key: "twoLayer", Value: "no-such-resource"}},
+			handler: server.UEAUTwoLayerPathHandlerFunc,
+		},
+		{
+			name:   "ueau three layer unknown resource",
+			method: http.MethodPost,
+			path:   "/nudm-ueau/v1/" + supi + "/no-such-resource/generate-av",
+			params: gin.Params{
+				{Key: "supi", Value: supi},
+				{Key: "twoLayer", Value: "no-such-resource"},
+				{Key: "thirdLayer", Value: "generate-av"},
+			},
+			handler: server.UEAUThreeLayerPathHandlerFunc,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recorder, c := newSDMTestContext(t, tt.method, tt.path, "")
+			c.Params = tt.params
+
+			require.NotPanics(t, func() { tt.handler(c) })
+			require.Equal(t, http.StatusNotFound, recorder.Code)
+			require.Equal(t, "application/problem+json", recorder.Header().Get("Content-Type"))
+
+			var problem models.ProblemDetails
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &problem))
+			require.Equal(t, int32(http.StatusNotFound), problem.Status)
+			require.Equal(t, "RESOURCE_URI_STRUCTURE_NOT_FOUND", problem.Cause)
+			require.Contains(t, problem.Detail, tt.path)
+			require.Equal(t, problem.Cause, c.GetString(sbi.IN_PB_DETAILS_CTX_STR))
 		})
 	}
 }
