@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,13 +18,6 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 	notifyItems []models.NotifyItem,
 	supi string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDM_SDM, models.Nrf_NFMgmt_NFType_UDM)
-	if err != nil {
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
-		c.JSON(int(pd.Status), pd)
-		return
-	}
-
 	ue, ok := p.Context().UdmUeFindBySupi(supi)
 	if !ok {
 		c.Status(http.StatusNoContent)
@@ -34,13 +28,41 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 
 	var problemDetails *models.ProblemDetails
 	for _, subscriptionDataSubscription := range ue.UdmSubsToNotify {
+		requestContext := context.TODO()
+		if p.Context().OAuth2Required {
+			target, targetErr := resolveDataChangeCallbackTarget(subscriptionDataSubscription)
+			if targetErr != nil {
+				problemDetails = openapi.ProblemDetailsSystemFailure(targetErr.Error())
+				continue
+			}
+
+			var pd *models.ProblemDetails
+			var tokenErr error
+			requestContext, pd, tokenErr = p.Context().GetTokenCtxForNFInstance(
+				target.ServiceName,
+				target.NfType,
+				target.NfInstanceID,
+			)
+			if tokenErr != nil {
+				if pd == nil {
+					pd = openapi.ProblemDetailsSystemFailure(tokenErr.Error())
+				}
+				problemDetails = pd
+				continue
+			}
+			if pd != nil {
+				problemDetails = pd
+				continue
+			}
+		}
+
 		onDataChangeNotificationurl := subscriptionDataSubscription.OriginalCallbackReference
 		dataChangeNotification := models.Udm_SDM_ModificationNotification{}
 		dataChangeNotification.NotifyItems = notifyItems
 		var subDataChangeNotificationPostRequest SDM.SubscribeDatachangeNotificationRequest
 		subDataChangeNotificationPostRequest.RequestBody = &dataChangeNotification
-		_, err = clientAPI.SubscriptionCreationApi.SubscribeDatachangeNotification(
-			ctx, onDataChangeNotificationurl, &subDataChangeNotificationPostRequest)
+		_, err := clientAPI.SubscriptionCreationApi.SubscribeDatachangeNotification(
+			requestContext, onDataChangeNotificationurl, &subDataChangeNotificationPostRequest)
 		if err != nil {
 			if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 				// API error
@@ -63,10 +85,18 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 }
 
 func (p *Processor) SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
+	amfInstanceID string,
 	deregistData models.Udm_UECM_DeregistrationData,
 ) *models.ProblemDetails {
-	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDM_UECM, models.Nrf_NFMgmt_NFType_UDM)
+	ctx, pd, err := p.Context().GetTokenCtxForNFInstance(
+		serviceNameNAMFCallback,
+		models.Nrf_NFMgmt_NFType_AMF,
+		amfInstanceID,
+	)
 	if err != nil {
+		if pd == nil {
+			return openapi.ProblemDetailsSystemFailure(err.Error())
+		}
 		return pd
 	}
 

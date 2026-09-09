@@ -83,7 +83,7 @@ func (s *nnrfService) SendSearchNFInstances(
 
 	client := s.getNFDiscClient(udmContext.NrfUri)
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NNRF_DISC, models.Nrf_NFMgmt_NFType_NRF)
+	ctx, _, err := s.consumer.Context().GetTokenCtxForNRF(models.Nrf_NFMgmt_ServiceName_NNRF_DISC)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (s *nnrfService) SendNFInstancesUDR(id string, types int) string {
 func (s *nnrfService) SendDeregisterNFInstance() (err error) {
 	logger.ConsumerLog.Infof("Send Deregister NFInstance")
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NNRF_NFM, models.Nrf_NFMgmt_NFType_NRF)
+	ctx, _, err := s.consumer.Context().GetTokenCtxForNRF(models.Nrf_NFMgmt_ServiceName_NNRF_NFM)
 	if err != nil {
 		return err
 	}
@@ -189,9 +189,8 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context) (
 					logger.MainLog.Infoln("OAuth2 setting receive from NRF:", oauth2)
 				}
 			}
-			udm_context.GetSelf().OAuth2Required = oauth2
-			if oauth2 && udm_context.GetSelf().NrfCertPem == "" {
-				logger.CfgLog.Error("OAuth2 enable but no nrfCertPem provided in config.")
+			if oauthErr := udm_context.GetSelf().SetOAuth2Required(oauth2); oauthErr != nil {
+				return "", "", oauthErr
 			}
 
 			break
@@ -207,7 +206,15 @@ func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (
 	profile.NfType = models.Nrf_NFMgmt_NFType_UDM
 	profile.NfStatus = models.Nrf_NFMgmt_NFStatus_REGISTERED
 	profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIPv4)
-	for _, nfService := range udmContext.NfService {
+	for serviceName, nfService := range udmContext.NfService {
+		if nfService.ServiceName == "" {
+			nfService.ServiceName = serviceName
+		}
+		allowedNfTypes, known := udm_context.AllowedNfTypesForService(nfService.ServiceName)
+		if !known {
+			return profile, fmt.Errorf("no AllowedNfTypes policy for service %q", nfService.ServiceName)
+		}
+		nfService.AllowedNfTypes = allowedNfTypes
 		profile.NfServices = append(profile.NfServices, nfService)
 	}
 	profile.UdmInfo = &models.Nrf_NFMgmt_UdmInfo{
