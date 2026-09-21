@@ -61,10 +61,12 @@ func NewServer(udm ServerUdm, tlsKeyLogPath string) (*Server, error) {
 func (s *Server) Run(traceCtx context.Context, wg *sync.WaitGroup) error {
 	logger.SBILog.Info("Starting server...")
 
-	var err error
-	_, s.Context().NfId, err = s.Consumer().RegisterNFInstance(s.CancelContext())
-	if err != nil {
+	ctx := s.CancelContext()
+	if err := s.Consumer().RegisterNFInstance(ctx, true); err != nil {
 		logger.InitLog.Errorf("UDM register to NRF Error[%s]", err.Error())
+	} else {
+		// Only a registered profile has something to keep alive.
+		s.Consumer().StartHeartbeat(ctx, wg)
 	}
 
 	wg.Add(1)
