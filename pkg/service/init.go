@@ -190,6 +190,9 @@ func (a *UdmApp) terminateProcedure() {
 	logger.MainLog.Infof("Terminating UDM...")
 	a.CallServerStop()
 
+	// no heartbeat PATCH or re-registration PUT may land after the deregistration
+	a.Consumer().WaitHeartbeatStopped()
+
 	// deregister with NRF
 	err := a.Consumer().SendDeregisterNFInstance()
 	if err != nil {
