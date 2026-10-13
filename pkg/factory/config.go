@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
@@ -72,6 +73,7 @@ type Info struct {
 }
 
 type Configuration struct {
+	IdleTimeout     *time.Duration     `yaml:"idleTimeout,omitempty" valid:"optional"`
 	NfInstanceId    string             `yaml:"nfInstanceId,omitempty" valid:"optional,uuidv4"`
 	Sbi             *Sbi               `yaml:"sbi,omitempty"  valid:"required"`
 	Metrics         *Metrics           `yaml:"metrics,omitempty" valid:"optional"`
@@ -477,4 +479,15 @@ func (c *Config) GetMetricsNamespace() string {
 		return c.Configuration.Metrics.Namespace
 	}
 	return UdmMetricsDefaultNamespace
+}
+
+// GetIdleTimeout returns the HTTP server idle timeout. Omitted values preserve
+// the previous 1ms timeout; an explicit zero disables the timeout.
+func (c *Config) GetIdleTimeout() time.Duration {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.IdleTimeout == nil {
+		return time.Millisecond
+	}
+	return *c.Configuration.IdleTimeout
 }
