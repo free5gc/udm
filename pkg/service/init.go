@@ -7,10 +7,10 @@ import (
 	"runtime/debug"
 	"sync"
 
+	"github.com/free5gc/openapi"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 
-	"github.com/free5gc/openapi"
 	NFManagement "github.com/free5gc/openapi/nrf/NFMgmt"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
@@ -40,6 +40,9 @@ type UdmApp struct {
 }
 
 func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*UdmApp, error) {
+	if err := openapi.ConfigureHTTP2Clients(cfg.GetReadIdleTimeout(), cfg.GetPingTimeout()); err != nil {
+		return nil, err
+	}
 	udm := &UdmApp{
 		cfg: cfg,
 		wg:  sync.WaitGroup{},
