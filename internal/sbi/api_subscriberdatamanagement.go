@@ -740,6 +740,22 @@ func (s *Server) HandleUpuAck(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
+// respondResourceURIStructureNotFound answers a request that reached the API
+// but names no resource this NF defines, as TS 29.500 table 5.2.7.2-1
+// requires: 404 with a ProblemDetails whose cause is
+// RESOURCE_URI_STRUCTURE_NOT_FOUND.
+func respondResourceURIStructureNotFound(c *gin.Context) {
+	problemDetails := models.ProblemDetails{
+		Title:  "Resource URI structure not found",
+		Status: http.StatusNotFound,
+		Detail: c.Request.Method + " " + c.Request.URL.Path + " does not name a resource of this API",
+		Cause:  "RESOURCE_URI_STRUCTURE_NOT_FOUND",
+	}
+	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+	c.Header("Content-Type", "application/problem+json")
+	c.JSON(int(problemDetails.Status), problemDetails)
+}
+
 func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {
 	supi := c.Param("supi")
 	oneLayerPathRouter := s.getOneLayerRoutes()
@@ -756,7 +772,7 @@ func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusNotFound, "404 page not found")
+	respondResourceURIStructureNotFound(c)
 }
 
 func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
@@ -799,7 +815,7 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 		}
 	}
 
-	c.String(http.StatusNotFound, "404 page not found")
+	respondResourceURIStructureNotFound(c)
 }
 
 func pathPatternMatches(pattern, path string) bool {
@@ -881,7 +897,7 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusNotFound, "404 page not found")
+	respondResourceURIStructureNotFound(c)
 }
 
 func (s *Server) getOneLayerRoutes() []Route {
