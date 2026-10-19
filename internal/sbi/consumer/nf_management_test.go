@@ -11,11 +11,19 @@ import (
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/require"
 
+	tlsX509 "crypto/x509"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDisc"
+	tlsNFM "github.com/free5gc/openapi/nrf/NFMgmt"
 	udm_context "github.com/free5gc/udm/internal/context"
+	tlsFactory "github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/util/nfheartbeat"
+	tlsYAML "gopkg.in/yaml.v2"
+	tlsIO "io"
+	tlsLog "log"
+	tlsServer "net/http/httptest"
+	tlsAtomic "sync/atomic"
 )
 
 const (
@@ -342,6 +350,62 @@ func TestRegisterNFInstance(t *testing.T) {
 			// The UDM keeps the instance ID it chose, whatever the NRF echoes back.
 			if got := consumer.Context().NfId; got != testNfId {
 				t.Errorf("NfId = %q, want %q", got, testNfId)
+			}
+		})
+	}
+}
+
+// Exercise parsed NF config through the same startup configuration API and
+// generated NRF client used in production. No deployment files are modified.
+func TestSBIConfigTLSVerification(t *testing.T) {
+	t.Cleanup(func() {
+		_ = openapi.ConfigureHTTP2Clients(openapi.TransportReadIdleTimeout, openapi.TransportPingTimeout, false)
+	})
+	var requests tlsAtomic.Int32
+	server := tlsServer.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = tlsIO.WriteString(w, `{}`)
+	}))
+	server.EnableHTTP2 = true
+	server.Config.ErrorLog = tlsLog.New(tlsIO.Discard, "", 0)
+	server.StartTLS()
+	defer server.Close()
+	for _, value := range []string{"", "false", "true"} {
+		t.Run("verify="+value, func(t *testing.T) {
+			data := "configuration:\n  sbi:\n    scheme: https\n"
+			if value != "" {
+				data += "    tls:\n      verify: " + value + "\n"
+			}
+			var cfg tlsFactory.Config
+			if err := tlsYAML.Unmarshal([]byte(data), &cfg); err != nil {
+				t.Fatal(err)
+			}
+			if cfg.GetTLSVerify() != (value == "true") {
+				t.Fatal("verify parsing mismatch")
+			}
+			if err := openapi.ConfigureHTTP2Clients(cfg.GetReadIdleTimeout(), cfg.GetPingTimeout(), cfg.GetTLSVerify()); err != nil {
+				t.Fatal(err)
+			}
+			apiCfg := tlsNFM.NewConfiguration()
+			apiCfg.SetBasePath(server.URL)
+			client := tlsNFM.NewAPIClient(apiCfg)
+			req := &tlsNFM.GetNFInstanceRequest{}
+			req.SetNfInstanceID("tls-test")
+			before := requests.Load()
+			_, err := client.NFInstanceIDDocumentApi.GetNFInstance(context.Background(), req)
+			if value == "true" {
+				var unknown tlsX509.UnknownAuthorityError
+				if !errors.As(err, &unknown) {
+					t.Fatalf("expected unknown authority, got %v", err)
+				}
+				if requests.Load() != before {
+					t.Fatal("HTTP handler reached despite rejected certificate")
+				}
+			} else if err != nil {
+				t.Fatal(err)
+			} else if requests.Load() != before+1 {
+				t.Fatal("request not received")
 			}
 		})
 	}
