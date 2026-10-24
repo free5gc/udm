@@ -2,16 +2,21 @@ package consumer
 
 import (
 	"context"
+	tlsX509 "crypto/x509"
 	"errors"
+	tlsIO "io"
+	tlsLog "log"
 	"net/http"
+	tlsServer "net/http/httptest"
+	tlsAtomic "sync/atomic"
 	"testing"
 	"testing/synctest"
 	"time"
 
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/require"
+	tlsYAML "gopkg.in/yaml.v2"
 
-	tlsX509 "crypto/x509"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDisc"
@@ -19,11 +24,6 @@ import (
 	udm_context "github.com/free5gc/udm/internal/context"
 	tlsFactory "github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/util/nfheartbeat"
-	tlsYAML "gopkg.in/yaml.v2"
-	tlsIO "io"
-	tlsLog "log"
-	tlsServer "net/http/httptest"
-	tlsAtomic "sync/atomic"
 )
 
 const (
@@ -359,13 +359,19 @@ func TestRegisterNFInstance(t *testing.T) {
 // generated NRF client used in production. No deployment files are modified.
 func TestSBIConfigTLSVerification(t *testing.T) {
 	t.Cleanup(func() {
-		_ = openapi.ConfigureHTTP2Clients(openapi.TransportReadIdleTimeout, openapi.TransportPingTimeout, false)
+		if err := openapi.ConfigureHTTP2Clients(
+			openapi.TransportReadIdleTimeout, openapi.TransportPingTimeout, false,
+		); err != nil {
+			t.Errorf("restore HTTP clients: %v", err)
+		}
 	})
 	var requests tlsAtomic.Int32
 	server := tlsServer.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests.Add(1)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = tlsIO.WriteString(w, `{}`)
+		if _, err := tlsIO.WriteString(w, `{}`); err != nil {
+			t.Errorf("write response: %v", err)
+		}
 	}))
 	server.EnableHTTP2 = true
 	server.Config.ErrorLog = tlsLog.New(tlsIO.Discard, "", 0)
@@ -384,7 +390,9 @@ func TestSBIConfigTLSVerification(t *testing.T) {
 			if cfg.GetTLSVerify() != (value == "true") {
 				t.Fatal("verify parsing mismatch")
 			}
-			if err := openapi.ConfigureHTTP2Clients(cfg.GetReadIdleTimeout(), cfg.GetPingTimeout(), cfg.GetTLSVerify()); err != nil {
+			if err := openapi.ConfigureHTTP2Clients(
+				cfg.GetReadIdleTimeout(), cfg.GetPingTimeout(), cfg.GetTLSVerify(),
+			); err != nil {
 				t.Fatal(err)
 			}
 			apiCfg := tlsNFM.NewConfiguration()
