@@ -36,6 +36,13 @@ const (
 	resyncAMF              string = "0000"
 )
 
+// SQN = SEQ || IND with a 5-bit IND, and the USIM accepts a SEQ at most
+// Delta above its own (TS 33.102 Annex C.2.1, C.3, C.4: Delta >= 2^28).
+const (
+	sqnIndLen uint  = 5
+	sqnDelta  int64 = 1 << 28
+)
+
 func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte, error) {
 	// Use ValidateAUTS to verify AUTS and extract SQNms
 	// This function internally:
@@ -54,6 +61,16 @@ func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte, error) {
 	logger.UeauLog.Tracef("aucSQN: macS=[%x]\n", macS)
 
 	return SQNms, macS, err
+}
+
+// sqnInRange reports whether the USIM would accept the next sequence number
+// generated from SQN_HE (TS 33.102 clause 6.3.5 step 2). sqnHe is the stored
+// SQN, which is the next one used. A SEQ above SEQ_MS is fresh in every
+// array slot (Annex C.2.2) and must be at most Delta above it (Annex C.2.1).
+func sqnInRange(sqnHe, sqnMs []byte) bool {
+	seqHe := new(big.Int).Rsh(new(big.Int).SetBytes(sqnHe), sqnIndLen)
+	gap := seqHe.Sub(seqHe, new(big.Int).Rsh(new(big.Int).SetBytes(sqnMs), sqnIndLen))
+	return gap.Sign() > 0 && gap.Cmp(big.NewInt(sqnDelta)) <= 0
 }
 
 func (p *Processor) strictHex(ss string, n int) string {
@@ -366,19 +383,26 @@ func (p *Processor) GenerateAuthDataProcedure(
 				return
 			}
 
-			// increment sqn authSubs.SequenceNumber
-			bigSQN := big.NewInt(0)
-			sqnStr = hex.EncodeToString(SQNms)
-			logger.UeauLog.Tracef("SQNstr=[%s]", sqnStr)
-			bigSQN.SetString(sqnStr, 16)
+			// TS 33.102 clause 6.3.5 steps 2-5: reset SQN_HE only if it is out
+			// of the range the USIM accepts, so that an older AUTS (e.g. a
+			// replayed RAND/AUTS pair) cannot roll SQN_HE back.
+			if sqnInRange(sqn, SQNms) {
+				logger.UeauLog.Infof("Re-sync: SQN_HE [%x] in range of SQN_MS [%x], not reset", sqn, SQNms)
+			} else {
+				// increment sqn authSubs.SequenceNumber
+				bigSQN := big.NewInt(0)
+				sqnStr = hex.EncodeToString(SQNms)
+				logger.UeauLog.Tracef("SQNstr=[%s]", sqnStr)
+				bigSQN.SetString(sqnStr, 16)
 
-			bigInc := big.NewInt(ind + 1)
+				bigInc := big.NewInt(ind + 1)
 
-			bigP := big.NewInt(SqnMAx)
-			bigSQN = bigInc.Add(bigSQN, bigInc)
-			bigSQN = bigSQN.Mod(bigSQN, bigP)
-			sqnStr = fmt.Sprintf("%x", bigSQN)
-			sqnStr = p.strictHex(sqnStr, 12)
+				bigP := big.NewInt(SqnMAx)
+				bigSQN = bigInc.Add(bigSQN, bigInc)
+				bigSQN = bigSQN.Mod(bigSQN, bigP)
+				sqnStr = fmt.Sprintf("%x", bigSQN)
+				sqnStr = p.strictHex(sqnStr, 12)
+			}
 		} else {
 			logger.UeauLog.Errorf("Re-Sync MAC failed for UE with identity supiOrSuci=[%s], resolvedSupi=[%s]", supiOrSuci, supi)
 			logger.UeauLog.Errorln("MACS ", macS)
