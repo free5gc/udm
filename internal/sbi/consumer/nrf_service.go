@@ -17,6 +17,7 @@ import (
 	"github.com/free5gc/udm/internal/util"
 	sbi_metrics "github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/nfheartbeat"
+	"github.com/free5gc/util/serviceuri"
 )
 
 const registerRetryInterval = 2 * time.Second
@@ -132,14 +133,7 @@ func (s *nnrfService) SendNFInstancesUDR(id string, types int) string {
 		logger.ConsumerLog.Error(err.Error())
 		return ""
 	}
-	for _, profile := range result.NfInstances {
-		return util.SearchNFServiceUri(
-			profile,
-			models.Nrf_NFMgmt_ServiceName_NUDR_DR,
-			models.Nrf_NFMgmt_NFServiceStatus_REGISTERED,
-		)
-	}
-	return ""
+	return util.SearchNFServiceUri(result.NfInstances, models.Nrf_NFMgmt_ServiceName_NUDR_DR)
 }
 
 func (s *nnrfService) SendDeregisterNFInstance() (err error) {
@@ -279,7 +273,10 @@ func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (
 	profile.NfInstanceId = udmContext.NfId
 	profile.NfType = models.Nrf_NFMgmt_NFType_UDM
 	profile.NfStatus = models.Nrf_NFMgmt_NFStatus_REGISTERED
-	profile.Ipv4Addresses = append(profile.Ipv4Addresses, udmContext.RegisterIPv4)
+	addr := serviceuri.NewAddressing(udmContext.RegisterIPv4)
+	profile.Fqdn = addr.FQDN
+	profile.Ipv4Addresses = addr.IPv4Addresses
+	profile.Ipv6Addresses = addr.IPv6Addresses
 	for _, nfService := range udmContext.NfService {
 		profile.NfServices = append(profile.NfServices, nfService)
 	}
