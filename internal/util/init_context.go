@@ -47,5 +47,5 @@ func InitUDMContext(udmContext *context.UDMContext) {
 
 	udmContext.SuciProfiles = configuration.SuciProfiles
 
-	udmContext.InitNFService(servingNameList, config.Info.Version)
+	udmContext.InitNFService(servingNameList)
 }
