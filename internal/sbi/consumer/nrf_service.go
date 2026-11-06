@@ -179,16 +179,26 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context, applyOAuth2 bool) 
 		NfInstanceID: &udmContext.NfId,
 		RequestBody:  &nfProfile,
 	}
+
+	// Continue registration attempts while the context is active.
 	for ctx.Err() == nil {
 		res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(ctx, registerNfInstanceRequest)
+
+		// Registration succeeded.
 		if err == nil && res != nil {
 			var nf models.Nrf_NFMgmt_NFProfile
 			if res.Nrf_NFMgmt_NFProfile != nil {
 				nf = *res.Nrf_NFMgmt_NFProfile
 			}
+
+			// Process the NRF response and initialize OAuth if requested.
 			return s.processRegisterResponse(udmContext, nf, applyOAuth2)
 		}
+
 		logger.ConsumerLog.Errorf("UDM register to NRF Error[%v]", err)
+
+		// Wait before retrying, but stop waiting immediately if the context
+		// is canceled. The loop condition then prevents further attempts.
 		select {
 		case <-ctx.Done():
 		case <-time.After(registerRetryInterval):
@@ -197,8 +207,9 @@ func (s *nnrfService) RegisterNFInstance(ctx context.Context, applyOAuth2 bool) 
 	return fmt.Errorf("NFRegister aborted: %w (last error: %v)", ctx.Err(), err)
 }
 
-// processRegisterResponse adopts what the NRF answered to the NFRegister PUT: the
-// heartbeat interval and the oauth2 custom info.
+// processRegisterResponse processes the NRF registration response,
+// applying the OAuth2 setting only when requested and updating the
+// heartbeat interval after successful processing.
 func (s *nnrfService) processRegisterResponse(
 	udmContext *udm_context.UDMContext,
 	nf models.Nrf_NFMgmt_NFProfile,
@@ -211,7 +222,11 @@ func (s *nnrfService) processRegisterResponse(
 			logger.MainLog.Infoln("OAuth2 setting receive from NRF:", oauth2)
 		}
 	}
+
+	// Apply the OAuth setting.
 	if applyOAuth2 {
+		// Leave the heartbeat timer unchanged
+		// if applying the OAuth setting fails.
 		if err := udmContext.SetOAuth2Required(oauth2); err != nil {
 			return err
 		}
