@@ -315,5 +315,5 @@ func (s *nnrfService) buildNfProfile(udmContext *udm_context.UDMContext) (
 		// 	},
 		// },
 	}
-	return
+	return profile, nil
 }

@@ -63,10 +63,15 @@ func TestSendUEAuthenticationDeregister(t *testing.T) {
 					// token acquisition for the AUSF service in the error case.
 					if r.PostForm.Get("scope") == "nausf-auth" && tt.tokenStatus != 0 {
 						w.WriteHeader(tt.tokenStatus)
-						_, _ = w.Write([]byte(`{"error":"unauthorized_client"}`))
+						if _, err := w.Write([]byte(`{"error":"unauthorized_client"}`)); err != nil {
+							t.Errorf("write token error response: %v", err)
+						}
 						return
 					}
-					_, _ = w.Write([]byte(`{"access_token":"test-token","token_type":"Bearer","expires_in":3600}`))
+					tokenResponse := []byte(`{"access_token":"test-token","token_type":"Bearer","expires_in":3600}`)
+					if _, err := w.Write(tokenResponse); err != nil {
+						t.Errorf("write token response: %v", err)
+					}
 				case "/nnrf-disc/v1/nf-instances":
 					if r.Method != http.MethodGet {
 						t.Errorf("discovery method: %s", r.Method)
@@ -111,7 +116,9 @@ func TestSendUEAuthenticationDeregister(t *testing.T) {
 					if tt.ausfStatus == 404 {
 						w.Header().Set("Content-Type", "application/problem+json")
 						w.WriteHeader(404)
-						_, _ = w.Write([]byte(`{"status":404,"cause":"CONTEXT_NOT_FOUND"}`))
+						if _, err := w.Write([]byte(`{"status":404,"cause":"CONTEXT_NOT_FOUND"}`)); err != nil {
+							t.Errorf("write context-not-found response: %v", err)
+						}
 						return
 					}
 					w.WriteHeader(tt.ausfStatus)
@@ -174,8 +181,10 @@ func TestSendUEAuthenticationDeregister(t *testing.T) {
 func TestSendUEAuthenticationDeregisterRejectsInvalidInput(t *testing.T) {
 	c := newTestConsumer(t, &udm_context.UDMContext{})
 	for _, input := range []struct{ supi, target string }{
-		{"", uuid.NewString()}, {"suci-0-001-01-0000-0-0-0000000001", uuid.NewString()},
-		{"imsi-001010000000001", ""}, {"imsi-001010000000001", "not-a-uuid"},
+		{"", uuid.NewString()},
+		{"suci-0-001-01-0000-0-0-0000000001", uuid.NewString()},
+		{"imsi-001010000000001", ""},
+		{"imsi-001010000000001", "not-a-uuid"},
 		{"imsi-001010000000001", uuid.NewString()}, // No NRF URI: fail before making an HTTP request.
 	} {
 		require.Error(t, c.SendUEAuthenticationDeregister(input.supi, input.target))
