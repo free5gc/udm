@@ -46,6 +46,9 @@ func TestSendUEAuthenticationDeregister(t *testing.T) {
 			var info models.Ausf_UEAU_DeregistrationInfo
 			calls := 0
 			var server *httptest.Server
+
+			// Simulate NRF token issuance, NF discovery, and AUSF deregistration
+			// over a shared HTTP/2 test server.
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				mu.Lock()
 				defer mu.Unlock()
@@ -138,6 +141,9 @@ func TestSendUEAuthenticationDeregister(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+			// Reject mismatched discovery results and token acquisition failures
+			// before sending deregistration; OAuth-disabled cases require no token.
+			// Check the requested AUSF instance, NF type, and service independently.
 			mu.Lock()
 			defer mu.Unlock()
 			require.Equal(t, tt.wantCalls, calls)
@@ -153,6 +159,9 @@ func TestSendUEAuthenticationDeregister(t *testing.T) {
 				}
 				require.Equal(t, wantAuthorization, authorization)
 			}
+
+			// Verify nnrf-disc targets NRF, while nausf-auth targets the original
+			// AUSF instance. OAuth-disabled cases must not request either token.
 			if tt.disabled {
 				require.Empty(t, tokenForms)
 			} else {
@@ -178,6 +187,8 @@ func TestSendUEAuthenticationDeregister(t *testing.T) {
 	}
 }
 
+// Reject invalid SUPIs, malformed AUSF instance IDs, and missing NRF
+// configuration before attempting deregistration.
 func TestSendUEAuthenticationDeregisterRejectsInvalidInput(t *testing.T) {
 	c := newTestConsumer(t, &udm_context.UDMContext{})
 	for _, input := range []struct{ supi, target string }{
@@ -185,7 +196,7 @@ func TestSendUEAuthenticationDeregisterRejectsInvalidInput(t *testing.T) {
 		{"suci-0-001-01-0000-0-0-0000000001", uuid.NewString()},
 		{"imsi-001010000000001", ""},
 		{"imsi-001010000000001", "not-a-uuid"},
-		{"imsi-001010000000001", uuid.NewString()}, // No NRF URI: fail before making an HTTP request.
+		{"imsi-001010000000001", uuid.NewString()}, // Valid input, but NRF URI is missing.
 	} {
 		require.Error(t, c.SendUEAuthenticationDeregister(input.supi, input.target))
 	}
