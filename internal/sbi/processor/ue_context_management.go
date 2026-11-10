@@ -276,9 +276,8 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 
 	if request.Guami != nil {
 		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
-		if udmUe.SameAsStoredGUAMI3gpp(*request.Guami) { // deregistration
-			logger.UecmLog.Infoln("UpdateAmf3gppAccess - deregistration")
-			request.PurgeFlag = true
+		if udmUe.SameAsStoredGUAMI3gpp(*request.Guami) {
+			// GUAMI matches; continue processing with the original PurgeFlag.
 		} else {
 			logger.UecmLog.Errorln("INVALID_GUAMI")
 			problemDetails := &models.ProblemDetails{
@@ -298,6 +297,7 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 	}
 
 	if request.PurgeFlag {
+		logger.UecmLog.Infoln("UpdateAmf3gppAccess - deregistration")
 		var patchItemTmp models.PatchItem
 		patchItemTmp.Path = "/" + "purgeFlag"
 		patchItemTmp.Op = models.PatchOperation_ADD
