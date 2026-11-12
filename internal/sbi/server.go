@@ -162,6 +162,10 @@ func newRouter(s *Server) *gin.Engine {
 	udmCallBackRoutes := s.getHttpCallBackRoutes()
 	udmCallBackGroup := router.Group("")
 	udmCallBackGroup.Use(func(c *gin.Context) {
+		// TS 29.500 6.7.3: Subscribe/Notify notifications do not use access tokens.
+		if c.Request.Method == http.MethodPost && c.FullPath() == "/:supi/sdm-subscriptions" {
+			return
+		}
 		util.NewRouterAuthorizationCheck(models.Nrf_NFMgmt_ServiceName_NUDM_SDM).Check(c, s.Context())
 	})
 	AddService(udmCallBackGroup, udmCallBackRoutes)

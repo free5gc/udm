@@ -164,9 +164,8 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
 
 			go func() {
 				logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
-				pd := p.SendOnDeregistrationNotification(ueID,
+				pd := p.SendOnDeregistrationNotification(
 					oldAmf3GppAccessRegContext.DeregCallbackUri,
-					oldAmf3GppAccessRegContext.AmfInstanceId,
 					deregistData) // Deregistration Notify Triggered
 				if pd != nil {
 					logger.UecmLog.Errorf("RegistrationAmf3gppAccess: send DeregNotify fail %v", pd)
@@ -238,9 +237,7 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
 		go func() {
 			logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmfNon3GppAccessRegContext.Guami)
 			pd := p.SendOnDeregistrationNotification(
-				ueID,
 				oldAmfNon3GppAccessRegContext.DeregCallbackUri,
-				oldAmfNon3GppAccessRegContext.AmfInstanceId,
 				deregistData,
 			) // Deregistration Notify Triggered
 			if pd != nil {
