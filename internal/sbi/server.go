@@ -145,6 +145,22 @@ func (s *Server) shutdownHttpServer() {
 	}
 }
 
+// applyCallbackRoutes mounts callback routes and exempts only operations
+// classified as Notify from OAuth checks (TS 29.500 6.7.3), not the whole group.
+func applyCallbackRoutes(group *gin.RouterGroup, routes []Route, s *Server) {
+	authCheck := util.NewRouterAuthorizationCheck(models.Nrf_NFMgmt_ServiceName_NUDM_SDM)
+	for _, route := range routes {
+		handlers := make([]gin.HandlerFunc, 0, 2)
+		if !route.IsNotification {
+			handlers = append(handlers, func(c *gin.Context) {
+				authCheck.Check(c, s.Context())
+			})
+		}
+		handlers = append(handlers, route.HandlerFunc)
+		group.Handle(route.Method, route.Pattern, handlers...)
+	}
+}
+
 func newRouter(s *Server) *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	router.Use(metrics.InboundMetrics())
@@ -161,14 +177,7 @@ func newRouter(s *Server) *gin.Engine {
 	// Callback
 	udmCallBackRoutes := s.getHttpCallBackRoutes()
 	udmCallBackGroup := router.Group("")
-	udmCallBackGroup.Use(func(c *gin.Context) {
-		// TS 29.500 6.7.3: Subscribe/Notify notifications do not use access tokens.
-		if c.Request.Method == http.MethodPost && c.FullPath() == "/:supi/sdm-subscriptions" {
-			return
-		}
-		util.NewRouterAuthorizationCheck(models.Nrf_NFMgmt_ServiceName_NUDM_SDM).Check(c, s.Context())
-	})
-	AddService(udmCallBackGroup, udmCallBackRoutes)
+	applyCallbackRoutes(udmCallBackGroup, udmCallBackRoutes, s)
 
 	// UEAU
 	udmUEAURoutes := s.getUEAuthenticationRoutes()

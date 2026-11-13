@@ -20,6 +20,10 @@ import (
 // not a notification. Tracking the original AUSF and automatically triggering
 // deregistration are outside this sender's responsibility; it must never fall
 // back to an arbitrary discovered AUSF.
+//
+// Reserved interface: UDM does not call this yet. Tracking the original AUSF
+// and deciding when a context is stale are left to a follow-up change that
+// wires this sender into the authentication flow.
 func (c *Consumer) SendUEAuthenticationDeregister(supi, ausfInstanceID string) error {
 	if !validator.IsValidSupi(supi) {
 		return fmt.Errorf("invalid deregistration SUPI")

@@ -589,7 +589,8 @@ func (context *UDMContext) AuthorizationCheck(token string, serviceName models.N
 		logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: OAuth2 not required\n")
 		return nil
 	}
-	logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: token[%s] serviceName[%s]\n", token, serviceName)
+	logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: tokenPresent[%t] serviceName[%s]",
+		token != "", serviceName)
 	err := oauth.VerifyOAuth(token, string(serviceName), oauth.AudiencePolicy{
 		NFInstanceID: context.NfId,
 		NFType:       models.Nrf_NFMgmt_NFType_UDM,

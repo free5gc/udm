@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 
 	udm_context "github.com/free5gc/udm/internal/context"
@@ -60,5 +61,27 @@ func TestNotifyOAuthRouteBoundary(t *testing.T) {
 			router.ServeHTTP(recorder, req)
 			require.Equal(t, tt.wantStatus, recorder.Code, recorder.Body.String())
 		})
+	}
+}
+
+func TestApplyCallbackRoutesExemptsOnlyNotifications(t *testing.T) {
+	udmCtx := &udm_context.UDMContext{
+		OAuth2Required:  true,
+		NfId:            "11111111-1111-4111-8111-111111111111",
+		NrfNfInstanceID: "22222222-2222-4222-8222-222222222222",
+	}
+	testApp := &traceDataTestApp{udmCtx: udmCtx}
+	router := gin.New()
+	ok := func(c *gin.Context) { c.Status(http.StatusNoContent) }
+	applyCallbackRoutes(router.Group(""), []Route{
+		{Name: "Notify", Method: http.MethodPost, Pattern: "/notify", HandlerFunc: ok, IsNotification: true},
+		{Name: "Other", Method: http.MethodPost, Pattern: "/other", HandlerFunc: ok},
+	}, &Server{ServerUdm: testApp})
+
+	for path, want := range map[string]int{"/notify": http.StatusNoContent, "/other": http.StatusUnauthorized} {
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, path, nil)
+		recorder := httptest.NewRecorder()
+		router.ServeHTTP(recorder, req)
+		require.Equal(t, want, recorder.Code, path)
 	}
 }

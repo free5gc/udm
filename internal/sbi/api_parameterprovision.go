@@ -14,94 +14,94 @@ import (
 func (s *Server) getParameterProvisionRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 
 		{
-			"Update",
-			http.MethodPatch,
-			"/:ueId/pp-data",
-			s.HandleUpdate,
+			Name:        "Update",
+			Method:      http.MethodPatch,
+			Pattern:     "/:ueId/pp-data",
+			HandlerFunc: s.HandleUpdate,
 		},
 
 		{
-			"Create5GMBSGroup",
-			http.MethodPut,
-			"/mbs-group-membership/:extGroupId",
-			s.HandleCreate5GMBSGroup,
+			Name:        "Create5GMBSGroup",
+			Method:      http.MethodPut,
+			Pattern:     "/mbs-group-membership/:extGroupId",
+			HandlerFunc: s.HandleCreate5GMBSGroup,
 		},
 
 		{
-			"Create5GVNGroup",
-			http.MethodPut,
-			"/5g-vn-groups/:extGroupId",
-			s.HandleCreate5GVNGroup,
+			Name:        "Create5GVNGroup",
+			Method:      http.MethodPut,
+			Pattern:     "/5g-vn-groups/:extGroupId",
+			HandlerFunc: s.HandleCreate5GVNGroup,
 		},
 
 		{
-			"CreatePPDataEntry",
-			http.MethodPut,
-			"/:ueId/pp-data-store/:afInstanceId",
-			s.HandleCreatePPDataEntry,
+			Name:        "CreatePPDataEntry",
+			Method:      http.MethodPut,
+			Pattern:     "/:ueId/pp-data-store/:afInstanceId",
+			HandlerFunc: s.HandleCreatePPDataEntry,
 		},
 
 		{
-			"Delete5GMBSGroup",
-			http.MethodDelete,
-			"/mbs-group-membership/:extGroupId",
-			s.HandleDelete5GMBSGroup,
+			Name:        "Delete5GMBSGroup",
+			Method:      http.MethodDelete,
+			Pattern:     "/mbs-group-membership/:extGroupId",
+			HandlerFunc: s.HandleDelete5GMBSGroup,
 		},
 
 		{
-			"Delete5GVNGroup",
-			http.MethodDelete,
-			"/5g-vn-groups/:extGroupId",
-			s.HandleDelete5GVNGroup,
+			Name:        "Delete5GVNGroup",
+			Method:      http.MethodDelete,
+			Pattern:     "/5g-vn-groups/:extGroupId",
+			HandlerFunc: s.HandleDelete5GVNGroup,
 		},
 
 		{
-			"DeletePPDataEntry",
-			http.MethodDelete,
-			"/:ueId/pp-data-store/:afInstanceId",
-			s.HandleDeletePPDataEntry,
+			Name:        "DeletePPDataEntry",
+			Method:      http.MethodDelete,
+			Pattern:     "/:ueId/pp-data-store/:afInstanceId",
+			HandlerFunc: s.HandleDeletePPDataEntry,
 		},
 
 		{
-			"Get5GMBSGroup",
-			http.MethodGet,
-			"/mbs-group-membership/:extGroupId",
-			s.HandleGet5GMBSGroup,
+			Name:        "Get5GMBSGroup",
+			Method:      http.MethodGet,
+			Pattern:     "/mbs-group-membership/:extGroupId",
+			HandlerFunc: s.HandleGet5GMBSGroup,
 		},
 
 		{
-			"Get5GVNGroup",
-			http.MethodGet,
-			"/5g-vn-groups/:extGroupId",
-			s.HandleGet5GVNGroup,
+			Name:        "Get5GVNGroup",
+			Method:      http.MethodGet,
+			Pattern:     "/5g-vn-groups/:extGroupId",
+			HandlerFunc: s.HandleGet5GVNGroup,
 		},
 
 		{
-			"GetPPDataEntry",
-			http.MethodGet,
-			"/:ueId/pp-data-store/:afInstanceId",
-			s.HandleGetPPDataEntry,
+			Name:        "GetPPDataEntry",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/pp-data-store/:afInstanceId",
+			HandlerFunc: s.HandleGetPPDataEntry,
 		},
 
 		{
-			"Modify5GMBSGroup",
-			http.MethodPatch,
-			"/mbs-group-membership/:extGroupId",
-			s.HandleModify5GMBSGroup,
+			Name:        "Modify5GMBSGroup",
+			Method:      http.MethodPatch,
+			Pattern:     "/mbs-group-membership/:extGroupId",
+			HandlerFunc: s.HandleModify5GMBSGroup,
 		},
 
 		{
-			"Modify5GVNGroup",
-			http.MethodPatch,
-			"/5g-vn-groups/:extGroupId",
-			s.HandleModify5GVNGroup,
+			Name:        "Modify5GVNGroup",
+			Method:      http.MethodPatch,
+			Pattern:     "/5g-vn-groups/:extGroupId",
+			HandlerFunc: s.HandleModify5GVNGroup,
 		},
 	}
 }

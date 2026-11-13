@@ -40,7 +40,7 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 		subDataChangeNotificationPostRequest.RequestBody = &dataChangeNotification
 		// TS 29.500 6.7.3: use a clean context so no access token is forwarded.
 		_, err := clientAPI.SubscriptionCreationApi.SubscribeDatachangeNotification(
-			context.TODO(), onDataChangeNotificationurl, &subDataChangeNotificationPostRequest)
+			context.Background(), onDataChangeNotificationurl, &subDataChangeNotificationPostRequest)
 		if err != nil {
 			if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 				// API error

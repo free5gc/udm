@@ -43,6 +43,21 @@ var servicePolicies = map[models.Nrf_NFMgmt_ServiceName][]models.Nrf_NFMgmt_NFTy
 		models.Nrf_NFMgmt_NFType_SOR_AF,
 		models.Nrf_NFMgmt_NFType_AMF,
 	},
+	// TS 29.503 Nudm_NIDDAuthorization: NF Service Consumer is NEF.
+	models.Nrf_NFMgmt_ServiceName_NUDM_NIDDAU: {
+		models.Nrf_NFMgmt_NFType_NEF,
+	},
+	// TS 29.503 Nudm_ReportSMDeliveryStatus: NF Service Consumers are
+	// SMS-GMSC, IP-SM-GW and SMS Router.
+	models.Nrf_NFMgmt_ServiceName_NUDM_RSDS: {
+		models.Nrf_NFMgmt_NFType_SMS_GMSC,
+		models.Nrf_NFMgmt_NFType_IP_SM_GW,
+		models.Nrf_NFMgmt_NFType_SMS_ROUTER,
+	},
+	// TS 29.503 Nudm_ServiceSpecificAuthorization: NF Service Consumer is NEF.
+	models.Nrf_NFMgmt_ServiceName_NUDM_SSAU: {
+		models.Nrf_NFMgmt_NFType_NEF,
+	},
 }
 
 func AllowedNfTypesForService(

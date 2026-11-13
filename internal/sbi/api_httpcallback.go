@@ -15,10 +15,12 @@ import (
 func (s *Server) getHttpCallBackRoutes() []Route {
 	return []Route{
 		{
-			"DataChangeNotificationToNF",
-			http.MethodPost,
-			"/:supi/sdm-subscriptions",
-			s.HandleDataChangeNotificationToNF,
+			Name:        "DataChangeNotificationToNF",
+			Method:      http.MethodPost,
+			Pattern:     "/:supi/sdm-subscriptions",
+			HandlerFunc: s.HandleDataChangeNotificationToNF,
+			// Nudr_DataRepository DataChange Notify (TS 29.504 5.2.2.6).
+			IsNotification: true,
 		},
 	}
 }
