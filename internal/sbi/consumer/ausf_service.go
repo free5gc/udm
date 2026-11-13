@@ -6,10 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/free5gc/openapi"
 	Nausf_UEAU "github.com/free5gc/openapi/ausf/UEAU"
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDisc"
+	"github.com/free5gc/udm/internal/util"
 	sbi_metrics "github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/validator"
 )
@@ -59,8 +59,8 @@ func (c *Consumer) SendUEAuthenticationDeregister(supi, ausfInstanceID string) e
 			profiles = append(profiles, profile)
 		}
 	}
-	_, uri, err := openapi.GetServiceNfProfileAndUri(profiles, models.Nrf_NFMgmt_ServiceName_NAUSF_AUTH)
-	if err != nil || uri == "" {
+	uri := util.SearchNFServiceUri(profiles, models.Nrf_NFMgmt_ServiceName_NAUSF_AUTH)
+	if uri == "" {
 		return fmt.Errorf("original AUSF %s has no nausf-auth service", ausfInstanceID)
 	}
 
