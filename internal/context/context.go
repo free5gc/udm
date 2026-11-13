@@ -19,6 +19,7 @@ import (
 	"github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/idgenerator"
+	"github.com/free5gc/util/serviceuri"
 )
 
 var udmContext = UDMContext{}
@@ -482,6 +483,7 @@ func (context *UDMContext) GetSDMUri() string {
 func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	tmpVersion := strings.Split(version, ".")
 	versionUri := "v" + tmpVersion[0]
+	addr := serviceuri.NewAddressing(context.RegisterIPv4)
 	for index, nameString := range serviceName {
 		name := models.Nrf_NFMgmt_ServiceName(nameString)
 		context.NfService[name] = models.Nrf_NFMgmt_NFService{
@@ -495,14 +497,8 @@ func (context *UDMContext) InitNFService(serviceName []string, version string) {
 			},
 			Scheme:          context.UriScheme,
 			NfServiceStatus: models.Nrf_NFMgmt_NFServiceStatus_REGISTERED,
-			ApiPrefix:       context.GetIPv4Uri(),
-			IpEndPoints: []models.Nrf_NFMgmt_IpEndPoint{
-				{
-					Ipv4Address: context.RegisterIPv4,
-					Transport:   models.Nrf_NFMgmt_TransportProtocol_TCP,
-					Port:        int32(context.SBIPort),
-				},
-			},
+			Fqdn:            addr.FQDN,
+			IpEndPoints:     addr.IpEndPoints(int32(context.SBIPort)),
 		}
 	}
 }
