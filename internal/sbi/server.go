@@ -66,12 +66,15 @@ func (s *Server) Run(traceCtx context.Context, wg *sync.WaitGroup) error {
 	ctx := s.CancelContext()
 	if err := s.Consumer().RegisterNFInstance(ctx, true); err != nil {
 		logger.InitLog.Errorf("UDM register to NRF Error[%s]", err.Error())
-	} else {
-		// Only a registered profile has something to keep alive.
-		s.Consumer().StartHeartbeat(ctx, wg)
+		return err
 	}
 
+	// Only a registered profile has something to keep alive.
+	s.Consumer().StartHeartbeat(ctx, wg)
+
 	wg.Add(1)
+
+	// Start UDM server only if the NRF registration has succeeded.
 	go s.startServer(wg)
 
 	return nil
@@ -142,6 +145,22 @@ func (s *Server) shutdownHttpServer() {
 	}
 }
 
+// applyCallbackRoutes mounts callback routes and exempts only operations
+// classified as Notify from OAuth checks (TS 29.500 6.7.3), not the whole group.
+func applyCallbackRoutes(group *gin.RouterGroup, routes []Route, s *Server) {
+	authCheck := util.NewRouterAuthorizationCheck(models.Nrf_NFMgmt_ServiceName_NUDM_SDM)
+	for _, route := range routes {
+		handlers := make([]gin.HandlerFunc, 0, 2)
+		if !route.IsNotification {
+			handlers = append(handlers, func(c *gin.Context) {
+				authCheck.Check(c, s.Context())
+			})
+		}
+		handlers = append(handlers, route.HandlerFunc)
+		group.Handle(route.Method, route.Pattern, handlers...)
+	}
+}
+
 func newRouter(s *Server) *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
 	router.Use(metrics.InboundMetrics())
@@ -158,10 +177,7 @@ func newRouter(s *Server) *gin.Engine {
 	// Callback
 	udmCallBackRoutes := s.getHttpCallBackRoutes()
 	udmCallBackGroup := router.Group("")
-	udmCallBackGroup.Use(func(c *gin.Context) {
-		util.NewRouterAuthorizationCheck(models.Nrf_NFMgmt_ServiceName_NUDM_SDM).Check(c, s.Context())
-	})
-	AddService(udmCallBackGroup, udmCallBackRoutes)
+	applyCallbackRoutes(udmCallBackGroup, udmCallBackRoutes, s)
 
 	// UEAU
 	udmUEAURoutes := s.getUEAuthenticationRoutes()
