@@ -138,7 +138,7 @@ func InitUdmContext(context *UDMContext) {
 
 	udmContext.SuciProfiles = configuration.SuciProfiles
 
-	udmContext.InitNFService(servingNameList, config.Info.Version)
+	udmContext.InitNFService(servingNameList)
 }
 
 func (context *UDMContext) ManageSmData(
@@ -479,18 +479,28 @@ func (context *UDMContext) GetSDMUri() string {
 	return context.GetIPv4Uri() + factory.UdmSdmResUriPrefix
 }
 
-func (context *UDMContext) InitNFService(serviceName []string, version string) {
-	tmpVersion := strings.Split(version, ".")
-	versionUri := "v" + tmpVersion[0]
+// apiFullVersions are the versions of the Nudm APIs that the UDM serves: those
+// of the OpenAPI documents of TS 29.503 that free5gc/openapi is generated from.
+// The router serves each one under "v" and its MAJOR (TS 29.501 §4.3.1.3).
+var apiFullVersions = map[models.Nrf_NFMgmt_ServiceName]string{
+	models.Nrf_NFMgmt_ServiceName_NUDM_SDM:  "2.2.5",
+	models.Nrf_NFMgmt_ServiceName_NUDM_UECM: "1.2.6",
+	models.Nrf_NFMgmt_ServiceName_NUDM_UEAU: "1.2.2",
+	models.Nrf_NFMgmt_ServiceName_NUDM_EE:   "1.2.3",
+	models.Nrf_NFMgmt_ServiceName_NUDM_PP:   "1.2.3",
+}
+
+func (context *UDMContext) InitNFService(serviceName []string) {
 	for index, nameString := range serviceName {
 		name := models.Nrf_NFMgmt_ServiceName(nameString)
+		version := apiFullVersions[name]
 		context.NfService[name] = models.Nrf_NFMgmt_NFService{
 			ServiceInstanceId: strconv.Itoa(index),
 			ServiceName:       name,
 			Versions: []models.Nrf_NFMgmt_NFServiceVersion{
 				{
 					ApiFullVersion:  version,
-					ApiVersionInUri: versionUri,
+					ApiVersionInUri: "v" + strings.Split(version, ".")[0],
 				},
 			},
 			Scheme:          context.UriScheme,
