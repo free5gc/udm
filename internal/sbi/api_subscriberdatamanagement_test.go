@@ -514,13 +514,34 @@ func setupSdmTestRouter() *gin.Engine {
 	r := gin.New()
 	group := r.Group("/nudm-sdm/v2")
 	AddService(group, []Route{
-		{"GetSmfSelectData", http.MethodGet, "/:supi/smf-select-data", s.HandleGetSmfSelectData},
-		{"GetSupi", http.MethodGet, "/:supi", s.HandleGetSupi},
-		{"GetTraceData", http.MethodGet, "/:supi/trace-data", s.HandleGetTraceData},
-		{"GetUeContextInSmfData", http.MethodGet, "/:supi/ue-context-in-smf-data", s.HandleGetUeContextInSmfData},
-		{"GetNssai", http.MethodGet, "/:supi/nssai", s.HandleGetNssai},
-		{"GetSmData", http.MethodGet, "/:supi/sm-data", s.HandleGetSmData},
-		{"GetAmData", http.MethodGet, "/:supi/am-data", s.HandleGetAmData},
+		{
+			Name: "GetSmfSelectData", Method: http.MethodGet, Pattern: "/:supi/smf-select-data",
+			HandlerFunc: s.HandleGetSmfSelectData,
+		},
+		{
+			Name: "GetSupi", Method: http.MethodGet, Pattern: "/:supi",
+			HandlerFunc: s.HandleGetSupi,
+		},
+		{
+			Name: "GetTraceData", Method: http.MethodGet, Pattern: "/:supi/trace-data",
+			HandlerFunc: s.HandleGetTraceData,
+		},
+		{
+			Name: "GetUeContextInSmfData", Method: http.MethodGet, Pattern: "/:supi/ue-context-in-smf-data",
+			HandlerFunc: s.HandleGetUeContextInSmfData,
+		},
+		{
+			Name: "GetNssai", Method: http.MethodGet, Pattern: "/:supi/nssai",
+			HandlerFunc: s.HandleGetNssai,
+		},
+		{
+			Name: "GetSmData", Method: http.MethodGet, Pattern: "/:supi/sm-data",
+			HandlerFunc: s.HandleGetSmData,
+		},
+		{
+			Name: "GetAmData", Method: http.MethodGet, Pattern: "/:supi/am-data",
+			HandlerFunc: s.HandleGetAmData,
+		},
 	})
 	return r
 }

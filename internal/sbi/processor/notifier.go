@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,13 +18,6 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 	notifyItems []models.NotifyItem,
 	supi string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDM_SDM, models.Nrf_NFMgmt_NFType_UDM)
-	if err != nil {
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
-		c.JSON(int(pd.Status), pd)
-		return
-	}
-
 	ue, ok := p.Context().UdmUeFindBySupi(supi)
 	if !ok {
 		c.Status(http.StatusNoContent)
@@ -34,13 +28,19 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 
 	var problemDetails *models.ProblemDetails
 	for _, subscriptionDataSubscription := range ue.UdmSubsToNotify {
+		if subscriptionDataSubscription == nil {
+			problemDetails = openapi.ProblemDetailsSystemFailure("missing SDM subscription callback identity")
+			continue
+		}
+
 		onDataChangeNotificationurl := subscriptionDataSubscription.OriginalCallbackReference
 		dataChangeNotification := models.Udm_SDM_ModificationNotification{}
 		dataChangeNotification.NotifyItems = notifyItems
 		var subDataChangeNotificationPostRequest SDM.SubscribeDatachangeNotificationRequest
 		subDataChangeNotificationPostRequest.RequestBody = &dataChangeNotification
-		_, err = clientAPI.SubscriptionCreationApi.SubscribeDatachangeNotification(
-			ctx, onDataChangeNotificationurl, &subDataChangeNotificationPostRequest)
+		// TS 29.500 6.7.3: use a clean context so no access token is forwarded.
+		_, err := clientAPI.SubscriptionCreationApi.SubscribeDatachangeNotification(
+			context.Background(), onDataChangeNotificationurl, &subDataChangeNotificationPostRequest)
 		if err != nil {
 			if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 				// API error
@@ -62,20 +62,16 @@ func (p *Processor) DataChangeNotificationProcedure(c *gin.Context,
 	c.JSON(int(problemDetails.Status), problemDetails)
 }
 
-func (p *Processor) SendOnDeregistrationNotification(ueId string, onDeregistrationNotificationUrl string,
+func (p *Processor) SendOnDeregistrationNotification(onDeregistrationNotificationUrl string,
 	deregistData models.Udm_UECM_DeregistrationData,
 ) *models.ProblemDetails {
-	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDM_UECM, models.Nrf_NFMgmt_NFType_UDM)
-	if err != nil {
-		return pd
-	}
-
 	clientAPI := p.Consumer().GetUECMClient("SendOnDeregistrationNotification")
 	var call3GppRegistrationDeregistrationNotificationPostRequest UECM.
 		Call3GppRegistrationDeregistrationNotificationRequest
 	call3GppRegistrationDeregistrationNotificationPostRequest.RequestBody = &deregistData
-	_, err = clientAPI.AMFRegistrationFor3GPPAccessApi.
-		Call3GppRegistrationDeregistrationNotification(ctx,
+	// This asynchronous notification must not inherit request cancellation or tokens.
+	_, err := clientAPI.AMFRegistrationFor3GPPAccessApi.
+		Call3GppRegistrationDeregistrationNotification(context.Background(),
 			onDeregistrationNotificationUrl,
 			&call3GppRegistrationDeregistrationNotificationPostRequest)
 	if err != nil {

@@ -9,17 +9,17 @@ import (
 func (s *Server) getUEIDRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 
 		{
-			"Deconceal",
-			http.MethodPost,
-			"/deconceal",
-			s.HandleDeconceal,
+			Name:        "Deconceal",
+			Method:      http.MethodPost,
+			Pattern:     "/deconceal",
+			HandlerFunc: s.HandleDeconceal,
 		},
 	}
 }

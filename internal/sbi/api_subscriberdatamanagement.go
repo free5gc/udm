@@ -19,10 +19,10 @@ import (
 func (s *Server) getSubscriberDataManagementRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 	}
 }
@@ -903,31 +903,31 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 func (s *Server) getOneLayerRoutes() []Route {
 	return []Route{
 		{
-			"GetDataSets",
-			http.MethodGet,
-			"/:supi",
-			s.HandleGetSupi,
+			Name:        "GetDataSets",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi",
+			HandlerFunc: s.HandleGetSupi,
 		},
 
 		{
-			"GetSharedData",
-			http.MethodGet,
-			"/shared-data",
-			s.HandleGetSharedData,
+			Name:        "GetSharedData",
+			Method:      http.MethodGet,
+			Pattern:     "/shared-data",
+			HandlerFunc: s.HandleGetSharedData,
 		},
 
 		{
-			"SubscribeToSharedData",
-			http.MethodPost,
-			"/shared-data-subscriptions",
-			s.HandleSubscribeToSharedData,
+			Name:        "SubscribeToSharedData",
+			Method:      http.MethodPost,
+			Pattern:     "/shared-data-subscriptions",
+			HandlerFunc: s.HandleSubscribeToSharedData,
 		},
 
 		{
-			"GetMultipleIdentifiers",
-			http.MethodGet,
-			"/multiple-identifiers",
-			s.HandleGetMultipleIdentifiers,
+			Name:        "GetMultipleIdentifiers",
+			Method:      http.MethodGet,
+			Pattern:     "/multiple-identifiers",
+			HandlerFunc: s.HandleGetMultipleIdentifiers,
 		},
 	}
 }
@@ -935,136 +935,136 @@ func (s *Server) getOneLayerRoutes() []Route {
 func (s *Server) getTwoLayerRoutes() []Route {
 	return []Route{
 		{
-			"GetAmData",
-			http.MethodGet,
-			"/:supi/am-data",
-			s.HandleGetAmData,
+			Name:        "GetAmData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/am-data",
+			HandlerFunc: s.HandleGetAmData,
 		},
 
 		{
-			"GetSmfSelData",
-			http.MethodGet,
-			"/:supi/smf-select-data",
-			s.HandleGetSmfSelectData,
+			Name:        "GetSmfSelData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/smf-select-data",
+			HandlerFunc: s.HandleGetSmfSelectData,
 		},
 
 		{
-			"GetSmsMngtData",
-			http.MethodGet,
-			"/:supi/sms-mng-data",
-			s.HandleGetSmsMngData,
+			Name:        "GetSmsMngtData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/sms-mng-data",
+			HandlerFunc: s.HandleGetSmsMngData,
 		},
 
 		{
-			"GetSmsData",
-			http.MethodGet,
-			"/:supi/sms-data",
-			s.HandleGetSmsData,
+			Name:        "GetSmsData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/sms-data",
+			HandlerFunc: s.HandleGetSmsData,
 		},
 
 		{
-			"GetSmData",
-			http.MethodGet,
-			"/:supi/sm-data",
-			s.HandleGetSmData,
+			Name:        "GetSmData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/sm-data",
+			HandlerFunc: s.HandleGetSmData,
 		},
 
 		{
-			"GetNSSAI",
-			http.MethodGet,
-			"/:supi/nssai",
-			s.HandleGetNssai,
+			Name:        "GetNSSAI",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/nssai",
+			HandlerFunc: s.HandleGetNssai,
 		},
 
 		{
-			"Subscribe",
-			http.MethodPost,
-			"/:ueId/sdm-subscriptions",
-			s.HandleSubscribe,
+			Name:        "Subscribe",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueId/sdm-subscriptions",
+			HandlerFunc: s.HandleSubscribe,
 		},
 
 		{
-			"GetTraceConfigData",
-			http.MethodGet,
-			"/:supi/trace-data",
-			s.HandleGetTraceData,
+			Name:        "GetTraceConfigData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/trace-data",
+			HandlerFunc: s.HandleGetTraceData,
 		},
 
 		{
-			"GetUeCtxInSmfData",
-			http.MethodGet,
-			"/:supi/ue-context-in-smf-data",
-			s.HandleGetUeContextInSmfData,
+			Name:        "GetUeCtxInSmfData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/ue-context-in-smf-data",
+			HandlerFunc: s.HandleGetUeContextInSmfData,
 		},
 
 		{
-			"GetUeCtxInSmsfData",
-			http.MethodGet,
-			"/:supi/ue-context-in-smsf-data",
-			s.HandleGetUeContextInSmsfData,
+			Name:        "GetUeCtxInSmsfData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/ue-context-in-smsf-data",
+			HandlerFunc: s.HandleGetUeContextInSmsfData,
 		},
 
 		{
-			"GetGroupIdentifiers",
-			http.MethodGet,
-			"/group-data/group-identifiers",
-			s.HandleGetGroupIdentifiers,
+			Name:        "GetGroupIdentifiers",
+			Method:      http.MethodGet,
+			Pattern:     "/group-data/group-identifiers",
+			HandlerFunc: s.HandleGetGroupIdentifiers,
 		},
 
 		{
-			"GetLcsBcaData",
-			http.MethodGet,
-			"/:supi/lcs-bca-data",
-			s.HandleGetLcsBcaData,
+			Name:        "GetLcsBcaData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/lcs-bca-data",
+			HandlerFunc: s.HandleGetLcsBcaData,
 		},
 
 		{
-			"GetLcsMoData",
-			http.MethodGet,
-			"/:supi/lcs-mo-data",
-			s.HandleGetLcsMoData,
+			Name:        "GetLcsMoData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/lcs-mo-data",
+			HandlerFunc: s.HandleGetLcsMoData,
 		},
 
 		{
-			"GetLcsPrivacyData",
-			http.MethodGet,
-			"/:ueId/lcs-privacy-data",
-			s.HandleGetLcsPrivacyData,
+			Name:        "GetLcsPrivacyData",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/lcs-privacy-data",
+			HandlerFunc: s.HandleGetLcsPrivacyData,
 		},
 
 		{
-			"GetMbsData",
-			http.MethodGet,
-			"/:supi/5mbs-data",
-			s.HandleGetMbsData,
+			Name:        "GetMbsData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/5mbs-data",
+			HandlerFunc: s.HandleGetMbsData,
 		},
 
 		{
-			"GetProseData",
-			http.MethodGet,
-			"/:supi/prose-data",
-			s.HandleGetProseData,
+			Name:        "GetProseData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/prose-data",
+			HandlerFunc: s.HandleGetProseData,
 		},
 
 		{
-			"GetUcData",
-			http.MethodGet,
-			"/:supi/uc-data",
-			s.HandleGetUcData,
+			Name:        "GetUcData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/uc-data",
+			HandlerFunc: s.HandleGetUcData,
 		},
 
 		{
-			"GetUeCtxInAmfData",
-			http.MethodGet,
-			"/:supi/ue-context-in-amf-data",
-			s.HandleGetUeCtxInAmfData,
+			Name:        "GetUeCtxInAmfData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/ue-context-in-amf-data",
+			HandlerFunc: s.HandleGetUeCtxInAmfData,
 		},
 
 		{
-			"GetV2xData",
-			http.MethodGet,
-			"/:supi/v2x-data",
-			s.HandleGetV2xData,
+			Name:        "GetV2xData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/v2x-data",
+			HandlerFunc: s.HandleGetV2xData,
 		},
 	}
 }

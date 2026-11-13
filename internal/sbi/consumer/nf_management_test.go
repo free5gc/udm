@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"path/filepath"
 	"testing"
 	"testing/synctest"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDisc"
+	"github.com/free5gc/openapi/oauth"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/util/nfheartbeat"
 )
@@ -288,21 +290,37 @@ func TestRegisterNFInstanceStopsOnCancel(t *testing.T) {
 }
 
 func TestRegisterNFInstance(t *testing.T) {
+	const testNrfInstanceID = "11111111-1111-4111-8111-111111111111"
+
 	tests := []struct {
-		name        string
-		status      int
-		body        map[string]any
-		applyOAuth2 bool
-		wantTimer   int32
-		wantOAuth2  bool
+		name         string
+		status       int
+		body         map[string]any
+		applyOAuth2  bool
+		withNrfCert  bool
+		initialTimer int32
+		wantTimer    int32
+		wantOAuth2   bool
+		wantErr      string
 	}{
 		{
 			name:        "201 adopts the returned timer",
 			status:      http.StatusCreated,
 			body:        nfProfileJSON(15, map[string]any{"oauth2": true}),
 			applyOAuth2: true,
+			withNrfCert: true,
 			wantTimer:   15,
 			wantOAuth2:  true,
+		},
+		{
+			name:         "201 rejects OAuth initialization without NRF certificate",
+			status:       http.StatusCreated,
+			body:         nfProfileJSON(15, map[string]any{"oauth2": true}),
+			applyOAuth2:  true,
+			initialTimer: 7,
+			wantTimer:    7,
+			wantOAuth2:   false,
+			wantErr:      "OAuth2 enabled but NRF certificate path is empty",
 		},
 		{
 			name:      "200 on a profile the NRF already holds",
@@ -321,14 +339,26 @@ func TestRegisterNFInstance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			consumer := newNrfTestConsumer(t)
+			consumer.heartbeatTimer = tt.initialTimer
+			if tt.withNrfCert {
+				certPath := filepath.Join(t.TempDir(), "nrf.pem")
+				key, err := oauth.GenerateRSAKeyPair("", "")
+				require.NoError(t, err)
+				_, err = oauth.GenerateCertificate("NRF", testNrfInstanceID, certPath, &key.PublicKey, nil, key)
+				require.NoError(t, err)
+				consumer.Context().NrfCertPem = certPath
+			}
 
 			gock.New(testNrfUri).
 				Put(testNfIdPath).
 				Reply(tt.status).
 				JSON(tt.body)
 
-			if err := consumer.RegisterNFInstance(testCtx(t), tt.applyOAuth2); err != nil {
-				t.Fatalf("RegisterNFInstance: %v", err)
+			err := consumer.RegisterNFInstance(testCtx(t), tt.applyOAuth2)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
 			}
 			if !gock.IsDone() {
 				t.Fatal("the registration PUT was not sent as expected")
@@ -338,6 +368,9 @@ func TestRegisterNFInstance(t *testing.T) {
 			}
 			if got := consumer.Context().OAuth2Required; got != tt.wantOAuth2 {
 				t.Errorf("OAuth2Required = %v, want %v", got, tt.wantOAuth2)
+			}
+			if tt.withNrfCert {
+				require.Equal(t, testNrfInstanceID, consumer.Context().NrfNfInstanceID)
 			}
 			// The UDM keeps the instance ID it chose, whatever the NRF echoes back.
 			if got := consumer.Context().NfId; got != testNfId {

@@ -14,6 +14,9 @@ type Route struct {
 	Pattern string
 	// HandlerFunc is the handler function of this route.
 	HandlerFunc gin.HandlerFunc
+	// IsNotification identifies a Notify operation of Subscribe/Notify semantics.
+	// TS 29.500 6.7.3 excludes these operations from OAuth access-token use.
+	IsNotification bool
 }
 
 type RouteGroup interface {

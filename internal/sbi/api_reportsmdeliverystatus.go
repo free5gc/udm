@@ -9,17 +9,17 @@ import (
 func (s *Server) getReportSMDeliveryStatusRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 
 		{
-			"ReportSMDeliveryStatus",
-			http.MethodPost,
-			"/:ueIdentity/sm-delivery-status",
-			s.HandleReportSMDeliveryStatus,
+			Name:        "ReportSMDeliveryStatus",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueIdentity/sm-delivery-status",
+			HandlerFunc: s.HandleReportSMDeliveryStatus,
 		},
 	}
 }
