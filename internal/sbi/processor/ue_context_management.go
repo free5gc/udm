@@ -278,13 +278,14 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 
 	if request.Guami != nil {
 		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
-		if udmUe.SameAsStoredGUAMI3gpp(*request.Guami) { // deregistration
-			logger.UecmLog.Infoln("UpdateAmf3gppAccess - deregistration")
-			request.PurgeFlag = true
-		} else {
+		if !udmUe.SameAsStoredGUAMI3gpp(*request.Guami) {
 			logger.UecmLog.Errorln("INVALID_GUAMI")
+			status := http.StatusUnprocessableEntity
+			if request.PurgeFlag {
+				status = http.StatusForbidden
+			}
 			problemDetails := &models.ProblemDetails{
-				Status: http.StatusForbidden,
+				Status: int32(status),
 				Cause:  "INVALID_GUAMI",
 			}
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
@@ -300,6 +301,7 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 	}
 
 	if request.PurgeFlag {
+		logger.UecmLog.Infoln("UpdateAmf3gppAccess - deregistration")
 		var patchItemTmp models.PatchItem
 		patchItemTmp.Path = "/" + "purgeFlag"
 		patchItemTmp.Op = models.PatchOperation_ADD
@@ -392,13 +394,14 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 
 	if request.Guami != nil {
 		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
-		if udmUe.SameAsStoredGUAMINon3gpp(*request.Guami) { // deregistration
-			logger.UecmLog.Infoln("UpdateAmfNon3gppAccess - deregistration")
-			request.PurgeFlag = true
-		} else {
+		if !udmUe.SameAsStoredGUAMINon3gpp(*request.Guami) {
 			logger.UecmLog.Errorln("INVALID_GUAMI")
+			status := http.StatusUnprocessableEntity
+			if request.PurgeFlag {
+				status = http.StatusForbidden
+			}
 			problemDetails := &models.ProblemDetails{
-				Status: http.StatusForbidden,
+				Status: int32(status),
 				Cause:  "INVALID_GUAMI",
 			}
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
@@ -414,6 +417,7 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 	}
 
 	if request.PurgeFlag {
+		logger.UecmLog.Infoln("UpdateAmfNon3gppAccess - deregistration")
 		var patchItemTmp models.PatchItem
 		patchItemTmp.Path = "/" + "purgeFlag"
 		patchItemTmp.Op = models.PatchOperation_ADD
@@ -470,6 +474,11 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
+	}
+
+	if request.PurgeFlag {
+		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
+		udmUe.AmfNon3GppAccessRegistration = nil
 	}
 
 	c.Status(http.StatusNoContent)
