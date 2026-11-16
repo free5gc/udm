@@ -278,8 +278,12 @@ func (p *Processor) UpdateAmf3gppAccessProcedure(c *gin.Context,
 		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
 		if !udmUe.SameAsStoredGUAMI3gpp(*request.Guami) {
 			logger.UecmLog.Errorln("INVALID_GUAMI")
+			status := http.StatusUnprocessableEntity
+			if request.PurgeFlag {
+				status = http.StatusForbidden
+			}
 			problemDetails := &models.ProblemDetails{
-				Status: http.StatusForbidden,
+				Status: int32(status),
 				Cause:  "INVALID_GUAMI",
 			}
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
@@ -390,8 +394,12 @@ func (p *Processor) UpdateAmfNon3gppAccessProcedure(c *gin.Context,
 		udmUe, _ := p.Context().UdmUeFindBySupi(ueID)
 		if !udmUe.SameAsStoredGUAMINon3gpp(*request.Guami) {
 			logger.UecmLog.Errorln("INVALID_GUAMI")
+			status := http.StatusUnprocessableEntity
+			if request.PurgeFlag {
+				status = http.StatusForbidden
+			}
 			problemDetails := &models.ProblemDetails{
-				Status: http.StatusForbidden,
+				Status: int32(status),
 				Cause:  "INVALID_GUAMI",
 			}
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
