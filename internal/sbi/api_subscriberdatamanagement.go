@@ -779,7 +779,7 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 	supi := c.Param("supi")
 	op := c.Param("subscriptionId")
 
-	logger.ConsumerLog.Infoln("TwoLayerPathHandlerFunc, ", supi, op)
+	logger.ConsumerLog.Infof("TwoLayerPathHandlerFunc, supi=%q op=%q", supi, op)
 
 	// for "/shared-data-subscriptions/:subscriptionId"
 	if supi == "shared-data-subscriptions" && http.MethodDelete == c.Request.Method {
