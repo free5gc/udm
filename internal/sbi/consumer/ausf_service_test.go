@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -91,13 +92,19 @@ func TestSendUEAuthenticationDeregister(t *testing.T) {
 					if tt.wrongType {
 						nfType = models.Nrf_NFMgmt_NFType_SMF
 					}
+					addr := server.Listener.Addr().(*net.TCPAddr)
 					err := json.NewEncoder(w).Encode(models.Nrf_NFDisc_SearchResult{
 						NfInstances: []models.Nrf_NFDisc_NFProfile{{
 							NfInstanceId: profileID, NfType: nfType,
 							NfServices: []models.Nrf_NFDisc_NFService{{
 								ServiceName:     models.Nrf_NFMgmt_ServiceName_NAUSF_AUTH,
 								NfServiceStatus: models.Nrf_NFMgmt_NFServiceStatus_REGISTERED,
-								ApiPrefix:       server.URL,
+								Scheme:          models.UriScheme_HTTP,
+								IpEndPoints: []models.Nrf_NFMgmt_IpEndPoint{{
+									Ipv4Address: addr.IP.String(),
+									Transport:   models.Nrf_NFMgmt_TransportProtocol_TCP,
+									Port:        int32(addr.Port),
+								}},
 							}},
 						}},
 					})
