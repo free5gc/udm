@@ -184,8 +184,31 @@ func (s *Server) HandleDeleteAuth(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
+// HandleGenerateAv serves Nudm_UEAU GetHssAv (TS 29.503 clause 5.4.2.4).
 func (s *Server) HandleGenerateAv(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{})
+	supi := c.Param("supi")
+	if !validator.IsValidSupi(supi) {
+		c.JSON(http.StatusBadRequest, models.ProblemDetails{
+			Status: http.StatusBadRequest, Cause: "MANDATORY_IE_INCORRECT", Detail: "supi is invalid",
+		})
+		return
+	}
+	if c.Request.Method != http.MethodPost {
+		c.JSON(http.StatusMethodNotAllowed, gin.H{})
+		return
+	}
+	var req models.Udm_UEAU_HssAuthenticationInfoRequest
+	body, err := c.GetRawData()
+	if err == nil {
+		err = openapi.Deserialize(&req, body, "application/json")
+	}
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.ProblemDetails{
+			Status: http.StatusBadRequest, Cause: "MANDATORY_IE_INCORRECT", Detail: "[Request Body] " + err.Error(),
+		})
+		return
+	}
+	s.Processor().GenerateHssAvProcedure(c, req, supi, c.Param("hssAuthType"))
 }
 
 func (s *Server) HandleGenerateGbaAv(c *gin.Context) {
