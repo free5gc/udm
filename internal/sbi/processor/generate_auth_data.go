@@ -71,6 +71,9 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDR_DR, models.Nrf_NFMgmt_NFType_UDR)
 	if err != nil {
+		if pd == nil {
+			pd = openapi.ProblemDetailsSystemFailure(err.Error())
+		}
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
@@ -114,6 +117,9 @@ func (p *Processor) GenerateAuthDataProcedure(
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDR_DR, models.Nrf_NFMgmt_NFType_UDR)
 	if err != nil {
+		if pd == nil {
+			pd = openapi.ProblemDetailsSystemFailure(err.Error())
+		}
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
