@@ -72,8 +72,12 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDR_DR, models.Nrf_NFMgmt_NFType_UDR)
 	if err != nil {
+		if pd == nil {
+			pd = openapi.ProblemDetailsSystemFailure(err.Error())
+		}
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
+		return
 	}
 	var idTranslationResult models.Udm_SDM_IdTranslationResult
 	var getIdentityDataRequest Nudr_DataRepository.GetIdentityDataRequest
