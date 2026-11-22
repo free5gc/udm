@@ -29,7 +29,7 @@ func TestInitNFServiceAddressing(t *testing.T) {
 				SBIPort:      8000,
 				NfService:    make(map[models.Nrf_NFMgmt_ServiceName]models.Nrf_NFMgmt_NFService),
 			}
-			c.InitNFService([]string{string(models.Nrf_NFMgmt_ServiceName_NUDM_SDM)}, "1.0.0")
+			c.InitNFService([]string{string(models.Nrf_NFMgmt_ServiceName_NUDM_SDM)})
 			s := c.NfService[models.Nrf_NFMgmt_ServiceName_NUDM_SDM]
 
 			if s.ApiPrefix != "" || s.Fqdn != tt.wantFQDN ||
