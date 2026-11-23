@@ -3,6 +3,7 @@ package processor
 import (
 	"encoding/json"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -169,4 +170,44 @@ func TestGenerateAuthDataProcedure_UDRError(t *testing.T) {
 	// corrected assertion to check if body is valid JSON and contains expected error cause
 	require.True(t, json.Valid(rawBytes), "response body should be valid JSON, got: %s", body)
 	require.Contains(t, body, "USER_NOT_FOUND")
+}
+
+// The token request for nudr-dr fails (the NRF is closed: connection refused), so
+// oauth.GetTokenCtx returns an error with a nil ProblemDetails.
+func TestUEAUProcedures_TokenError(t *testing.T) {
+	nrf := httptest.NewServer(http.NotFoundHandler())
+	nrfURI := nrf.URL
+	nrf.Close()
+
+	mockApp := mockapp.NewMockApp(gomock.NewController(t))
+	testConsumer, err := consumer.NewConsumer(mockApp)
+	require.NoError(t, err)
+	testProcessor, err := NewProcessor(mockApp)
+	require.NoError(t, err)
+	mockApp.EXPECT().Consumer().Return(testConsumer).AnyTimes()
+	mockApp.EXPECT().Context().Return(&udm_context.UDMContext{
+		OAuth2Required: true,
+		NrfUri:         nrfURI,
+		NfId:           "1",
+	}).AnyTimes()
+
+	for name, call := range map[string]func(c *gin.Context){
+		"GenerateAuthData": func(c *gin.Context) {
+			testProcessor.GenerateAuthDataProcedure(c,
+				models.Udm_UEAU_AuthenticationInfoRequest{ServingNetworkName: "internet"}, "imsi-208930000000001")
+		},
+		"ConfirmAuthData": func(c *gin.Context) {
+			testProcessor.ConfirmAuthDataProcedure(c, models.Udm_UEAU_AuthEvent{}, "imsi-208930000000001")
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(rec)
+			require.NotPanics(t, func() { call(c) })
+			require.Equal(t, http.StatusInternalServerError, rec.Code)
+			var pd models.ProblemDetails
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &pd))
+			require.Equal(t, "SYSTEM_FAILURE", pd.Cause)
+		})
+	}
 }
