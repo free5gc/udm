@@ -291,7 +291,13 @@ func TestIsValidSharedDataSubscriptionID(t *testing.T) {
 	}
 }
 
-func TestHandlersRejectInvalidSubscriptionIDs(t *testing.T) {
+func TestHandlersRejectInvalidSubscriptionParameters(t *testing.T) {
+	const subscriptionBody = `{
+		"nfInstanceId": "11111111-1111-4111-8111-111111111111",
+		"callbackReference": "https://example.com/notify",
+		"monitoredResourceUris": ["https://example.com/am-data"]
+	}`
+
 	validSupi := "imsi-208930000000001"
 	tests := []struct {
 		name    string
@@ -300,6 +306,7 @@ func TestHandlersRejectInvalidSubscriptionIDs(t *testing.T) {
 		body    string
 		params  gin.Params
 		handler func(*gin.Context)
+		detail  string
 	}{
 		{
 			name:    "unsubscribe",
@@ -307,6 +314,7 @@ func TestHandlersRejectInvalidSubscriptionIDs(t *testing.T) {
 			path:    "/" + validSupi + "/sdm-subscriptions/$ne",
 			params:  gin.Params{{Key: "ueId", Value: validSupi}, {Key: "subscriptionId", Value: "$ne"}},
 			handler: (&Server{}).HandleUnsubscribe,
+			detail:  "Subscription ID is invalid",
 		},
 		{
 			name:    "unsubscribe shared data",
@@ -314,6 +322,7 @@ func TestHandlersRejectInvalidSubscriptionIDs(t *testing.T) {
 			path:    "/shared-data-subscriptions/$ne",
 			params:  gin.Params{{Key: "subscriptionId", Value: "$ne"}},
 			handler: (&Server{}).HandleUnsubscribeForSharedData,
+			detail:  "Subscription ID is invalid",
 		},
 		{
 			name:    "modify",
@@ -322,6 +331,7 @@ func TestHandlersRejectInvalidSubscriptionIDs(t *testing.T) {
 			body:    `{}`,
 			params:  gin.Params{{Key: "ueId", Value: validSupi}, {Key: "subscriptionId", Value: "$ne"}},
 			handler: (&Server{}).HandleModify,
+			detail:  "Subscription ID is invalid",
 		},
 		{
 			name:    "modify shared data",
@@ -330,6 +340,61 @@ func TestHandlersRejectInvalidSubscriptionIDs(t *testing.T) {
 			body:    `[1,2,3]`,
 			params:  gin.Params{{Key: "subscriptionId", Value: "$ne"}},
 			handler: (&Server{}).HandleModifyForSharedData,
+			detail:  "Subscription ID is invalid",
+		},
+		{
+			name:    "subscribe invalid IMSI",
+			method:  http.MethodPost,
+			path:    "/imsi-abc/sdm-subscriptions",
+			body:    subscriptionBody,
+			params:  gin.Params{{Key: "supi", Value: "imsi-abc"}},
+			handler: (&Server{}).HandleSubscribe,
+			detail:  "UE ID is invalid",
+		},
+		{
+			name:    "subscribe invalid NAI",
+			method:  http.MethodPost,
+			path:    "/nai-user/sdm-subscriptions",
+			body:    subscriptionBody,
+			params:  gin.Params{{Key: "supi", Value: "nai-user"}},
+			handler: (&Server{}).HandleSubscribe,
+			detail:  "UE ID is invalid",
+		},
+		{
+			name:    "subscribe invalid MSISDN",
+			method:  http.MethodPost,
+			path:    "/msisdn-abc/sdm-subscriptions",
+			body:    subscriptionBody,
+			params:  gin.Params{{Key: "supi", Value: "msisdn-abc"}},
+			handler: (&Server{}).HandleSubscribe,
+			detail:  "UE ID is invalid",
+		},
+		{
+			name:    "subscribe invalid external ID",
+			method:  http.MethodPost,
+			path:    "/extid-user/sdm-subscriptions",
+			body:    subscriptionBody,
+			params:  gin.Params{{Key: "supi", Value: "extid-user"}},
+			handler: (&Server{}).HandleSubscribe,
+			detail:  "UE ID is invalid",
+		},
+		{
+			name:    "subscribe empty UE ID",
+			method:  http.MethodPost,
+			path:    "/sdm-subscriptions",
+			body:    subscriptionBody,
+			params:  gin.Params{{Key: "supi", Value: ""}},
+			handler: (&Server{}).HandleSubscribe,
+			detail:  "UE ID is invalid",
+		},
+		{
+			name:    "subscribe invalid UE ID before malformed body",
+			method:  http.MethodPost,
+			path:    "/imsi-abc/sdm-subscriptions",
+			body:    `{`,
+			params:  gin.Params{{Key: "supi", Value: "imsi-abc"}},
+			handler: (&Server{}).HandleSubscribe,
+			detail:  "UE ID is invalid",
 		},
 	}
 
@@ -340,7 +405,16 @@ func TestHandlersRejectInvalidSubscriptionIDs(t *testing.T) {
 
 			require.NotPanics(t, func() { tt.handler(c) })
 			require.Equal(t, http.StatusBadRequest, recorder.Code)
-			require.Contains(t, recorder.Body.String(), "Subscription ID is invalid")
+			require.Equal(t, "application/json; charset=utf-8", recorder.Header().Get("Content-Type"))
+			var problem models.ProblemDetails
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &problem))
+			require.Equal(t, models.ProblemDetails{
+				Title:  "Malformed request syntax",
+				Status: http.StatusBadRequest,
+				Detail: tt.detail,
+				Cause:  "MANDATORY_IE_INCORRECT",
+			}, problem)
+			require.Equal(t, "Bad Request", c.GetString(sbi.IN_PB_DETAILS_CTX_STR))
 		})
 	}
 }
@@ -464,6 +538,18 @@ func TestDeserializationErrorsAreSanitized(t *testing.T) {
 		{
 			name: "subscribe", method: http.MethodPost, path: "/imsi-208930000000001/sdm-subscriptions",
 			params: gin.Params{{Key: "supi", Value: "imsi-208930000000001"}}, handler: server.HandleSubscribe,
+		},
+		{
+			name: "subscribe with NAI", method: http.MethodPost, path: "/nai-user@example.com/sdm-subscriptions",
+			params: gin.Params{{Key: "supi", Value: "nai-user@example.com"}}, handler: server.HandleSubscribe,
+		},
+		{
+			name: "subscribe with MSISDN", method: http.MethodPost, path: "/msisdn-1234567890/sdm-subscriptions",
+			params: gin.Params{{Key: "supi", Value: "msisdn-1234567890"}}, handler: server.HandleSubscribe,
+		},
+		{
+			name: "subscribe with external ID", method: http.MethodPost, path: "/extid-user@example.com/sdm-subscriptions",
+			params: gin.Params{{Key: "supi", Value: "extid-user@example.com"}}, handler: server.HandleSubscribe,
 		},
 		{
 			name: "modify", method: http.MethodPatch, path: "/imsi-208930000000001/sdm-subscriptions/1",

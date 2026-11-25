@@ -323,6 +323,21 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 
 // Subscribe - subscribe to notifications
 func (s *Server) HandleSubscribe(c *gin.Context) {
+	supi := c.Params.ByName("supi")
+	valid := validator.IsValidGpsi(supi) || validator.IsValidSupi(supi)
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "UE ID is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("UE ID is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+
 	var sdmSubscriptionReq models.Udm_SDM_SdmSubscription
 
 	requestBody, err := c.GetRawData()
@@ -356,7 +371,6 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 
 	logger.SdmLog.Infof("Handle Subscribe")
 
-	supi := c.Params.ByName("supi")
 	s.Processor().SubscribeProcedure(c, &sdmSubscriptionReq, supi)
 }
 
