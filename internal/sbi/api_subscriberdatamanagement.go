@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -18,12 +19,55 @@ import (
 func (s *Server) getSubscriberDataManagementRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 	}
+}
+
+func isValidSDMSubscriptionID(subscriptionID string) bool {
+	id, err := strconv.ParseUint(subscriptionID, 10, 64)
+	return err == nil && id > 0 && strconv.FormatUint(id, 10) == subscriptionID
+}
+
+func isValidSharedDataSubscriptionID(subscriptionID string) bool {
+	if len(subscriptionID) == 0 || len(subscriptionID) > 128 {
+		return false
+	}
+
+	for i := 0; i < len(subscriptionID); i++ {
+		ch := subscriptionID[i]
+		if (ch < 'a' || ch > 'z') &&
+			(ch < 'A' || ch > 'Z') &&
+			(ch < '0' || ch > '9') &&
+			ch != '-' && ch != '.' && ch != '_' && ch != '~' {
+			return false
+		}
+	}
+	return true
+}
+
+func validateSubscriptionID(c *gin.Context, sharedData bool) (string, bool) {
+	subscriptionID := c.Params.ByName("subscriptionId")
+	valid := isValidSDMSubscriptionID(subscriptionID)
+	if sharedData {
+		valid = isValidSharedDataSubscriptionID(subscriptionID)
+	}
+	if !valid {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Subscription ID is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("Subscription ID is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return "", false
+	}
+	return subscriptionID, true
 }
 
 // GetAmData - retrieve a UE's Access and Mobility Subscription Data
@@ -54,6 +98,7 @@ func (s *Server) HandleGetAmData(c *gin.Context) {
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -80,7 +125,11 @@ func (s *Server) getPlmnIDStruct(
 		problemDetails = &models.ProblemDetails{
 			Title:  "Invalid Parameter",
 			Status: http.StatusBadRequest,
-			Cause:  "plmn-id parameter cannot be empty",
+			Cause:  "OPTIONAL_QUERY_PARAM_INCORRECT",
+			InvalidParams: []models.InvalidParam{{
+				Param:  "query plmn-id",
+				Reason: "cannot be empty",
+			}},
 		}
 		return nil, problemDetails
 	}
@@ -94,10 +143,22 @@ func (s *Server) getPlmnIDStruct(
 		problemDetails = &models.ProblemDetails{
 			Title:  "Invalid Parameter",
 			Status: http.StatusBadRequest,
-			Cause:  "Failed to parse plmn-id JSON",
+			Cause:  "OPTIONAL_QUERY_PARAM_INCORRECT",
 			InvalidParams: []models.InvalidParam{{
-				Param:  "plmn-id",
-				Reason: err.Error(),
+				Param:  "query plmn-id",
+				Reason: "must be a valid PlmnId JSON object",
+			}},
+		}
+		return nil, problemDetails
+	}
+	if !validator.IsValidPlmnIdParts(plmnIDStruct.Mcc, plmnIDStruct.Mnc) {
+		problemDetails = &models.ProblemDetails{
+			Title:  "Invalid Parameter",
+			Status: http.StatusBadRequest,
+			Cause:  "OPTIONAL_QUERY_PARAM_INCORRECT",
+			InvalidParams: []models.InvalidParam{{
+				Param:  "query plmn-id",
+				Reason: "MCC must contain 3 digits and MNC must contain 2 or 3 digits",
 			}},
 		}
 		return nil, problemDetails
@@ -124,10 +185,25 @@ func (s *Server) HandleGetSmfSelectData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetSmfSelectData")
 
 	supi := c.Params.ByName("supi")
+	// TS 29.503 6.1.3.5.2
+	// Validate SUPI format
+	if !validator.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("Supi is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	// use c.Request.URL.Query() only for getPlmnIDStruct
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -160,10 +236,25 @@ func (s *Server) HandleGetSupi(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetSupiRequest")
 
 	supi := c.Params.ByName("supi")
+	// TS 29.503 6.1.3.5.2
+	// Validate SUPI format
+	if !validator.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("Supi is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	// use c.Request.URL.Query() only for getPlmnIDStruct
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -194,7 +285,7 @@ func (s *Server) HandleGetSharedData(c *gin.Context) {
 
 // SubscribeToSharedData - subscribe to notifications for shared data
 func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
-	var sharedDataSubsReq models.SdmSubscription
+	var sharedDataSubsReq models.Udm_SDM_SdmSubscription
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -212,14 +303,15 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 
 	err = openapi.Deserialize(&sharedDataSubsReq, requestBody, "application/json")
 	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
+		logger.SdmLog.Errorf("[Request Body] %v", err)
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: problemDetail,
+			Detail: "The request body is malformed or does not match the expected schema.",
+			Cause:  "INVALID_MSG_FORMAT",
 		}
-		logger.SdmLog.Errorln(problemDetail)
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, rsp.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(rsp.Status), rsp)
 		return
 	}
@@ -231,7 +323,7 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 
 // Subscribe - subscribe to notifications
 func (s *Server) HandleSubscribe(c *gin.Context) {
-	var sdmSubscriptionReq models.SdmSubscription
+	var sdmSubscriptionReq models.Udm_SDM_SdmSubscription
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -249,14 +341,15 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 
 	err = openapi.Deserialize(&sdmSubscriptionReq, requestBody, "application/json")
 	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
+		logger.SdmLog.Errorf("[Request Body] %v", err)
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: problemDetail,
+			Detail: "The request body is malformed or does not match the expected schema.",
+			Cause:  "INVALID_MSG_FORMAT",
 		}
-		logger.SdmLog.Errorln(problemDetail)
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, rsp.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(rsp.Status), rsp)
 		return
 	}
@@ -287,7 +380,10 @@ func (s *Server) HandleUnsubscribe(c *gin.Context) {
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
-	subscriptionID := c.Params.ByName("subscriptionId")
+	subscriptionID, valid := validateSubscriptionID(c, false)
+	if !valid {
+		return
+	}
 
 	s.Processor().UnsubscribeProcedure(c, ueId, subscriptionID)
 }
@@ -296,13 +392,16 @@ func (s *Server) HandleUnsubscribe(c *gin.Context) {
 func (s *Server) HandleUnsubscribeForSharedData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle UnsubscribeForSharedData")
 
-	subscriptionID := c.Params.ByName("subscriptionId")
+	subscriptionID, valid := validateSubscriptionID(c, true)
+	if !valid {
+		return
+	}
 	s.Processor().UnsubscribeForSharedDataProcedure(c, subscriptionID)
 }
 
 // Modify - modify the subscription
 func (s *Server) HandleModify(c *gin.Context) {
-	var sdmSubsModificationReq models.SdmSubsModification
+	var sdmSubsModificationReq models.Udm_SDM_SdmSubsModification
 
 	// TS 29.503 6.1.3.4.2
 	// Validate SUPI and GPSI format the UE ID (SUPI or GPSI)
@@ -320,7 +419,10 @@ func (s *Server) HandleModify(c *gin.Context) {
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
-	subscriptionID := c.Params.ByName("subscriptionId")
+	subscriptionID, valid := validateSubscriptionID(c, false)
+	if !valid {
+		return
+	}
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -338,14 +440,15 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 	err = openapi.Deserialize(&sdmSubsModificationReq, requestBody, "application/json")
 	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
+		logger.SdmLog.Errorf("[Request Body] %v", err)
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: problemDetail,
+			Detail: "The request body is malformed or does not match the expected schema.",
+			Cause:  "INVALID_MSG_FORMAT",
 		}
-		logger.SdmLog.Errorln(problemDetail)
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, rsp.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(rsp.Status), rsp)
 		return
 	}
@@ -357,7 +460,12 @@ func (s *Server) HandleModify(c *gin.Context) {
 
 // ModifyForSharedData - modify the subscription
 func (s *Server) HandleModifyForSharedData(c *gin.Context) {
-	var sharedDataSubscriptions models.SdmSubsModification
+	subscriptionID, valid := validateSubscriptionID(c, true)
+	if !valid {
+		return
+	}
+
+	var sharedDataSubscriptions models.Udm_SDM_SdmSubsModification
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
@@ -374,14 +482,15 @@ func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 
 	err = openapi.Deserialize(&sharedDataSubscriptions, requestBody, "application/json")
 	if err != nil {
-		problemDetail := "[Request Body] " + err.Error()
+		logger.SdmLog.Errorf("[Request Body] %v", err)
 		rsp := models.ProblemDetails{
 			Title:  "Malformed request syntax",
 			Status: http.StatusBadRequest,
-			Detail: problemDetail,
+			Detail: "The request body is malformed or does not match the expected schema.",
+			Cause:  "INVALID_MSG_FORMAT",
 		}
-		logger.SdmLog.Errorln(problemDetail)
-		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, rsp.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(rsp.Status), rsp)
 		return
 	}
@@ -389,7 +498,6 @@ func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle ModifyForSharedData")
 
 	supi := c.Params.ByName("supi")
-	subscriptionID := c.Params.ByName("subscriptionId")
 
 	s.Processor().ModifyForSharedDataProcedure(c, &sharedDataSubscriptions, supi, subscriptionID)
 }
@@ -399,7 +507,32 @@ func (s *Server) HandleGetTraceData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetTraceData")
 
 	supi := c.Params.ByName("supi")
-	plmnID := c.Query("plmn-id")
+	// TS 29.503 6.1.3.5.2
+	// Validate SUPI format
+	if !validator.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("Supi is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
+	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
+	if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
+	}
+
+	var plmnID string
+	if plmnIDStruct != nil {
+		plmnID = plmnIDStruct.Mcc + plmnIDStruct.Mnc
+	}
 
 	s.Processor().GetTraceDataProcedure(c, supi, plmnID)
 }
@@ -409,6 +542,20 @@ func (s *Server) HandleGetUeContextInSmfData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetUeContextInSmfData")
 
 	supi := c.Params.ByName("supi")
+	// TS 29.503 6.1.3.5.2
+	// Validate SUPI format
+	if !validator.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("Supi is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	supportedFeatures := c.Query("supported-features")
 
 	s.Processor().GetUeContextInSmfDataProcedure(c, supi, supportedFeatures)
@@ -428,10 +575,25 @@ func (s *Server) HandleGetNssai(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetNssai")
 
 	supi := c.Params.ByName("supi")
+	// TS 29.503 6.1.3.5.2
+	// Validate SUPI format
+	if !validator.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("Supi is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	// use c.Request.URL.Query() only for getPlmnIDStruct
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -455,10 +617,25 @@ func (s *Server) HandleGetSmData(c *gin.Context) {
 	logger.SdmLog.Infof("Handle GetSmData")
 
 	supi := c.Params.ByName("supi")
+	// TS 29.503 6.1.3.5.2
+	// Validate SUPI format
+	if !validator.IsValidSupi(supi) {
+		problemDetail := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: "Supi is invalid",
+			Cause:  "MANDATORY_IE_INCORRECT",
+		}
+		logger.SdmLog.Warnln("Supi is invalid")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.JSON(int(problemDetail.Status), problemDetail)
+		return
+	}
 	// use c.Request.URL.Query() only for getPlmnIDStruct
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(c.Request.URL.Query())
 	if problemDetails != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -563,11 +740,27 @@ func (s *Server) HandleUpuAck(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{})
 }
 
+// respondResourceURIStructureNotFound answers a request that reached the API
+// but names no resource this NF defines, as TS 29.500 table 5.2.7.2-1
+// requires: 404 with a ProblemDetails whose cause is
+// RESOURCE_URI_STRUCTURE_NOT_FOUND.
+func respondResourceURIStructureNotFound(c *gin.Context) {
+	problemDetails := models.ProblemDetails{
+		Title:  "Resource URI structure not found",
+		Status: http.StatusNotFound,
+		Detail: c.Request.Method + " " + c.Request.URL.Path + " does not name a resource of this API",
+		Cause:  "RESOURCE_URI_STRUCTURE_NOT_FOUND",
+	}
+	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+	c.Header("Content-Type", "application/problem+json")
+	c.JSON(int(problemDetails.Status), problemDetails)
+}
+
 func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {
 	supi := c.Param("supi")
 	oneLayerPathRouter := s.getOneLayerRoutes()
 	for _, route := range oneLayerPathRouter {
-		if strings.Contains(route.Pattern, supi) && route.Method == c.Request.Method {
+		if route.Pattern == "/"+supi && route.Method == c.Request.Method {
 			route.HandlerFunc(c)
 			return
 		}
@@ -579,14 +772,14 @@ func (s *Server) OneLayerPathHandlerFunc(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusNotFound, "404 page not found")
+	respondResourceURIStructureNotFound(c)
 }
 
 func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 	supi := c.Param("supi")
 	op := c.Param("subscriptionId")
 
-	logger.ConsumerLog.Infoln("TwoLayerPathHandlerFunc, ", supi, op)
+	logger.ConsumerLog.Infof("TwoLayerPathHandlerFunc, supi=%q op=%q", supi, op)
 
 	// for "/shared-data-subscriptions/:subscriptionId"
 	if supi == "shared-data-subscriptions" && http.MethodDelete == c.Request.Method {
@@ -614,14 +807,33 @@ func (s *Server) TwoLayerPathHandlerFunc(c *gin.Context) {
 	}
 
 	twoLayerPathRouter := s.getTwoLayerRoutes()
+	requestPath := "/" + supi + "/" + op
 	for _, route := range twoLayerPathRouter {
-		if strings.Contains(route.Pattern, op) && route.Method == c.Request.Method {
+		if pathPatternMatches(route.Pattern, requestPath) && route.Method == c.Request.Method {
 			route.HandlerFunc(c)
 			return
 		}
 	}
 
-	c.String(http.StatusNotFound, "404 page not found")
+	respondResourceURIStructureNotFound(c)
+}
+
+func pathPatternMatches(pattern, path string) bool {
+	patternParts := strings.Split(strings.Trim(pattern, "/"), "/")
+	pathParts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(patternParts) != len(pathParts) {
+		return false
+	}
+
+	for i := range patternParts {
+		if strings.HasPrefix(patternParts[i], ":") {
+			continue
+		}
+		if patternParts[i] != pathParts[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
@@ -685,37 +897,37 @@ func (s *Server) ThreeLayerPathHandlerFunc(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusNotFound, "404 page not found")
+	respondResourceURIStructureNotFound(c)
 }
 
 func (s *Server) getOneLayerRoutes() []Route {
 	return []Route{
 		{
-			"GetDataSets",
-			http.MethodGet,
-			"/:supi",
-			s.HandleGetSupi,
+			Name:        "GetDataSets",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi",
+			HandlerFunc: s.HandleGetSupi,
 		},
 
 		{
-			"GetSharedData",
-			http.MethodGet,
-			"/shared-data",
-			s.HandleGetSharedData,
+			Name:        "GetSharedData",
+			Method:      http.MethodGet,
+			Pattern:     "/shared-data",
+			HandlerFunc: s.HandleGetSharedData,
 		},
 
 		{
-			"SubscribeToSharedData",
-			http.MethodPost,
-			"/shared-data-subscriptions",
-			s.HandleSubscribeToSharedData,
+			Name:        "SubscribeToSharedData",
+			Method:      http.MethodPost,
+			Pattern:     "/shared-data-subscriptions",
+			HandlerFunc: s.HandleSubscribeToSharedData,
 		},
 
 		{
-			"GetMultipleIdentifiers",
-			http.MethodGet,
-			"/multiple-identifiers",
-			s.HandleGetMultipleIdentifiers,
+			Name:        "GetMultipleIdentifiers",
+			Method:      http.MethodGet,
+			Pattern:     "/multiple-identifiers",
+			HandlerFunc: s.HandleGetMultipleIdentifiers,
 		},
 	}
 }
@@ -723,136 +935,136 @@ func (s *Server) getOneLayerRoutes() []Route {
 func (s *Server) getTwoLayerRoutes() []Route {
 	return []Route{
 		{
-			"GetAmData",
-			http.MethodGet,
-			"/:supi/am-data",
-			s.HandleGetAmData,
+			Name:        "GetAmData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/am-data",
+			HandlerFunc: s.HandleGetAmData,
 		},
 
 		{
-			"GetSmfSelData",
-			http.MethodGet,
-			"/:supi/smf-select-data",
-			s.HandleGetSmfSelectData,
+			Name:        "GetSmfSelData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/smf-select-data",
+			HandlerFunc: s.HandleGetSmfSelectData,
 		},
 
 		{
-			"GetSmsMngtData",
-			http.MethodGet,
-			"/:supi/sms-mng-data",
-			s.HandleGetSmsMngData,
+			Name:        "GetSmsMngtData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/sms-mng-data",
+			HandlerFunc: s.HandleGetSmsMngData,
 		},
 
 		{
-			"GetSmsData",
-			http.MethodGet,
-			"/:supi/sms-data",
-			s.HandleGetSmsData,
+			Name:        "GetSmsData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/sms-data",
+			HandlerFunc: s.HandleGetSmsData,
 		},
 
 		{
-			"GetSmData",
-			http.MethodGet,
-			"/:supi/sm-data",
-			s.HandleGetSmData,
+			Name:        "GetSmData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/sm-data",
+			HandlerFunc: s.HandleGetSmData,
 		},
 
 		{
-			"GetNSSAI",
-			http.MethodGet,
-			"/:supi/nssai",
-			s.HandleGetNssai,
+			Name:        "GetNSSAI",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/nssai",
+			HandlerFunc: s.HandleGetNssai,
 		},
 
 		{
-			"Subscribe",
-			http.MethodPost,
-			"/:ueId/sdm-subscriptions",
-			s.HandleSubscribe,
+			Name:        "Subscribe",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueId/sdm-subscriptions",
+			HandlerFunc: s.HandleSubscribe,
 		},
 
 		{
-			"GetTraceConfigData",
-			http.MethodGet,
-			"/:supi/trace-data",
-			s.HandleGetTraceData,
+			Name:        "GetTraceConfigData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/trace-data",
+			HandlerFunc: s.HandleGetTraceData,
 		},
 
 		{
-			"GetUeCtxInSmfData",
-			http.MethodGet,
-			"/:supi/ue-context-in-smf-data",
-			s.HandleGetUeContextInSmfData,
+			Name:        "GetUeCtxInSmfData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/ue-context-in-smf-data",
+			HandlerFunc: s.HandleGetUeContextInSmfData,
 		},
 
 		{
-			"GetUeCtxInSmsfData",
-			http.MethodGet,
-			"/:supi/ue-context-in-smsf-data",
-			s.HandleGetUeContextInSmsfData,
+			Name:        "GetUeCtxInSmsfData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/ue-context-in-smsf-data",
+			HandlerFunc: s.HandleGetUeContextInSmsfData,
 		},
 
 		{
-			"GetGroupIdentifiers",
-			http.MethodGet,
-			"/group-data/group-identifiers",
-			s.HandleGetGroupIdentifiers,
+			Name:        "GetGroupIdentifiers",
+			Method:      http.MethodGet,
+			Pattern:     "/group-data/group-identifiers",
+			HandlerFunc: s.HandleGetGroupIdentifiers,
 		},
 
 		{
-			"GetLcsBcaData",
-			http.MethodGet,
-			"/:supi/lcs-bca-data",
-			s.HandleGetLcsBcaData,
+			Name:        "GetLcsBcaData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/lcs-bca-data",
+			HandlerFunc: s.HandleGetLcsBcaData,
 		},
 
 		{
-			"GetLcsMoData",
-			http.MethodGet,
-			"/:supi/lcs-mo-data",
-			s.HandleGetLcsMoData,
+			Name:        "GetLcsMoData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/lcs-mo-data",
+			HandlerFunc: s.HandleGetLcsMoData,
 		},
 
 		{
-			"GetLcsPrivacyData",
-			http.MethodGet,
-			"/:ueId/lcs-privacy-data",
-			s.HandleGetLcsPrivacyData,
+			Name:        "GetLcsPrivacyData",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/lcs-privacy-data",
+			HandlerFunc: s.HandleGetLcsPrivacyData,
 		},
 
 		{
-			"GetMbsData",
-			http.MethodGet,
-			"/:supi/5mbs-data",
-			s.HandleGetMbsData,
+			Name:        "GetMbsData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/5mbs-data",
+			HandlerFunc: s.HandleGetMbsData,
 		},
 
 		{
-			"GetProseData",
-			http.MethodGet,
-			"/:supi/prose-data",
-			s.HandleGetProseData,
+			Name:        "GetProseData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/prose-data",
+			HandlerFunc: s.HandleGetProseData,
 		},
 
 		{
-			"GetUcData",
-			http.MethodGet,
-			"/:supi/uc-data",
-			s.HandleGetUcData,
+			Name:        "GetUcData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/uc-data",
+			HandlerFunc: s.HandleGetUcData,
 		},
 
 		{
-			"GetUeCtxInAmfData",
-			http.MethodGet,
-			"/:supi/ue-context-in-amf-data",
-			s.HandleGetUeCtxInAmfData,
+			Name:        "GetUeCtxInAmfData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/ue-context-in-amf-data",
+			HandlerFunc: s.HandleGetUeCtxInAmfData,
 		},
 
 		{
-			"GetV2xData",
-			http.MethodGet,
-			"/:supi/v2x-data",
-			s.HandleGetV2xData,
+			Name:        "GetV2xData",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi/v2x-data",
+			HandlerFunc: s.HandleGetV2xData,
 		},
 	}
 }

@@ -9,24 +9,24 @@ import (
 func (s *Server) getMTRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 
 		{
-			"ProvideLocationInfo",
-			http.MethodPost,
-			"/:supi/loc-info/provide-loc-info",
-			s.HandleProvideLocationInfo,
+			Name:        "ProvideLocationInfo",
+			Method:      http.MethodPost,
+			Pattern:     "/:supi/loc-info/provide-loc-info",
+			HandlerFunc: s.HandleProvideLocationInfo,
 		},
 
 		{
-			"QueryUeInfo",
-			http.MethodGet,
-			"/:supi",
-			s.HandleQueryUeInfo,
+			Name:        "QueryUeInfo",
+			Method:      http.MethodGet,
+			Pattern:     "/:supi",
+			HandlerFunc: s.HandleQueryUeInfo,
 		},
 	}
 }

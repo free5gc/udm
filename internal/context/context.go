@@ -2,6 +2,7 @@ package context
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -9,14 +10,16 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/free5gc/openapi"
+	"github.com/google/uuid"
+
 	"github.com/free5gc/openapi/models"
-	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
+	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDisc"
 	"github.com/free5gc/openapi/oauth"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/pkg/factory"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/idgenerator"
+	"github.com/free5gc/util/serviceuri"
 )
 
 var udmContext = UDMContext{}
@@ -30,13 +33,13 @@ const (
 )
 
 func Init() {
-	GetSelf().NfService = make(map[models.ServiceName]models.NrfNfManagementNfService)
+	GetSelf().NfService = make(map[models.Nrf_NFMgmt_ServiceName]models.Nrf_NFMgmt_NFService)
 	GetSelf().EeSubscriptionIDGenerator = idgenerator.NewGenerator(1, math.MaxInt32)
 	InitUdmContext(GetSelf())
 }
 
 type NFContext interface {
-	AuthorizationCheck(token string, serviceName models.ServiceName) error
+	AuthorizationCheck(token string, serviceName models.Nrf_NFMgmt_ServiceName) error
 }
 
 var _ NFContext = &UDMContext{}
@@ -48,14 +51,15 @@ type UDMContext struct {
 	RegisterIPv4                   string // IP register to NRF
 	BindingIPv4                    string
 	UriScheme                      models.UriScheme
-	NfService                      map[models.ServiceName]models.NrfNfManagementNfService
+	NfService                      map[models.Nrf_NFMgmt_ServiceName]models.Nrf_NFMgmt_NFService
 	NFDiscoveryClient              *Nnrf_NFDiscovery.APIClient
 	UdmUePool                      sync.Map // map[supi]*UdmUeContext
 	NrfUri                         string
 	NrfCertPem                     string
-	GpsiSupiList                   models.IdentityData
-	SharedSubsDataMap              map[string]models.UdmSdmSharedData // sharedDataIds as key
-	SubscriptionOfSharedDataChange sync.Map                           // subscriptionID as key
+	NrfNfInstanceID                string
+	GpsiSupiList                   models.Udr_DR_IdentityData
+	SharedSubsDataMap              map[string]models.Udm_SDM_SharedData // sharedDataIds as key
+	SubscriptionOfSharedDataChange sync.Map                             // subscriptionID as key
 	SuciProfiles                   []suci.SuciProfile
 	EeSubscriptionIDGenerator      *idgenerator.IDGenerator
 	OAuth2Required                 bool
@@ -65,37 +69,37 @@ type UdmUeContext struct {
 	Supi                              string
 	Gpsi                              string
 	ExternalGroupID                   string
-	Nssai                             *models.Nssai
-	Amf3GppAccessRegistration         *models.Amf3GppAccessRegistration
-	AmfNon3GppAccessRegistration      *models.AmfNon3GppAccessRegistration
-	AccessAndMobilitySubscriptionData *models.AccessAndMobilitySubscriptionData
-	SmfSelSubsData                    *models.SmfSelectionSubscriptionData
-	UeCtxtInSmfData                   *models.UeContextInSmfData
-	TraceDataResponse                 models.TraceDataResponse
+	Nssai                             *models.Udm_SDM_Nssai
+	Amf3GppAccessRegistration         *models.Udm_UECM_Amf3GppAccessRegistration
+	AmfNon3GppAccessRegistration      *models.Udm_UECM_AmfNon3GppAccessRegistration
+	AccessAndMobilitySubscriptionData *models.Udm_SDM_AccessAndMobilitySubscriptionData
+	SmfSelSubsData                    *models.Udm_SDM_SmfSelectionSubscriptionData
+	UeCtxtInSmfData                   *models.Udm_SDM_UeContextInSmfData
+	TraceDataResponse                 models.Udm_SDM_TraceDataResponse
 	TraceData                         *models.TraceData
-	SessionManagementSubsData         map[string]models.SessionManagementSubscriptionData
-	SubsDataSets                      *models.UdmSdmSubscriptionDataSets
-	SubscribeToNotifChange            map[string]*models.SdmSubscription
-	SubscribeToNotifSharedDataChange  *models.SdmSubscription
+	SessionManagementSubsData         map[string]models.Udm_SDM_SessionManagementSubscriptionData
+	SubsDataSets                      *models.Udm_SDM_SubscriptionDataSets
+	SubscribeToNotifChange            map[string]*models.Udm_SDM_SdmSubscription
+	SubscribeToNotifSharedDataChange  *models.Udm_SDM_SdmSubscription
 	PduSessionID                      string
 	UdrUri                            string
-	UdmSubsToNotify                   map[string]*models.SubscriptionDataSubscriptions
-	EeSubscriptions                   map[string]*models.UdmEeEeSubscription // subscriptionID as key
+	UdmSubsToNotify                   map[string]*models.Udr_DR_SubscriptionDataSubscriptions
+	EeSubscriptions                   map[string]*models.Udm_EvtExpos_EeSubscription // subscriptionID as key
 	amSubsDataLock                    sync.Mutex
 	smfSelSubsDataLock                sync.Mutex
 	SmSubsDataLock                    sync.RWMutex
 }
 
 func (ue *UdmUeContext) Init() {
-	ue.UdmSubsToNotify = make(map[string]*models.SubscriptionDataSubscriptions)
-	ue.EeSubscriptions = make(map[string]*models.UdmEeEeSubscription)
-	ue.SubscribeToNotifChange = make(map[string]*models.SdmSubscription)
+	ue.UdmSubsToNotify = make(map[string]*models.Udr_DR_SubscriptionDataSubscriptions)
+	ue.EeSubscriptions = make(map[string]*models.Udm_EvtExpos_EeSubscription)
+	ue.SubscribeToNotifChange = make(map[string]*models.Udm_SDM_SdmSubscription)
 }
 
 type UdmNFContext struct {
 	SubscriptionID                   string
-	SubscribeToNotifChange           *models.SdmSubscription // SubscriptionID as key
-	SubscribeToNotifSharedDataChange *models.SdmSubscription // SubscriptionID as key
+	SubscribeToNotifChange           *models.Udm_SDM_SdmSubscription // SubscriptionID as key
+	SubscribeToNotifSharedDataChange *models.Udm_SDM_SdmSubscription // SubscriptionID as key
 }
 
 func InitUdmContext(context *UDMContext) {
@@ -138,20 +142,26 @@ func InitUdmContext(context *UDMContext) {
 	udmContext.InitNFService(servingNameList, config.Info.Version)
 }
 
-func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagementSubscriptionData, snssaiFromReq string,
-	dnnFromReq string) (mp map[string]models.SessionManagementSubscriptionData, ind string,
-	Dnns []models.DnnConfiguration, allDnns []map[string]models.DnnConfiguration,
+func (context *UDMContext) ManageSmData(
+	smDatafromUDR []models.Udm_SDM_SessionManagementSubscriptionData,
+	snssaiFromReq string, dnnFromReq string,
+) (mp map[string]models.Udm_SDM_SessionManagementSubscriptionData, ind string,
+	Dnns []models.Udm_SDM_DnnConfiguration, allDnns []map[string]models.Udm_SDM_DnnConfiguration,
 ) {
-	smDataMap := make(map[string]models.SessionManagementSubscriptionData)
+	smDataMap := make(map[string]models.Udm_SDM_SessionManagementSubscriptionData)
 	sNssaiList := make([]string, len(smDatafromUDR))
 	// to obtain all DNN configurations identified by "dnn" for all network slices where such DNN is available
-	AllDnnConfigsbyDnn := make([]models.DnnConfiguration, len(sNssaiList))
+	AllDnnConfigsbyDnn := make([]models.Udm_SDM_DnnConfiguration, len(sNssaiList))
 	// to obtain all DNN configurations for all network slice(s)
-	AllDnns := make([]map[string]models.DnnConfiguration, len(smDatafromUDR))
+	AllDnns := make([]map[string]models.Udm_SDM_DnnConfiguration, len(smDatafromUDR))
 	var snssaikey string // Required snssai to obtain all DNN configurations
 
 	for idx, smSubscriptionData := range smDatafromUDR {
-		singleNssaiStr := openapi.MarshToJsonString(smSubscriptionData.SingleNssai)[0]
+		singleNssaiJSON, err := json.Marshal(smSubscriptionData.SingleNssai)
+		if err != nil {
+			continue
+		}
+		singleNssaiStr := string(singleNssaiJSON)
 		smDataMap[singleNssaiStr] = smSubscriptionData
 		// sNssaiList = append(sNssaiList, singleNssaiStr)
 		AllDnns[idx] = smSubscriptionData.DnnConfigurations
@@ -168,16 +178,16 @@ func (context *UDMContext) ManageSmData(smDatafromUDR []models.SessionManagement
 }
 
 // HandleGetSharedData related functions
-func MappingSharedData(sharedDatafromUDR []models.UdmSdmSharedData) (mp map[string]models.UdmSdmSharedData) {
-	sharedSubsDataMap := make(map[string]models.UdmSdmSharedData)
+func MappingSharedData(sharedDatafromUDR []models.Udm_SDM_SharedData) (mp map[string]models.Udm_SDM_SharedData) {
+	sharedSubsDataMap := make(map[string]models.Udm_SDM_SharedData)
 	for i := 0; i < len(sharedDatafromUDR); i++ {
 		sharedSubsDataMap[sharedDatafromUDR[i].SharedDataId] = sharedDatafromUDR[i]
 	}
 	return sharedSubsDataMap
 }
 
-func ObtainRequiredSharedData(Sharedids []string, response []models.UdmSdmSharedData) (
-	sharedDatas []models.UdmSdmSharedData,
+func ObtainRequiredSharedData(Sharedids []string, response []models.Udm_SDM_SharedData) (
+	sharedDatas []models.Udm_SDM_SharedData,
 ) {
 	sharedSubsDataMap := MappingSharedData(response)
 	Allkeys := make([]string, len(sharedSubsDataMap))
@@ -196,7 +206,7 @@ func ObtainRequiredSharedData(Sharedids []string, response []models.UdmSdmShared
 		counter += 1
 	}
 
-	shared_Data := make([]models.UdmSdmSharedData, len(MatchedKeys))
+	shared_Data := make([]models.Udm_SDM_SharedData, len(MatchedKeys))
 	if len(MatchedKeys) != 1 {
 		for i := 0; i < len(MatchedKeys); i++ {
 			shared_Data[i] = sharedSubsDataMap[MatchedKeys[i]]
@@ -208,7 +218,7 @@ func ObtainRequiredSharedData(Sharedids []string, response []models.UdmSdmShared
 }
 
 // Returns the  SUPI from the SUPI list (SUPI list contains either a SUPI or a NAI)
-func GetCorrespondingSupi(list models.IdentityData) (id string) {
+func GetCorrespondingSupi(list models.Udr_DR_IdentityData) (id string) {
 	var identifier string
 	for i := 0; i < len(list.SupiList); i++ {
 		if strings.Contains(list.SupiList[i], "imsi") {
@@ -219,7 +229,7 @@ func GetCorrespondingSupi(list models.IdentityData) (id string) {
 }
 
 // functions related to Retrieval of multiple datasets(GetSupi)
-func (context *UDMContext) CreateSubsDataSetsForUe(supi string, body models.UdmSdmSubscriptionDataSets) {
+func (context *UDMContext) CreateSubsDataSetsForUe(supi string, body models.Udm_SDM_SubscriptionDataSets) {
 	ue, ok := context.UdmUeFindBySupi(supi)
 	if !ok {
 		ue = context.NewUdmUe(supi)
@@ -237,19 +247,22 @@ func (context *UDMContext) CreateTraceDataforUe(supi string, body models.TraceDa
 }
 
 // functions related to sdmSubscription (subscribe to notification of data change)
-func (udmUeContext *UdmUeContext) CreateSubscriptiontoNotifChange(subscriptionID string, body *models.SdmSubscription) {
+func (udmUeContext *UdmUeContext) CreateSubscriptiontoNotifChange(
+	subscriptionID string,
+	body *models.Udm_SDM_SdmSubscription,
+) {
 	if _, exist := udmUeContext.SubscribeToNotifChange[subscriptionID]; !exist {
 		udmUeContext.SubscribeToNotifChange[subscriptionID] = body
 	}
 }
 
 // TODO: this function has wrong UE pool key with subscriptionID
-func (context *UDMContext) CreateSubstoNotifSharedData(subscriptionID string, body *models.SdmSubscription) {
+func (context *UDMContext) CreateSubstoNotifSharedData(subscriptionID string, body *models.Udm_SDM_SdmSubscription) {
 	context.SubscriptionOfSharedDataChange.Store(subscriptionID, body)
 }
 
 // functions related UecontextInSmfData
-func (context *UDMContext) CreateUeContextInSmfDataforUe(supi string, body models.UeContextInSmfData) {
+func (context *UDMContext) CreateUeContextInSmfDataforUe(supi string, body models.Udm_SDM_UeContextInSmfData) {
 	ue, ok := context.UdmUeFindBySupi(supi)
 	if !ok {
 		ue = context.NewUdmUe(supi)
@@ -258,7 +271,10 @@ func (context *UDMContext) CreateUeContextInSmfDataforUe(supi string, body model
 }
 
 // functions for SmfSelectionSubscriptionData
-func (context *UDMContext) CreateSmfSelectionSubsDataforUe(supi string, body models.SmfSelectionSubscriptionData) {
+func (context *UDMContext) CreateSmfSelectionSubsDataforUe(
+	supi string,
+	body models.Udm_SDM_SmfSelectionSubscriptionData,
+) {
 	ue, ok := context.UdmUeFindBySupi(supi)
 	if !ok {
 		ue = context.NewUdmUe(supi)
@@ -267,14 +283,16 @@ func (context *UDMContext) CreateSmfSelectionSubsDataforUe(supi string, body mod
 }
 
 // SetSmfSelectionSubsData ... functions to set SmfSelectionSubscriptionData
-func (udmUeContext *UdmUeContext) SetSmfSelectionSubsData(smfSelSubsData *models.SmfSelectionSubscriptionData) {
+func (udmUeContext *UdmUeContext) SetSmfSelectionSubsData(smfSelSubsData *models.Udm_SDM_SmfSelectionSubscriptionData) {
 	udmUeContext.smfSelSubsDataLock.Lock()
 	defer udmUeContext.smfSelSubsDataLock.Unlock()
 	udmUeContext.SmfSelSubsData = smfSelSubsData
 }
 
 // SetSMSubsData ... functions to set SessionManagementSubsData
-func (udmUeContext *UdmUeContext) SetSMSubsData(smSubsData map[string]models.SessionManagementSubscriptionData) {
+func (udmUeContext *UdmUeContext) SetSMSubsData(
+	smSubsData map[string]models.Udm_SDM_SessionManagementSubscriptionData,
+) {
 	udmUeContext.SmSubsDataLock.Lock()
 	defer udmUeContext.SmSubsDataLock.Unlock()
 	udmUeContext.SessionManagementSubsData = smSubsData
@@ -313,7 +331,7 @@ func (context *UDMContext) UdmUeFindByGpsi(gpsi string) (*UdmUeContext, bool) {
 
 // Function to create the AccessAndMobilitySubscriptionData for Ue
 func (context *UDMContext) CreateAccessMobilitySubsDataForUe(supi string,
-	body models.AccessAndMobilitySubscriptionData,
+	body models.Udm_SDM_AccessAndMobilitySubscriptionData,
 ) {
 	ue, ok := context.UdmUeFindBySupi(supi)
 	if !ok {
@@ -323,7 +341,7 @@ func (context *UDMContext) CreateAccessMobilitySubsDataForUe(supi string,
 }
 
 // Function to set the AccessAndMobilitySubscriptionData for Ue
-func (udmUeContext *UdmUeContext) SetAMSubsriptionData(amData *models.AccessAndMobilitySubscriptionData) {
+func (udmUeContext *UdmUeContext) SetAMSubsriptionData(amData *models.Udm_SDM_AccessAndMobilitySubscriptionData) {
 	udmUeContext.amSubsDataLock.Lock()
 	defer udmUeContext.amSubsDataLock.Unlock()
 	udmUeContext.AccessAndMobilitySubscriptionData = amData
@@ -353,7 +371,7 @@ func (context *UDMContext) UdmSmfRegContextNotExists(supi string) bool {
 	}
 }
 
-func (context *UDMContext) CreateAmf3gppRegContext(supi string, body models.Amf3GppAccessRegistration) {
+func (context *UDMContext) CreateAmf3gppRegContext(supi string, body models.Udm_UECM_Amf3GppAccessRegistration) {
 	ue, ok := context.UdmUeFindBySupi(supi)
 	if !ok {
 		ue = context.NewUdmUe(supi)
@@ -361,7 +379,7 @@ func (context *UDMContext) CreateAmf3gppRegContext(supi string, body models.Amf3
 	ue.Amf3GppAccessRegistration = &body
 }
 
-func (context *UDMContext) CreateAmfNon3gppRegContext(supi string, body models.AmfNon3GppAccessRegistration) {
+func (context *UDMContext) CreateAmfNon3gppRegContext(supi string, body models.Udm_UECM_AmfNon3GppAccessRegistration) {
 	ue, ok := context.UdmUeFindBySupi(supi)
 	if !ok {
 		ue = context.NewUdmUe(supi)
@@ -379,7 +397,7 @@ func (context *UDMContext) CreateSmfRegContext(supi string, pduSessionID string)
 	}
 }
 
-func (context *UDMContext) GetAmf3gppRegContext(supi string) *models.Amf3GppAccessRegistration {
+func (context *UDMContext) GetAmf3gppRegContext(supi string) *models.Udm_UECM_Amf3GppAccessRegistration {
 	if ue, ok := context.UdmUeFindBySupi(supi); ok {
 		return ue.Amf3GppAccessRegistration
 	} else {
@@ -387,7 +405,7 @@ func (context *UDMContext) GetAmf3gppRegContext(supi string) *models.Amf3GppAcce
 	}
 }
 
-func (context *UDMContext) GetAmfNon3gppRegContext(supi string) *models.AmfNon3GppAccessRegistration {
+func (context *UDMContext) GetAmfNon3gppRegContext(supi string) *models.Udm_UECM_AmfNon3GppAccessRegistration {
 	if ue, ok := context.UdmUeFindBySupi(supi); ok {
 		return ue.AmfNon3GppAccessRegistration
 	} else {
@@ -465,52 +483,114 @@ func (context *UDMContext) GetSDMUri() string {
 func (context *UDMContext) InitNFService(serviceName []string, version string) {
 	tmpVersion := strings.Split(version, ".")
 	versionUri := "v" + tmpVersion[0]
+	addr := serviceuri.NewAddressing(context.RegisterIPv4)
 	for index, nameString := range serviceName {
-		name := models.ServiceName(nameString)
-		context.NfService[name] = models.NrfNfManagementNfService{
+		name := models.Nrf_NFMgmt_ServiceName(nameString)
+		context.NfService[name] = models.Nrf_NFMgmt_NFService{
 			ServiceInstanceId: strconv.Itoa(index),
 			ServiceName:       name,
-			Versions: []models.NfServiceVersion{
+			Versions: []models.Nrf_NFMgmt_NFServiceVersion{
 				{
 					ApiFullVersion:  version,
 					ApiVersionInUri: versionUri,
 				},
 			},
 			Scheme:          context.UriScheme,
-			NfServiceStatus: models.NfServiceStatus_REGISTERED,
-			ApiPrefix:       context.GetIPv4Uri(),
-			IpEndPoints: []models.IpEndPoint{
-				{
-					Ipv4Address: context.RegisterIPv4,
-					Transport:   models.NrfNfManagementTransportProtocol_TCP,
-					Port:        int32(context.SBIPort),
-				},
-			},
+			NfServiceStatus: models.Nrf_NFMgmt_NFServiceStatus_REGISTERED,
+			Fqdn:            addr.FQDN,
+			IpEndPoints:     addr.IpEndPoints(int32(context.SBIPort)),
 		}
 	}
 }
 
-func (c *UDMContext) GetTokenCtx(serviceName models.ServiceName, targetNF models.NrfNfManagementNfType) (
+func (c *UDMContext) GetTokenCtx(serviceName models.Nrf_NFMgmt_ServiceName, targetNF models.Nrf_NFMgmt_NFType) (
 	context.Context, *models.ProblemDetails, error,
 ) {
 	if !c.OAuth2Required {
 		return context.TODO(), nil, nil
 	}
-	return oauth.GetTokenCtx(models.NrfNfManagementNfType_UDM, targetNF,
-		c.NfId, c.NrfUri, string(serviceName))
+	return oauth.GetTokenCtx(c.tokenRequest(serviceName, targetNF))
+}
+
+func (c *UDMContext) GetTokenCtxForNFInstance(serviceName models.Nrf_NFMgmt_ServiceName,
+	targetNF models.Nrf_NFMgmt_NFType, targetNFInstanceID string,
+) (context.Context, *models.ProblemDetails, error) {
+	if !c.OAuth2Required {
+		return context.TODO(), nil, nil
+	}
+	targetID, err := uuid.Parse(strings.TrimSpace(targetNFInstanceID))
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid target NF instance ID: %w", err)
+	}
+	if targetID.Version() != 4 {
+		return nil, nil, fmt.Errorf("invalid target NF instance ID: UUID must be version 4")
+	}
+	return oauth.GetTokenCtx(c.tokenRequestForNFInstance(serviceName, targetNF, targetNFInstanceID))
+}
+
+func (c *UDMContext) GetTokenCtxForNRF(serviceName models.Nrf_NFMgmt_ServiceName) (
+	context.Context, *models.ProblemDetails, error,
+) {
+	return c.GetTokenCtxForNFInstance(serviceName, models.Nrf_NFMgmt_NFType_NRF, c.NrfNfInstanceID)
+}
+
+func (c *UDMContext) tokenRequest(
+	serviceName models.Nrf_NFMgmt_ServiceName,
+	targetNF models.Nrf_NFMgmt_NFType,
+) oauth.TokenRequest {
+	return oauth.TokenRequest{
+		ConsumerNFType:       models.Nrf_NFMgmt_NFType_UDM,
+		ConsumerNFInstanceID: c.NfId,
+		TargetNFType:         targetNF,
+		NRFURI:               c.NrfUri,
+		Scope:                string(serviceName),
+	}
+}
+
+func (c *UDMContext) tokenRequestForNFInstance(serviceName models.Nrf_NFMgmt_ServiceName,
+	targetNF models.Nrf_NFMgmt_NFType, targetNFInstanceID string,
+) oauth.TokenRequest {
+	request := c.tokenRequest(serviceName, targetNF)
+	request.TargetNFInstanceID = targetNFInstanceID
+	return request
+}
+
+func (c *UDMContext) SetOAuth2Required(required bool) error {
+	if !required {
+		c.OAuth2Required = false
+		c.NrfNfInstanceID = ""
+		return nil
+	}
+	if strings.TrimSpace(c.NrfCertPem) == "" {
+		return fmt.Errorf("OAuth2 enabled but NRF certificate path is empty")
+	}
+	if strings.TrimSpace(c.NrfUri) == "" {
+		return fmt.Errorf("OAuth2 enabled but NRF URI is empty")
+	}
+	nrfNfInstanceID, err := oauth.NFInstanceIDFromCertificate(c.NrfCertPem)
+	if err != nil {
+		return fmt.Errorf("derive trusted NRF instance ID from certificate: %w", err)
+	}
+	c.NrfNfInstanceID = nrfNfInstanceID
+	c.OAuth2Required = true
+	return nil
 }
 
 func GetSelf() *UDMContext {
 	return &udmContext
 }
 
-func (context *UDMContext) AuthorizationCheck(token string, serviceName models.ServiceName) error {
+func (context *UDMContext) AuthorizationCheck(token string, serviceName models.Nrf_NFMgmt_ServiceName) error {
 	if !context.OAuth2Required {
 		logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: OAuth2 not required\n")
 		return nil
 	}
-	logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: token[%s] serviceName[%s]\n", token, serviceName)
-	err := oauth.VerifyOAuth(token, string(serviceName), context.NrfCertPem)
+	logger.UtilLog.Debugf("UDMContext::AuthorizationCheck: tokenPresent[%t] serviceName[%s]",
+		token != "", serviceName)
+	err := oauth.VerifyOAuth(token, string(serviceName), oauth.AudiencePolicy{
+		NFInstanceID: context.NfId,
+		NFType:       models.Nrf_NFMgmt_NFType_UDM,
+	}, context.NrfNfInstanceID, context.NrfCertPem)
 	if err != nil {
 		return err
 	}

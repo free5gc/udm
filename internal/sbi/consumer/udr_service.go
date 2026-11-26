@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
+	Nudr_DataRepository "github.com/free5gc/openapi/udr/DR"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	sbi_metrics "github.com/free5gc/util/metrics/sbi"

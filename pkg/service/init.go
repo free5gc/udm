@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/nrf/NFManagement"
+	NFManagement "github.com/free5gc/openapi/nrf/NFMgmt"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/udm/internal/sbi"
@@ -40,6 +40,11 @@ type UdmApp struct {
 }
 
 func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*UdmApp, error) {
+	if err := openapi.ConfigureHTTP2Clients(
+		cfg.GetReadIdleTimeout(), cfg.GetPingTimeout(), cfg.GetTLSVerify(),
+	); err != nil {
+		return nil, err
+	}
 	udm := &UdmApp{
 		cfg: cfg,
 		wg:  sync.WaitGroup{},
@@ -72,7 +77,8 @@ func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*Ud
 	customMetrics := make(map[utils.MetricTypeEnabled][]prometheus.Collector)
 	if cfg.AreMetricsEnabled() {
 		if udm.metricsServer, err = metrics.NewServer(
-			getInitMetrics(cfg, features, customMetrics), tlsKeyLogPath, logger.InitLog); err != nil {
+			getInitMetrics(cfg, features, customMetrics), tlsKeyLogPath, logger.InitLog, cfg.GetIdleTimeout(),
+		); err != nil {
 			return nil, err
 		}
 	}
@@ -190,6 +196,9 @@ func (a *UdmApp) terminateProcedure() {
 	logger.MainLog.Infof("Terminating UDM...")
 	a.CallServerStop()
 
+	// no heartbeat PATCH or re-registration PUT may land after the deregistration
+	a.Consumer().WaitHeartbeatStopped()
+
 	// deregister with NRF
 	err := a.Consumer().SendDeregisterNFInstance()
 	if err != nil {
@@ -197,7 +206,7 @@ func (a *UdmApp) terminateProcedure() {
 		case openapi.GenericOpenAPIError:
 			switch errModel := apiErr.Model().(type) {
 			case NFManagement.DeregisterNFInstanceError:
-				pd := &errModel.ProblemDetails
+				pd := errModel.ProblemDetails
 				logger.InitLog.Errorf("Deregister NF instance Failed Problem[%+v]", pd)
 			case error:
 				logger.InitLog.Errorf("Deregister NF instance Error[%+v]", err)

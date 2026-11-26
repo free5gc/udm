@@ -8,7 +8,7 @@ import (
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
-	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
+	Nudr_DataRepository "github.com/free5gc/openapi/udr/DR"
 	"github.com/free5gc/udm/internal/logger"
 	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/validator"
@@ -17,227 +17,227 @@ import (
 func (s *Server) getUEContextManagementRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 
 		{
-			"Get3GppRegistration",
-			http.MethodGet,
-			"/:ueId/registrations/amf-3gpp-access",
-			s.HandleGetAmf3gppAccess,
+			Name:        "Get3GppRegistration",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations/amf-3gpp-access",
+			HandlerFunc: s.HandleGetAmf3gppAccess,
 		},
 
 		{
-			"GetNon3GppRegistration",
-			http.MethodGet,
-			"/:ueId/registrations/amf-non-3gpp-access",
-			s.HandleGetAmfNon3gppAccess,
+			Name:        "GetNon3GppRegistration",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations/amf-non-3gpp-access",
+			HandlerFunc: s.HandleGetAmfNon3gppAccess,
 		},
 
 		{
-			"Call3GppRegistration",
-			http.MethodPut,
-			"/:ueId/registrations/amf-3gpp-access",
-			s.HandleRegistrationAmf3gppAccess,
+			Name:        "Call3GppRegistration",
+			Method:      http.MethodPut,
+			Pattern:     "/:ueId/registrations/amf-3gpp-access",
+			HandlerFunc: s.HandleRegistrationAmf3gppAccess,
 		},
 
 		{
-			"Non3GppRegistration",
-			http.MethodPut,
-			"/:ueId/registrations/amf-non-3gpp-access",
-			s.HandleRegistrationAmfNon3gppAccess,
+			Name:        "Non3GppRegistration",
+			Method:      http.MethodPut,
+			Pattern:     "/:ueId/registrations/amf-non-3gpp-access",
+			HandlerFunc: s.HandleRegistrationAmfNon3gppAccess,
 		},
 
 		{
-			"Update3GppRegistration",
-			http.MethodPatch,
-			"/:ueId/registrations/amf-3gpp-access",
-			s.HandleUpdateAmf3gppAccess,
+			Name:        "Update3GppRegistration",
+			Method:      http.MethodPatch,
+			Pattern:     "/:ueId/registrations/amf-3gpp-access",
+			HandlerFunc: s.HandleUpdateAmf3gppAccess,
 		},
 
 		{
-			"UpdateNon3GppRegistration",
-			http.MethodPatch,
-			"/:ueId/registrations/amf-non-3gpp-access",
-			s.HandleUpdateAmfNon3gppAccess,
+			Name:        "UpdateNon3GppRegistration",
+			Method:      http.MethodPatch,
+			Pattern:     "/:ueId/registrations/amf-non-3gpp-access",
+			HandlerFunc: s.HandleUpdateAmfNon3gppAccess,
 		},
 
 		{
-			"SmfDeregistration",
-			http.MethodDelete,
-			"/:ueId/registrations/smf-registrations/:pduSessionId",
-			s.HandleDeregistrationSmfRegistrations,
+			Name:        "SmfDeregistration",
+			Method:      http.MethodDelete,
+			Pattern:     "/:ueId/registrations/smf-registrations/:pduSessionId",
+			HandlerFunc: s.HandleDeregistrationSmfRegistrations,
 		},
 
 		{
-			"Registration",
-			http.MethodPut,
-			"/:ueId/registrations/smf-registrations/:pduSessionId",
-			s.HandleRegistrationSmfRegistrations,
+			Name:        "Registration",
+			Method:      http.MethodPut,
+			Pattern:     "/:ueId/registrations/smf-registrations/:pduSessionId",
+			HandlerFunc: s.HandleRegistrationSmfRegistrations,
 		},
 
 		{
-			"Get3GppSmsfRegistration",
-			http.MethodGet,
-			"/:ueId/registrations/smsf-3gpp-access",
-			s.HandleGetSmsf3gppAccess,
+			Name:        "Get3GppSmsfRegistration",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations/smsf-3gpp-access",
+			HandlerFunc: s.HandleGetSmsf3gppAccess,
 		},
 
 		{
-			"Call3GppSmsfDeregistration",
-			http.MethodDelete,
-			"/:ueId/registrations/smsf-3gpp-access",
-			s.HandleDeregistrationSmsf3gppAccess,
+			Name:        "Call3GppSmsfDeregistration",
+			Method:      http.MethodDelete,
+			Pattern:     "/:ueId/registrations/smsf-3gpp-access",
+			HandlerFunc: s.HandleDeregistrationSmsf3gppAccess,
 		},
 
 		{
-			"Non3GppSmsfDeregistration",
-			http.MethodDelete,
-			"/:ueId/registrations/smsf-non-3gpp-access",
-			s.HandleDeregistrationSmsfNon3gppAccess,
+			Name:        "Non3GppSmsfDeregistration",
+			Method:      http.MethodDelete,
+			Pattern:     "/:ueId/registrations/smsf-non-3gpp-access",
+			HandlerFunc: s.HandleDeregistrationSmsfNon3gppAccess,
 		},
 
 		{
-			"GetNon3GppSmsfRegistration",
-			http.MethodGet,
-			"/:ueId/registrations/smsf-non-3gpp-access",
-			s.HandleGetSmsfNon3gppAccess,
+			Name:        "GetNon3GppSmsfRegistration",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations/smsf-non-3gpp-access",
+			HandlerFunc: s.HandleGetSmsfNon3gppAccess,
 		},
 
 		{
-			"Call3GppSmsfRegistration",
-			http.MethodPut,
-			"/:ueId/registrations/smsf-3gpp-access",
-			s.HandleUpdateSMSFReg3GPP,
+			Name:        "Call3GppSmsfRegistration",
+			Method:      http.MethodPut,
+			Pattern:     "/:ueId/registrations/smsf-3gpp-access",
+			HandlerFunc: s.HandleUpdateSMSFReg3GPP,
 		},
 
 		{
-			"Non3GppSmsfRegistration",
-			http.MethodPut,
-			"/:ueId/registrations/smsf-non-3gpp-access",
-			s.HandleRegistrationSmsfNon3gppAccess,
+			Name:        "Non3GppSmsfRegistration",
+			Method:      http.MethodPut,
+			Pattern:     "/:ueId/registrations/smsf-non-3gpp-access",
+			HandlerFunc: s.HandleRegistrationSmsfNon3gppAccess,
 		},
 
 		{
-			"DeregAMF",
-			http.MethodPost,
-			"/:ueId/registrations/amf-3gpp-access/dereg-amf",
-			s.HandleDeregAMF,
+			Name:        "DeregAMF",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueId/registrations/amf-3gpp-access/dereg-amf",
+			HandlerFunc: s.HandleDeregAMF,
 		},
 
 		{
-			"GetIpSmGwRegistration",
-			http.MethodGet,
-			"/:ueId/registrations/ip-sm-gw",
-			s.HandleGetIpSmGwRegistration,
+			Name:        "GetIpSmGwRegistration",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations/ip-sm-gw",
+			HandlerFunc: s.HandleGetIpSmGwRegistration,
 		},
 
 		{
-			"GetLocationInfo",
-			http.MethodGet,
-			"/:ueId/registrations/location",
-			s.HandleGetLocationInfo,
+			Name:        "GetLocationInfo",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations/location",
+			HandlerFunc: s.HandleGetLocationInfo,
 		},
 
 		{
-			"GetNwdafRegistration",
-			http.MethodGet,
-			"/:ueId/registrations/nwdaf-registrations",
-			s.HandleGetNwdafRegistration,
+			Name:        "GetNwdafRegistration",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations/nwdaf-registrations",
+			HandlerFunc: s.HandleGetNwdafRegistration,
 		},
 
 		{
-			"GetRegistrations",
-			http.MethodGet,
-			"/:ueId/registrations",
-			s.HandleGetRegistrations,
+			Name:        "GetRegistrations",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations",
+			HandlerFunc: s.HandleGetRegistrations,
 		},
 
 		{
-			"GetSmfRegistration",
-			http.MethodGet,
-			"/:ueId/registrations/smf-registrations",
-			s.HandleGetSmfRegistration,
+			Name:        "GetSmfRegistration",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations/smf-registrations",
+			HandlerFunc: s.HandleGetSmfRegistration,
 		},
 
 		{
-			"IpSmGwDeregistration",
-			http.MethodDelete,
-			"/:ueId/registrations/ip-sm-gw",
-			s.HandleIpSmGwDeregistration,
+			Name:        "IpSmGwDeregistration",
+			Method:      http.MethodDelete,
+			Pattern:     "/:ueId/registrations/ip-sm-gw",
+			HandlerFunc: s.HandleIpSmGwDeregistration,
 		},
 
 		{
-			"IpSmGwRegistration",
-			http.MethodPut,
-			"/:ueId/registrations/ip-sm-gw",
-			s.HandleIpSmGwRegistration,
+			Name:        "IpSmGwRegistration",
+			Method:      http.MethodPut,
+			Pattern:     "/:ueId/registrations/ip-sm-gw",
+			HandlerFunc: s.HandleIpSmGwRegistration,
 		},
 
 		{
-			"NwdafDeregistration",
-			http.MethodDelete,
-			"/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
-			s.HandleNwdafDeregistration,
+			Name:        "NwdafDeregistration",
+			Method:      http.MethodDelete,
+			Pattern:     "/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
+			HandlerFunc: s.HandleNwdafDeregistration,
 		},
 
 		{
-			"NwdafRegistration",
-			http.MethodPut,
-			"/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
-			s.HandleNwdafRegistration,
+			Name:        "NwdafRegistration",
+			Method:      http.MethodPut,
+			Pattern:     "/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
+			HandlerFunc: s.HandleNwdafRegistration,
 		},
 
 		{
-			"PeiUpdate",
-			http.MethodPost,
-			"/:ueId/registrations/amf-3gpp-access/pei-update",
-			s.HandlePeiUpdate,
+			Name:        "PeiUpdate",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueId/registrations/amf-3gpp-access/pei-update",
+			HandlerFunc: s.HandlePeiUpdate,
 		},
 
 		{
-			"RetrieveSmfRegistration",
-			http.MethodGet,
-			"/:ueId/registrations/smf-registrations/:pduSessionId",
-			s.HandleRetrieveSmfRegistration,
+			Name:        "RetrieveSmfRegistration",
+			Method:      http.MethodGet,
+			Pattern:     "/:ueId/registrations/smf-registrations/:pduSessionId",
+			HandlerFunc: s.HandleRetrieveSmfRegistration,
 		},
 
 		{
-			"SendRoutingInfoSm",
-			http.MethodPost,
-			"/:ueId/registrations/send-routing-info-sm",
-			s.HandleSendRoutingInfoSm,
+			Name:        "SendRoutingInfoSm",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueId/registrations/send-routing-info-sm",
+			HandlerFunc: s.HandleSendRoutingInfoSm,
 		},
 
 		{
-			"TriggerPCSCFRestoration",
-			http.MethodPost,
-			"/restore-pcscf",
-			s.HandleTriggerPCSCFRestoration,
+			Name:        "TriggerPCSCFRestoration",
+			Method:      http.MethodPost,
+			Pattern:     "/restore-pcscf",
+			HandlerFunc: s.HandleTriggerPCSCFRestoration,
 		},
 
 		{
-			"UpdateNwdafRegistration",
-			http.MethodPatch,
-			"/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
-			s.HandleUpdateNwdafRegistration,
+			Name:        "UpdateNwdafRegistration",
+			Method:      http.MethodPatch,
+			Pattern:     "/:ueId/registrations/nwdaf-registrations/:nwdafRegistrationId",
+			HandlerFunc: s.HandleUpdateNwdafRegistration,
 		},
 
 		{
-			"UpdateRoamingInformation",
-			http.MethodPost,
-			"/:ueId/registrations/amf-3gpp-access/roaming-info-update",
-			s.HandleUpdateRoamingInformation,
+			Name:        "UpdateRoamingInformation",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueId/registrations/amf-3gpp-access/roaming-info-update",
+			HandlerFunc: s.HandleUpdateRoamingInformation,
 		},
 
 		{
-			"UpdateSmfRegistration",
-			http.MethodPatch,
-			"/:ueId/registrations/smf-registrations/:pduSessionId",
-			s.HandleUpdateSmfRegistration,
+			Name:        "UpdateSmfRegistration",
+			Method:      http.MethodPatch,
+			Pattern:     "/:ueId/registrations/smf-registrations/:pduSessionId",
+			HandlerFunc: s.HandleUpdateSmfRegistration,
 		},
 	}
 }
@@ -271,7 +271,7 @@ func (s *Server) HandleGetAmfNon3gppAccess(c *gin.Context) {
 
 // Register - register as AMF for non-3GPP access
 func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
-	var amfNon3GppAccessRegistration models.AmfNon3GppAccessRegistration
+	var amfNon3GppAccessRegistration models.Udm_UECM_AmfNon3GppAccessRegistration
 
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.2.3
@@ -354,7 +354,7 @@ func (s *Server) HandleRegistrationAmfNon3gppAccess(c *gin.Context) {
 
 // RegistrationAmf3gppAccess - register as AMF for 3GPP access
 func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
-	var amf3GppAccessRegistration models.Amf3GppAccessRegistration
+	var amf3GppAccessRegistration models.Udm_UECM_Amf3GppAccessRegistration
 
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.2.2
@@ -438,7 +438,7 @@ func (s *Server) HandleRegistrationAmf3gppAccess(c *gin.Context) {
 
 // UpdateAmfNon3gppAccess - update a parameter in the AMF registration for non-3GPP access
 func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
-	var amfNon3GppAccessRegistrationModification models.AmfNon3GppAccessRegistrationModification
+	var amfNon3GppAccessRegistrationModification models.Udm_UECM_AmfNon3GppAccessRegistrationModification
 
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.6.3
@@ -506,7 +506,7 @@ func (s *Server) HandleUpdateAmfNon3gppAccess(c *gin.Context) {
 
 // UpdateAmf3gppAccess - Update a parameter in the AMF registration for 3GPP access
 func (s *Server) HandleUpdateAmf3gppAccess(c *gin.Context) {
-	var amf3GppAccessRegistrationModification models.Amf3GppAccessRegistrationModification
+	var amf3GppAccessRegistrationModification models.Udm_UECM_Amf3GppAccessRegistrationModification
 
 	ueID := c.Param("ueId")
 	// TS 29.503 5.3.2.6.2
@@ -642,7 +642,7 @@ func (s *Server) HandleDeregistrationSmfRegistrations(c *gin.Context) {
 
 // RegistrationSmfRegistrations - register as SMF
 func (s *Server) HandleRegistrationSmfRegistrations(c *gin.Context) {
-	var smfRegistration models.SmfRegistration
+	var smfRegistration models.Udm_UECM_SmfRegistration
 
 	ueID := c.Params.ByName("ueId")
 	// TS 29.503 5.3.2.2.4

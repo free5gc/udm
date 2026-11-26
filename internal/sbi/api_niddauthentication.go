@@ -9,17 +9,17 @@ import (
 func (s *Server) getNIDDAuthenticationRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 
 		{
-			"AuthorizeNiddData",
-			http.MethodPost,
-			"/:ueIdentity/authorize",
-			s.HandleAuthorizeNiddData,
+			Name:        "AuthorizeNiddData",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueIdentity/authorize",
+			HandlerFunc: s.HandleAuthorizeNiddData,
 		},
 	}
 }

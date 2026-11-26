@@ -9,24 +9,24 @@ import (
 func (s *Server) getServiceSpecificAuthorizationRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 
 		{
-			"ServiceSpecificAuthorization",
-			http.MethodPost,
-			"/:ueIdentity/:serviceType/authorize",
-			s.HandleServiceSpecificAuthorization,
+			Name:        "ServiceSpecificAuthorization",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueIdentity/:serviceType/authorize",
+			HandlerFunc: s.HandleServiceSpecificAuthorization,
 		},
 
 		{
-			"ServiceSpecificAuthorizationRemoval",
-			http.MethodPost,
-			"/:ueIdentity/:serviceType/remove",
-			s.HandleServiceSpecificAuthorizationRemoval,
+			Name:        "ServiceSpecificAuthorizationRemoval",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueIdentity/:serviceType/remove",
+			HandlerFunc: s.HandleServiceSpecificAuthorizationRemoval,
 		},
 	}
 }

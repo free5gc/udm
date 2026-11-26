@@ -15,9 +15,8 @@ import (
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
-	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
+	Nudr_DataRepository "github.com/free5gc/openapi/udr/DR"
 	"github.com/free5gc/udm/internal/logger"
-	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/suci"
 	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/milenage"
@@ -37,15 +36,15 @@ const (
 	resyncAMF              string = "0000"
 )
 
-func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte) {
+func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte, error) {
 	// Use ValidateAUTS to verify AUTS and extract SQNms
 	// This function internally:
 	// 1. Uses AK* (f5*) to de-conceal SQNms from AUTS
 	// 2. Computes MAC-S with AMF=0x0000 and verifies it
-	SQNms, _, err := milenage.ValidateAUTS(opc, k, rand, auts)
+	SQNms, err := milenage.ValidateAUTS(opc, k, rand, auts)
 	if err != nil {
 		logger.UeauLog.Errorln("aucSQN ValidateAUTS err:", err)
-		return nil, nil
+		return nil, nil, err
 	}
 
 	logger.UeauLog.Tracef("aucSQN: SQNms=[%x]\n", SQNms)
@@ -54,7 +53,7 @@ func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte) {
 	macS := auts[6:14]
 	logger.UeauLog.Tracef("aucSQN: macS=[%x]\n", macS)
 
-	return SQNms, macS
+	return SQNms, macS, err
 }
 
 func (p *Processor) strictHex(ss string, n int) string {
@@ -67,17 +66,17 @@ func (p *Processor) strictHex(ss string, n int) string {
 }
 
 func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
-	authEvent models.AuthEvent,
+	authEvent models.Udm_UEAU_AuthEvent,
 	supi string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDR_DR, models.Nrf_NFMgmt_NFType_UDR)
 	if err != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	var createAuthStatusRequest Nudr_DataRepository.CreateAuthenticationStatusRequest
-	createAuthStatusRequest.AuthEvent = &authEvent
+	createAuthStatusRequest.RequestBody = &authEvent
 	createAuthStatusRequest.UeId = &supi
 
 	client, err := p.Consumer().CreateUDMClientToUDR(supi)
@@ -94,7 +93,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			return
 		}
 		logger.UeauLog.Errorln("ConfirmAuth err:", err.Error())
@@ -110,10 +109,10 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 
 func (p *Processor) GenerateAuthDataProcedure(
 	c *gin.Context,
-	authInfoRequest models.AuthenticationInfoRequest,
+	authInfoRequest models.Udm_UEAU_AuthenticationInfoRequest,
 	supiOrSuci string,
 ) {
-	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
+	ctx, pd, err := p.Context().GetTokenCtx(models.Nrf_NFMgmt_ServiceName_NUDR_DR, models.Nrf_NFMgmt_NFType_UDR)
 	if err != nil {
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
@@ -121,7 +120,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 	}
 	logger.UeauLog.Traceln("In GenerateAuthDataProcedure")
 
-	response := &models.UdmUeauAuthenticationInfoResult{}
+	response := &models.Udm_UEAU_AuthenticationInfoResult{}
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	supi, err := suci.ToSupi(supiOrSuci, p.Context().SuciProfiles)
 	if err != nil {
@@ -155,7 +154,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
 			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
-			c.JSON(apiError.ErrorStatus, apiError.RawBody)
+			c.Data(apiError.ErrorStatus, "application/json", apiError.RawBody)
 			switch apiError.ErrorStatus {
 			case http.StatusNotFound:
 				logger.UeauLog.Warnf("Return from UDR QueryAuthSubsData error")
@@ -169,6 +168,13 @@ func (p *Processor) GenerateAuthDataProcedure(
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
+	if authSubs == nil || authSubs.Udr_DR_AuthenticationSubscription == nil {
+		problemDetails := openapi.ProblemDetailsSystemFailure("UDR returned an empty authentication subscription")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
+	}
+	authSubscription := authSubs.Udr_DR_AuthenticationSubscription
 
 	/*
 		K, RAND, CK, IK: 128 bits (16 bytes) (hex len = 32)
@@ -179,8 +185,8 @@ func (p *Processor) GenerateAuthDataProcedure(
 	hasOPC := false
 	var kStr, opcStr string
 	var k, op, opc []byte
-	if authSubs.AuthenticationSubscription.EncPermanentKey != "" {
-		kStr = authSubs.AuthenticationSubscription.EncPermanentKey
+	if authSubscription.EncPermanentKey != "" {
+		kStr = authSubscription.EncPermanentKey
 		if len(kStr) == keyStrLen {
 			k, err = hex.DecodeString(kStr)
 			if err != nil {
@@ -211,8 +217,8 @@ func (p *Processor) GenerateAuthDataProcedure(
 		return
 	}
 
-	if authSubs.AuthenticationSubscription.EncOpcKey != "" {
-		opcStr = authSubs.AuthenticationSubscription.EncOpcKey
+	if authSubscription.EncOpcKey != "" {
+		opcStr = authSubscription.EncOpcKey
 		if len(opcStr) == opcStrLen {
 			opc, err = hex.DecodeString(opcStr)
 			if err != nil {
@@ -237,7 +243,19 @@ func (p *Processor) GenerateAuthDataProcedure(
 		return
 	}
 
-	sqnStr := p.strictHex(authSubs.AuthenticationSubscription.SequenceNumber.Sqn, 12)
+	if authSubscription.SequenceNumber == nil {
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusForbidden,
+			Cause:  authenticationRejected,
+			Detail: "SequenceNumber is missing",
+		}
+		logger.UeauLog.Errorln("Nil SequenceNumber")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.JSON(int(problemDetails.Status), problemDetails)
+		return
+	}
+
+	sqnStr := p.strictHex(authSubscription.SequenceNumber.Sqn, 12)
 	logger.UeauLog.Traceln("sqnStr", sqnStr)
 	sqn, err := hex.DecodeString(sqnStr)
 	if err != nil {
@@ -270,7 +288,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		return
 	}
 
-	amfStr := p.strictHex(authSubs.AuthenticationSubscription.AuthenticationManagementField, 4)
+	amfStr := p.strictHex(authSubscription.AuthenticationManagementField, 4)
 	logger.UeauLog.Traceln("amfStr", amfStr)
 	AMF, err := hex.DecodeString(amfStr)
 	if err != nil {
@@ -320,7 +338,19 @@ func (p *Processor) GenerateAuthDataProcedure(
 			return
 		}
 
-		SQNms, macS := p.aucSQN(opc, k, Auts, randHex)
+		SQNms, macS, err := p.aucSQN(opc, k, Auts, randHex)
+		if err != nil {
+			logger.UeauLog.Errorln("aucSQN error:", err)
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusForbidden,
+				Cause:  authenticationRejected,
+				Detail: err.Error(),
+			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+			c.JSON(int(problemDetails.Status), problemDetails)
+			return
+		}
+
 		if reflect.DeepEqual(macS, Auts[6:]) {
 			_, err = cryptoRand.Read(RAND)
 			if err != nil {
@@ -391,7 +421,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		{
 			Op:   models.PatchOperation_REPLACE,
 			Path: "/sequenceNumber",
-			Value: models.SequenceNumber{
+			Value: models.Udr_DR_SequenceNumber{
 				Sqn: SQNheStr,
 			},
 		},
@@ -401,7 +431,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 
 	var modifyAuthenticationSubscriptionRequest Nudr_DataRepository.ModifyAuthenticationSubscriptionRequest
 	modifyAuthenticationSubscriptionRequest.UeId = &supi
-	modifyAuthenticationSubscriptionRequest.PatchItem = patchItemArray
+	modifyAuthenticationSubscriptionRequest.RequestBody = patchItemArray
 	_, err = client.AuthenticationSubscriptionDocumentApi.ModifyAuthenticationSubscription(
 		ctx, &modifyAuthenticationSubscriptionRequest)
 	if err != nil {
@@ -418,39 +448,19 @@ func (p *Processor) GenerateAuthDataProcedure(
 	}
 
 	// Run milenage
-	macA, macS := make([]byte, 8), make([]byte, 8)
-	CK, IK := make([]byte, 16), make([]byte, 16)
-	RES := make([]byte, 8)
-	AK, AKstar := make([]byte, 6), make([]byte, 6)
-
-	// Generate macA, macS
-	err = util.MilenageF1(opc, k, RAND, sqn, AMF, macA, macS)
+	IK, CK, RES, AUTN, err := milenage.GenerateAKAParameters(opc, k, RAND, sqn, AMF)
 	if err != nil {
-		logger.UeauLog.Errorln("milenage F1 err:", err)
-	}
-
-	// Generate RES, CK, IK, AK, AKstar
-	// RES == XRES (expected RES) for server
-	err = util.MilenageF2345(opc, k, RAND, RES, CK, IK, AK, AKstar)
-	if err != nil {
-		logger.UeauLog.Errorln("milenage F2345 err:", err)
+		logger.UeauLog.Errorln("milenage GenerateAKAParameters err:", err)
 	}
 	logger.UeauLog.Tracef("milenage RES=[%s]", hex.EncodeToString(RES))
-
-	// Generate AUTN
-	logger.UeauLog.Tracef("SQN=[%x], AK=[%x]", sqn, AK)
-	logger.UeauLog.Tracef("AMF=[%x], macA=[%x]", AMF, macA)
-	SQNxorAK := make([]byte, 6)
-	for i := 0; i < len(sqn); i++ {
-		SQNxorAK[i] = sqn[i] ^ AK[i]
-	}
-	logger.UeauLog.Tracef("SQN xor AK=[%x]", SQNxorAK)
-	AUTN := append(append(SQNxorAK, AMF...), macA...)
 	logger.UeauLog.Tracef("AUTN=[%x]", AUTN)
 
-	var av models.AuthenticationVector
-	if authSubs.AuthenticationSubscription.AuthenticationMethod == models.AuthMethod__5_G_AKA {
-		response.AuthType = models.UdmUeauAuthType__5_G_AKA
+	SQNxorAK := AUTN[0:6]
+	logger.UeauLog.Tracef("SQN xor AK=[%x]", SQNxorAK)
+
+	var av models.Udm_UEAU_AuthenticationVector
+	if authSubscription.AuthenticationMethod == models.Udr_DR_AuthMethod_5_G_AKA {
+		response.AuthType = models.Udm_UEAU_AuthType_5_G_AKA
 
 		// derive XRES*
 		key := append(CK, IK...)
@@ -482,9 +492,9 @@ func (p *Processor) GenerateAuthDataProcedure(
 		av.XresStar = hex.EncodeToString(xresStar)
 		av.Autn = hex.EncodeToString(AUTN)
 		av.Kausf = hex.EncodeToString(kdfValForKausf)
-		av.AvType = models.AvType__5_G_HE_AKA
+		av.AvType = models.Udm_UEAU_AvType_5_G_HE_AKA
 	} else { // EAP-AKA'
-		response.AuthType = models.UdmUeauAuthType_EAP_AKA_PRIME
+		response.AuthType = models.Udm_UEAU_AuthType_EAP_AKA_PRIME
 		// derive CK' and IK'
 		key := append(CK, IK...)
 		FC := ueauth.FC_FOR_CK_PRIME_IK_PRIME_DERIVATION
@@ -510,7 +520,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		av.Autn = hex.EncodeToString(AUTN)
 		av.CkPrime = hex.EncodeToString(ckPrime)
 		av.IkPrime = hex.EncodeToString(ikPrime)
-		av.AvType = models.AvType_EAP_AKA_PRIME
+		av.AvType = models.Udm_UEAU_AvType_EAP_AKA_PRIME
 	}
 
 	response.AuthenticationVector = &av

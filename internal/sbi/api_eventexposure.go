@@ -14,38 +14,38 @@ import (
 func (s *Server) getEventExposureRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
+			Name:        "Index",
+			Method:      http.MethodGet,
+			Pattern:     "/",
+			HandlerFunc: s.HandleIndex,
 		},
 
 		{
-			"CreateEeSubscription",
-			http.MethodPost,
-			"/:ueIdentity/ee-subscriptions",
-			s.HandleCreateEeSubscription,
+			Name:        "CreateEeSubscription",
+			Method:      http.MethodPost,
+			Pattern:     "/:ueIdentity/ee-subscriptions",
+			HandlerFunc: s.HandleCreateEeSubscription,
 		},
 
 		{
-			"DeleteEeSubscription",
-			http.MethodDelete,
-			"/:ueIdentity/ee-subscriptions/:subscriptionId",
-			s.HandleDeleteEeSubscription,
+			Name:        "DeleteEeSubscription",
+			Method:      http.MethodDelete,
+			Pattern:     "/:ueIdentity/ee-subscriptions/:subscriptionId",
+			HandlerFunc: s.HandleDeleteEeSubscription,
 		},
 
 		{
-			"UpdateEeSubscription",
-			http.MethodPatch,
-			"/:ueIdentity/ee-subscriptions/:subscriptionId",
-			s.HandleUpdateEeSubscription,
+			Name:        "UpdateEeSubscription",
+			Method:      http.MethodPatch,
+			Pattern:     "/:ueIdentity/ee-subscriptions/:subscriptionId",
+			HandlerFunc: s.HandleUpdateEeSubscription,
 		},
 	}
 }
 
 // HTTPCreateEeSubscription - Subscribe
 func (s *Server) HandleCreateEeSubscription(c *gin.Context) {
-	var eesubscription models.UdmEeEeSubscription
+	var eesubscription models.Udm_EvtExpos_EeSubscription
 
 	requestBody, err := c.GetRawData()
 	if err != nil {

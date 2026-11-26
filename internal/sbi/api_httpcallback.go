@@ -15,23 +15,18 @@ import (
 func (s *Server) getHttpCallBackRoutes() []Route {
 	return []Route{
 		{
-			"Index",
-			http.MethodGet,
-			"/",
-			s.HandleIndex,
-		},
-
-		{
-			"DataChangeNotificationToNF",
-			http.MethodPost,
-			"/:supi/sdm-subscriptions",
-			s.HandleDataChangeNotificationToNF,
+			Name:        "DataChangeNotificationToNF",
+			Method:      http.MethodPost,
+			Pattern:     "/:supi/sdm-subscriptions",
+			HandlerFunc: s.HandleDataChangeNotificationToNF,
+			// Nudr_DataRepository DataChange Notify (TS 29.504 5.2.2.6).
+			IsNotification: true,
 		},
 	}
 }
 
 func (s *Server) HandleDataChangeNotificationToNF(c *gin.Context) {
-	var dataChangeNotify models.DataChangeNotify
+	var dataChangeNotify models.Udr_DR_DataChangeNotify
 	requestBody, err := c.GetRawData()
 	if err != nil {
 		problemDetail := models.ProblemDetails{
