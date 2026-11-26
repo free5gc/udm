@@ -405,7 +405,11 @@ func TestHandlersRejectInvalidSubscriptionParameters(t *testing.T) {
 
 			require.NotPanics(t, func() { tt.handler(c) })
 			require.Equal(t, http.StatusBadRequest, recorder.Code)
-			require.Equal(t, "application/json; charset=utf-8", recorder.Header().Get("Content-Type"))
+			contentType := "application/json; charset=utf-8"
+			if tt.method == http.MethodPost {
+				contentType = "application/problem+json"
+			}
+			require.Equal(t, contentType, recorder.Header().Get("Content-Type"))
 			var problem models.ProblemDetails
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &problem))
 			require.Equal(t, models.ProblemDetails{

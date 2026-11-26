@@ -334,6 +334,7 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 		}
 		logger.SdmLog.Warnln("UE ID is invalid")
 		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(problemDetail.Status)))
+		c.Header("Content-Type", "application/problem+json")
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
